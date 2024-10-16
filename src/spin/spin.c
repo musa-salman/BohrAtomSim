@@ -5,18 +5,21 @@
 
 #include <spin/spin.h>
 #include <spin/spin_calc.h>
+#include <utils/types.h>
+#include <polar/polar_calc.h>
+#include <spherical/spherical_calc.h>
 #include <utils/iterator.h>
 #include <utils/linked_list.h>
 #include <utils/macros.h>
 
 void spin_sim_ele(struct config *config)
 {
-    struct sim_itr *curr_itr = (struct sim_itr *)malloc(sizeof(struct sim_itr)),
-                   *next_itr = (struct sim_itr *)malloc(sizeof(struct sim_itr));
+    struct sim_itr *curr_itr = malloc(sizeof(*curr_itr));
+    struct sim_itr *next_itr = malloc(sizeof(*next_itr));
 
     long double Hbar_sqr = HBAR(config) * HBAR(config);
 
-    int list_size = linked_list_size(config->log_files);
+    size_t list_size = linked_list_size(config->log_files);
     bool is_interested = false;
 
     struct sim_ctx ctx = {
@@ -28,18 +31,18 @@ void spin_sim_ele(struct config *config)
         start_iteration(&ctx);
         struct orbit *curr_orbit = (struct orbit *)linked_list_pop(config->log_files);
 
-        double N = curr_orbit->n;
-        double K = curr_orbit->k;
-        double m = curr_orbit->m;
+        long double N = curr_orbit->n;
+        long double K = curr_orbit->k;
+        long double m = curr_orbit->m;
 
-        double curr_l = HBAR(config) * K;
-        double K_sqr = K * K;
+        long double curr_l = HBAR(config) * K;
+        long double K_sqr = K * K;
 
-        double *rMinMax = calc_rmin_rmax(N, K);
+        long double *rMinMax = calc_rmin_rmax(N, K);
 
-        double N_phi = K - m;
+        long double N_phi = K - m;
 
-        double theta_min = sphere_calc_theta_min(N_phi, K);
+        long double theta_min = sphere_calc_theta_min(N_phi, K);
 
         FILE *res_f = (FILE *)linked_list_pop(config->log_files);
 
@@ -64,7 +67,7 @@ void spin_sim_ele(struct config *config)
 
         log_iteration(res_f, curr_itr);
 
-        double revolutions = config->revolutions;
+        long double revolutions = config->revolutions;
 
         unsigned long j = 1;
         for (unsigned long it = 1; j < config->iters; it++)
