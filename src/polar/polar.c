@@ -160,19 +160,9 @@ void polar_sim_rel_ele(struct config *config)
         long double *rMinMax = calc_rmin_rmax(N, K);
         // L is the value of H_Bar
         long double curr_l = config->Hbar * K;
-        long double alpha = calc_alpha(config->electron_mass, config->electron_charge);
-        long double w = calc_rel_w(N, K, config->electron_mass, alpha);
         long double K_sqr = K * K;
 
-        long double a = calc_rel_A(config->electron_mass, w);
-        long double b = calc_rel_B(config->electron_mass, config->electron_charge, w);
-        long double c = calc_rel_C(K_sqr * Hbar_sqr, config->electron_charge);
-
-        long double rel_rmin = calc_rel_rmin(a, b, c);
-
-        long double prev_phi = 0;
         long double prev_max_vec = 0;
-        long double prev_r = 0;
 
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
@@ -226,12 +216,9 @@ void polar_sim_rel_ele(struct config *config)
                         printf(" currMaxth - prevMaxVec  %LE, acurrate %LE \n", PHI(curr_itr) - prev_max_vec, (((2 * PI) / chi) - 2 * PI));
                     }
 
-                    prev_r = DR(curr_itr);
                     prev_max_vec = PHI(curr_itr);
                 }
             }
-
-            prev_phi = PHI(curr_itr);
 
             next_itr->gamma = calc_rel_gamma(curr_l, config->electron_mass, DR(curr_itr), R_DOT(curr_itr));
 
