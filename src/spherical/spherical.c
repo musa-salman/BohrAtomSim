@@ -39,7 +39,6 @@ void spherical_sim_ele(struct config *config)
         long double K = curr_orbit->k;
         long double m = curr_orbit->m;
 
-        long double curr_l = HBAR(config) * K;
         long double K_sqr = K * K;
 
         long double *rMinMax = calc_rmin_rmax(N, K);
@@ -51,7 +50,6 @@ void spherical_sim_ele(struct config *config)
 
         long double theta_min = sphere_calc_theta_min(N_phi, K);
 
-        long double prev_phi = 0;
         long double *prev_max_vec = NULL;
         long double *curr_max_vec = NULL;
         long double prevR = 0;
@@ -91,10 +89,6 @@ void spherical_sim_ele(struct config *config)
 
         log_iteration(res_f, curr_itr);
 
-        struct sim_ctx ctx = {
-            .config = config,
-            .curr_itr = *curr_itr,
-            .next_itr = *next_itr};
         unsigned long j = 1;
         for (unsigned long it = 1; j < config->iters; it++)
         {
@@ -162,14 +156,6 @@ void spherical_sim_ele(struct config *config)
                     prev_max_vec = curr_max_vec;
                 }
             }
-            if (m == 0)
-            {
-                prev_phi = PHI(curr_itr);
-            }
-            else if (m == K)
-            {
-                prev_phi = THETA(curr_itr);
-            }
 
             if (it % LOG_P(config) == 0 && !(config->delta_psi_mode))
             {
@@ -232,29 +218,13 @@ void spherical_sim_rel_ele(struct config *config)
         long double curr_l = HBAR(config) * K;
         long double K_sqr = K * K;
 
-        long double alpha = calc_alpha(CHARGE(config), HBAR(config));
-
-        long double w = calc_rel_w(N, K, MASS(config), alpha);
-
-        long double a = calc_rel_A(MASS(config), w);
-
-        long double b = calc_rel_B(MASS(config), CHARGE(config), w);
-
-        long double c = calc_rel_C(K_sqr * Hbar_sqr, CHARGE(config));
-
-        long double rel_rmin = calc_rel_rmin(a, b, c);
-
         long double *rMinMax = calc_rmin_rmax(N, K);
-
-        long double chi = calc_rel_chi(HBAR(config), CHARGE(config), K);
 
         int sign = 1;
         bool theta_flag = false;
 
-        long double prevPhi = 0;
         long double *prev_max_vec = NULL;
         long double *curr_max_vec = NULL;
-        long double prevR = 0;
         bool at_max = true;
 
         long double N_phi = K - m;
@@ -352,7 +322,7 @@ void spherical_sim_rel_ele(struct config *config)
                 next_itr->phi_dot = rel_sphere_calc_phi_dot(
                     N_phi, HBAR(config), THETA(curr_itr), MASS(config),
                     DR(curr_itr), GAMMA(curr_itr));
-                    
+
                 next_itr->theta_dot_dot = rel_sphere_calc_theta_dot_dot((spherical_calc_rel_params){
                     .r = DR(curr_itr), .r_dot = R_DOT(curr_itr), .theta = THETA(curr_itr), 
                     .theta_dot = THETA_DOT(curr_itr), .phi_dot = PHI_DOT(curr_itr),
@@ -389,18 +359,8 @@ void spherical_sim_rel_ele(struct config *config)
                         free(prev_max_vec);
                     }
 
-                    prevR = DR(curr_itr);
-
                     prev_max_vec = curr_max_vec;
                 }
-            }
-            if (m == 0)
-            {
-                prevPhi = PHI(curr_itr);
-            }
-            else if (m == K)
-            {
-                prevPhi = THETA(curr_itr);
             }
 
             next_itr->gamma = calc_rel_gamma(curr_l, MASS(config), DR(curr_itr),
