@@ -5,28 +5,15 @@
 #include <polar/polar_calc.h>
 #include <utils/macros.h>
 
-long double calc_phi_dot(long double l, long double m, long double r)
+long double calc_phi_dot(long double l, long double mass, long double r)
 {
-    return l / (m * r * r);
+    return l / (mass * r * r);
 }
 
-long double calc_R_dot_dot(long double m, long double r, long double e, long double k_sqr, long double Hbar_sqr)
+long double calc_R_dot_dot(long double mass, long double r, long double charge,
+                           long double k_sqr, long double Hbar_sqr)
 {
-    long double arg1;
-    long double arg2;
-    long double r_sq = r * r;
-
-    arg1 = k_sqr * Hbar_sqr;
-    arg1 /= m * r_sq * r;
-
-    arg2 = e * e;
-    arg2 /= r_sq;
-
-    arg1 = arg1 - arg2;
-
-    arg1 /= m;
-
-    return arg1;
+    return ((k_sqr * Hbar_sqr) / (mass * r * r * r)) - (charge * charge / (r * r));
 }
 
 long double *calc_rmin_rmax(long double n, long double k)
