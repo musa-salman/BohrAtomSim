@@ -17,7 +17,7 @@
     @return double r_dot_dot
 
 */
-double calc_R_dot_dot(double m, double r, double e, double k_sqr, double Hbar_sqr);
+long double calc_R_dot_dot(long double m, long double r, long double e, long double k_sqr, long double Hbar_sqr);
 
 /**
 
@@ -31,7 +31,7 @@ double calc_R_dot_dot(double m, double r, double e, double k_sqr, double Hbar_sq
 
 
 */
-double calc_phi_dot(double l, double m, double r);
+long double calc_phi_dot(long double l, long double m, long double r);
 
 /**
     Calculates the R_max and the R_min for a given electron orbit
@@ -47,6 +47,6 @@ double calc_phi_dot(double l, double m, double r);
     @return double result[2] containing the r_min at index 0 and r_max at index 1
 
 */
-double *calc_rmin_rmax(double n, double k);
+long double *calc_rmin_rmax(long double n, long double k);
 
 #endif // EVAL_H

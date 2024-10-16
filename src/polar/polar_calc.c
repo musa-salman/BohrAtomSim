@@ -5,18 +5,16 @@
 #include <polar/polar_calc.h>
 #include <utils/macros.h>
 
-double calc_phi_dot(double l, double m, double r)
+long double calc_phi_dot(long double l, long double m, long double r)
 {
     return l / (m * r * r);
 }
 
-double calc_R_dot_dot(double m, double r, double e, double k_sqr, double Hbar_sqr)
+long double calc_R_dot_dot(long double m, long double r, long double e, long double k_sqr, long double Hbar_sqr)
 {
-    // why its not written as a single line?
-    // k_sqr * Hbar_sqr / (m * r * r * r) - e * e / (r * r) / m;
-    double arg1, arg2;
-
-    double r_sq = r * r;
+    long double arg1;
+    long double arg2;
+    long double r_sq = r * r;
 
     arg1 = k_sqr * Hbar_sqr;
     arg1 /= m * r_sq * r;
@@ -31,19 +29,18 @@ double calc_R_dot_dot(double m, double r, double e, double k_sqr, double Hbar_sq
     return arg1;
 }
 
-double *calc_rmin_rmax(double n, double k)
+long double *calc_rmin_rmax(long double n, long double k)
 {
-    double a = n * n;
-    double b = k / n;
+    long double a = n * n;
+    long double b = k / n;
     b *= a;
 
-    double dis = a * a;
+    long double dis = a * a;
     dis -= b * b;
 
-    dis = sqrt(dis);
+    dis = sqrtl(dis);
 
-    double *results = (double *)malloc(2 * sizeof(double));
-
+    long double *results = malloc(sizeof(*results) * 2);
     results[0] = results[1] = a;
     results[0] -= dis;
     results[1] += dis;
