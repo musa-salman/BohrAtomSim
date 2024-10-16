@@ -13,9 +13,9 @@ enum sim_type
 
 struct orbit
 {
-    short n;
-    short k;
-    short m;
+    unsigned int n : 16;
+    unsigned int k : 16;
+    unsigned int m : 16;
 };
 
 // simulation iteration to hold the current and next iteration values

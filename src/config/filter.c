@@ -1,13 +1,15 @@
-#include <utils/linked_list.h>
-#include <config.h>
-#include <filter.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-void m_block(enum sim_type type, struct linked_list *list, char **filter_lines, int n, int k)
+#include <utils/linked_list.h>
+#include <utils/reads.h>
+#include <config.h>
+#include <filter.h>
+
+void m_block(struct linked_list *list, char **filter_lines, int n, int k)
 {
-    char *curr_line = filter_lines[0];
+    const char *curr_line = filter_lines[0];
 
     int m = atoi(curr_line);
 
@@ -22,11 +24,10 @@ void m_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
 
 void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, int line_count, int n)
 {
-
     int k = 0;
     for (int i = 0; i < line_count; i++)
     {
-        char *line = filter_lines[i];
+        const char *line = filter_lines[i];
         if (strstr(line, "K") != NULL)
         {
             k = atoi(line);
@@ -64,8 +65,7 @@ void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
         }
         else if (strstr(line, "M") != NULL)
         { // block not empty
-
-            m_block(type, list, filter_lines + i, n, k);
+            m_block(list, filter_lines + i, n, k);
         }
         else if (strstr(line, "}") != NULL)
         {
@@ -80,7 +80,7 @@ void n_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
 
     for (int i = 0; i < line_count; i++)
     {
-        char *curr_line = filter_lines[i];
+        const char *curr_line = filter_lines[i];
         if (strstr(curr_line, "N") != NULL)
         {
             n = atoi(curr_line);
@@ -96,8 +96,8 @@ void n_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
                         {
 
                             struct orbit *orbit = malloc(sizeof(struct orbit));
-
                             *orbit = (struct orbit){n, k, m};
+                            linked_list_append(list, orbit);
                         }
                     }
                     else
@@ -119,9 +119,9 @@ void n_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
 
 char *print_filter(void *data)
 {
-    struct orbit *orbit = (struct orbit *)data;
+    const struct orbit *orbit = (struct orbit *)data;
 
-    char output[20];
+    char *output = malloc(sizeof(char[100]));
 
     sprintf(output, "[%hi %hi %hi]", orbit->n, orbit->k, orbit->m);
 
@@ -130,10 +130,13 @@ char *print_filter(void *data)
 
 struct linked_list *get_filter_list(enum sim_type type)
 {
-
-    struct linked_list *list = linked_list_new();
-
     FILE *filter_file = fopen(FILTER_PATH, "r");
+    if(filter_file == NULL)
+    {
+        perror("ERROR opening filter file");
+        exit(1);
+    }
+    struct linked_list *list = linked_list_new();
 
     int line_count = -1;
 
@@ -150,6 +153,6 @@ struct linked_list *get_filter_list(enum sim_type type)
     fclose(filter_file);
 
     // TODO why is this here?
-    linked_list_print(list, print_filter);
+    linked_list_print(list, &print_filter);
     return list;
 }
