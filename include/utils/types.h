@@ -21,21 +21,21 @@ struct orbit
 // simulation iteration to hold the current and next iteration values
 struct sim_itr
 {
-    double dt;        // iteration time
-    double dr;        // iteration distance
-    double r_dot;     // iteration movement speed
-    double r_dot_dot; // iteration movement acceleration
-    double phi;       // iteration angle
-    double phi_dot;   // iteration angular speed
+    long double dt;        // iteration time
+    long double dr;        // iteration distance
+    long double r_dot;     // iteration movement speed
+    long double r_dot_dot; // iteration movement acceleration
+    long double phi;       // iteration angle
+    long double phi_dot;   // iteration angular speed
 
     // TODO what is phi_dot_0?
-    double phi_dot_0;
-    double gamma;     // iteration rel mass mult
-    double delta_phi; // iteration angle of the perihelion
-    double theta;
-    double theta_dot;
-    double theta_dot_dot;
-    double epsilon;
+    long double phi_dot_0;
+    long double gamma;     // iteration rel mass mult
+    long double delta_phi; // iteration angle of the perihelion
+    long double theta;
+    long double theta_dot;
+    long double theta_dot_dot;
+    long double epsilon;
 };
 
 #endif // TYPES_H

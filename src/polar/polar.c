@@ -3,6 +3,8 @@
 #include <stdlib.h>
 
 #include <polar/polar.h>
+#include <polar/polar_calc.h>
+#include <polar/polar_calc_rel.h>
 #include <utils/linked_list.h>
 #include <utils/types.h>
 #include <utils/iterator.h>
@@ -10,13 +12,14 @@
 
 void polar_sim_ele(struct config *config)
 {
-    struct sim_itr *curr_itr, *next_itr;
+    struct sim_itr *curr_itr;
+    struct sim_itr *next_itr;
 
     curr_itr = malloc(sizeof(struct sim_itr));
     next_itr = malloc(sizeof(struct sim_itr));
 
-    bool is_at_interest = false,
-    is_maximum = true;
+    bool is_at_interest = false;
+    bool is_maximum = true;
 
     // TODO: what is this?
     long double Hbar_sqr = config->Hbar * config->Hbar;
@@ -39,13 +42,12 @@ void polar_sim_ele(struct config *config)
 
         FILE *res_f = (FILE *)linked_list_pop(config->log_files);
 
-        double *rMinMax = calc_rmin_rmax(N, K);
-        double curr_l = config->Hbar * N;
-        double K_sqr = K * K;
+        long double *rMinMax = calc_rmin_rmax(N, K);
+        long double curr_l = config->Hbar * N;
+        long double K_sqr = K * K;
 
-        double prev_phi = 0;
-        double prev_max_vec = 0;
-        double prevR = 0;
+        long double prev_max_vec = 0;
+        long double prevR = 0;
 
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
@@ -54,7 +56,7 @@ void polar_sim_ele(struct config *config)
         curr_itr->r_dot_dot = calc_R_dot_dot(config->electron_mass, curr_itr->dr, config->electron_charge, K_sqr, Hbar_sqr);
         curr_itr->phi_dot = calc_phi_dot(curr_l, config->electron_mass, curr_itr->dr);
 
-        double revolutions = config->revolutions;
+        long double revolutions = config->revolutions;
 
         unsigned long j = 1;
         for (unsigned long it = 1; j < config->iters; it++)
@@ -89,7 +91,7 @@ void polar_sim_ele(struct config *config)
                     }
 
                     prevR = DR(curr_itr);
-                    printf("r = %E PHI = %E\n", prevR, prev_max_vec);
+                    printf("r = %LE PHI = %LE\n", prevR, prev_max_vec);
                     prev_max_vec = PHI(curr_itr);
                 }
             }
@@ -130,29 +132,23 @@ void polar_sim_ele(struct config *config)
 
 void polar_sim_rel_ele(struct config *config)
 {
-    struct sim_itr *curr_itr, *next_itr;
+    struct sim_itr *curr_itr;
+    struct sim_itr *next_itr;
 
     // keep track of vars for iteration i adn a i+1
-    curr_itr = malloc(sizeof(struct sim_itr));
-    next_itr = malloc(sizeof(struct sim_itr));
+    curr_itr = malloc(sizeof(*curr_itr));
+    next_itr = malloc(sizeof(*next_itr));
 
     // Hbar_sqr is the value of hbar squared
-    double Hbar_sqr = config->Hbar * config->Hbar;
+    long double Hbar_sqr = config->Hbar * config->Hbar;
     // reached peak of the eclipse
     bool at_max = true;
     // start calculating
-    int list_size = linked_list_size(config->filter_list);
+    size_t list_size = linked_list_size(config->filter_list);
     bool is_at_interest = false;
 
-    struct sim_ctx ctx;
     for (int i = 0; i < list_size; i++)
     {
-
-        ctx = (struct sim_ctx){
-            .curr_itr = *curr_itr,
-            .next_itr = *next_itr,
-            .config = config,
-        };
         struct orbit *currOrbit = (struct orbit *)linked_list_pop(config->filter_list);
 
         double N = currOrbit->n;
@@ -160,29 +156,23 @@ void polar_sim_rel_ele(struct config *config)
 
         FILE *res_f = (FILE *)linked_list_pop(config->log_files);
 
-        // printf(" n-i = %d\n",(N-i));
-
         // The multiplier of H_BAR
-        double *rMinMax = calc_rmin_rmax(N, K);
+        long double *rMinMax = calc_rmin_rmax(N, K);
         // L is the value of H_Bar
-        double curr_l = config->Hbar * K;
-        double alpha = calc_alpha(config->electron_mass, config->electron_charge);
-        double w = calc_rel_w(N, K, config->electron_mass, alpha);
+        long double curr_l = config->Hbar * K;
+        long double alpha = calc_alpha(config->electron_mass, config->electron_charge);
+        long double w = calc_rel_w(N, K, config->electron_mass, alpha);
+        long double K_sqr = K * K;
 
-        double K_sqr = K * K;
-        // K^2 for Hbar_sqr
+        long double a = calc_rel_A(config->electron_mass, w);
+        long double b = calc_rel_B(config->electron_mass, config->electron_charge, w);
+        long double c = calc_rel_C(K_sqr * Hbar_sqr, config->electron_charge);
 
-        double a = calc_rel_A(config->electron_mass, w);
+        long double rel_rmin = calc_rel_rmin(a, b, c);
 
-        double b = calc_rel_B(config->electron_mass, config->electron_charge, w);
-        double c = calc_rel_C(K_sqr * Hbar_sqr, config->electron_charge);
-
-        double rel_rmin = calc_rel_rmin(a, b, c);
-        // printf("relativistic rmin = %E ,non relativistic rmin = %E\n\n",rel_rmin,R_MIN);
-
-        double prev_phi = 0;
-        double prev_max_vec = 0;
-        double prev_r = 0;
+        long double prev_phi = 0;
+        long double prev_max_vec = 0;
+        long double prev_r = 0;
 
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
@@ -196,7 +186,7 @@ void polar_sim_rel_ele(struct config *config)
 
         curr_itr->phi_dot = calc_rel_phi_dot(curr_l, curr_itr->gamma, curr_itr->dr, config->electron_mass);
 
-        double revolutions = config->revolutions;
+        long double revolutions = config->revolutions;
 
         unsigned long j = 1;
         struct sim_ctx ctx = {
@@ -221,7 +211,7 @@ void polar_sim_rel_ele(struct config *config)
                 if (at_max)
                 {
 
-                    double chi = calc_rel_chi(config->electron_mass, config->electron_charge, K);
+                    long double chi = calc_rel_chi(config->electron_mass, config->electron_charge, K);
 
                     if (prev_max_vec != 0)
                     {
@@ -233,7 +223,7 @@ void polar_sim_rel_ele(struct config *config)
                         }
                         next_itr->delta_phi = DELTA_PHI(curr_itr);
 
-                        printf(" currMaxth - prevMaxVec  %E, acurrate %E \n", PHI(curr_itr) - prev_max_vec, (((2 * PI) / chi) - 2 * PI));
+                        printf(" currMaxth - prevMaxVec  %LE, acurrate %LE \n", PHI(curr_itr) - prev_max_vec, (((2 * PI) / chi) - 2 * PI));
                     }
 
                     prev_r = DR(curr_itr);
@@ -267,7 +257,7 @@ void polar_sim_rel_ele(struct config *config)
         }
 
         free(rMinMax);
-        endTime(*currOrbit);
+        end_iteration(&ctx);
         log_iteration(res_f, curr_itr);
 
         fclose(res_f);
