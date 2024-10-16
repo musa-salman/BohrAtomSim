@@ -41,7 +41,7 @@ void spherical_sim_ele(struct config *config)
 
         long double K_sqr = K * K;
 
-        long double *rMinMax = calc_rmin_rmax(N, K);
+        struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
 
         int sign = 1;
         bool theta_flag = false;
@@ -60,7 +60,7 @@ void spherical_sim_ele(struct config *config)
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
 
-        curr_itr->dr = rMinMax[0];
+        curr_itr->dr = radial_bounds->r_min;
         curr_itr->theta = theta_min;
 
         long double revolutions = config->revolutions;
@@ -138,7 +138,7 @@ void spherical_sim_ele(struct config *config)
                     if (prev_max_vec != NULL)
                     {
 
-                        curr_itr->delta_phi = rel_sphere_calc_delta_phi(curr_max_vec, prev_max_vec, rMinMax[1]);
+                        curr_itr->delta_phi = rel_sphere_calc_delta_phi(curr_max_vec, prev_max_vec, radial_bounds->r_max);
 
                         if (config->delta_psi_mode)
                         {
@@ -181,7 +181,7 @@ void spherical_sim_ele(struct config *config)
 
         log_iteration(res_f, curr_itr);
         end_iteration(&ctx);
-        free(rMinMax);
+        free(radial_bounds);
         fclose(res_f);
         free(curr_orbit);
     }
@@ -218,7 +218,7 @@ void spherical_sim_rel_ele(struct config *config)
         long double curr_l = HBAR(config) * K;
         long double K_sqr = K * K;
 
-        long double *rMinMax = calc_rmin_rmax(N, K);
+        struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
 
         int sign = 1;
         bool theta_flag = false;
@@ -237,7 +237,7 @@ void spherical_sim_rel_ele(struct config *config)
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
 
-        curr_itr->dr = rMinMax[0];
+        curr_itr->dr = radial_bounds->r_min;
 
         curr_itr->gamma = calc_rel_gamma(curr_l, MASS(config), DR(curr_itr), R_DOT(curr_itr));
 
@@ -346,7 +346,7 @@ void spherical_sim_rel_ele(struct config *config)
                     {
 
                         curr_itr->delta_phi = rel_sphere_calc_delta_phi(
-                            curr_max_vec, prev_max_vec, rMinMax[1]);
+                            curr_max_vec, prev_max_vec, radial_bounds->r_max);
 
                         if (config->delta_psi_mode)
                         {
@@ -392,7 +392,7 @@ void spherical_sim_rel_ele(struct config *config)
         free(curr_max_vec);
 
         end_iteration(&ctx);
-        free(rMinMax);
+        free(radial_bounds);
         fclose(res_f);
         free(curr_orbit);
     }

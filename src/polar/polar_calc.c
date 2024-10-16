@@ -13,10 +13,11 @@ long double calc_phi_dot(long double l, long double mass, long double r)
 long double calc_R_dot_dot(long double mass, long double r, long double charge,
                            long double k_sqr, long double Hbar_sqr)
 {
+    // TODO: what is Hbar_sqr?
     return ((k_sqr * Hbar_sqr) / (mass * r * r * r)) - (charge * charge / (r * r));
 }
 
-long double *calc_rmin_rmax(long double n, long double k)
+struct radial_bounds *compute_radial_limits(long double n, long double k)
 {
     long double a = n * n;
     long double b = k / n;
@@ -27,13 +28,13 @@ long double *calc_rmin_rmax(long double n, long double k)
 
     dis = sqrtl(dis);
 
-    long double *results = malloc(sizeof(*results) * 2);
-    results[0] = results[1] = a;
-    results[0] -= dis;
-    results[1] += dis;
+    struct radial_bounds *radial_bounds = malloc(sizeof(*radial_bounds));
+    radial_bounds->r_min = radial_bounds->r_max = a;
+    radial_bounds->r_min -= dis;
+    radial_bounds->r_max += dis;
 
-    results[0] *= BOHR_R;
-    results[1] *= BOHR_R;
+    radial_bounds->r_min *= BOHR_R;
+    radial_bounds->r_max *= BOHR_R;
 
-    return results;
+    return radial_bounds;
 }

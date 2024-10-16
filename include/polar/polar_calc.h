@@ -1,6 +1,12 @@
 #ifndef EVAL_H
 #define EVAL_H
 
+struct radial_bounds
+{
+    long double r_min;
+    long double r_max;
+};
+
 /*
 *************************************************************************************************************
 *** All calculations are done according to Atomic Structure And Spectral Lines Vol. I by Arnold Sommerfeld ***
@@ -42,11 +48,7 @@ long double calc_phi_dot(long double l, long double mass, long double r);
 
         where a = n^2 * BOHR_R
         and   b = k/n * a
-
-    @param double n double k
-    @return double result[2] containing the r_min at index 0 and r_max at index 1
-
 */
-long double *calc_rmin_rmax(long double n, long double k);
+struct radial_bounds *compute_radial_limits(long double n, long double k);
 
 #endif // EVAL_H

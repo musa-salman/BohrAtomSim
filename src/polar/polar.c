@@ -42,7 +42,7 @@ void polar_sim_ele(struct config *config)
 
         FILE *res_f = (FILE *)linked_list_pop(config->log_files);
 
-        long double *rMinMax = calc_rmin_rmax(N, K);
+        struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
         long double curr_l = config->Hbar * N;
         long double K_sqr = K * K;
 
@@ -52,8 +52,10 @@ void polar_sim_ele(struct config *config)
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
 
-        curr_itr->dr = rMinMax[0];
-        curr_itr->r_dot_dot = calc_R_dot_dot(config->electron_mass, curr_itr->dr, config->electron_charge, K_sqr, Hbar_sqr);
+        curr_itr->dr = radial_bounds->r_min;
+        curr_itr->r_dot_dot = calc_R_dot_dot(
+            config->electron_mass, curr_itr->dr, config->electron_charge,
+            K_sqr, Hbar_sqr);
         curr_itr->phi_dot = calc_phi_dot(curr_l, config->electron_mass, curr_itr->dr);
 
         long double revolutions = config->revolutions;
@@ -120,7 +122,7 @@ void polar_sim_ele(struct config *config)
 
         log_iteration(res_f, curr_itr);
         end_iteration(&ctx);
-        free(rMinMax);
+        free(radial_bounds);
         fclose(res_f);
 
         free(curr_orbit);
@@ -157,7 +159,7 @@ void polar_sim_rel_ele(struct config *config)
         FILE *res_f = (FILE *)linked_list_pop(config->log_files);
 
         // The multiplier of H_BAR
-        long double *rMinMax = calc_rmin_rmax(N, K);
+        struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
         // L is the value of H_Bar
         long double curr_l = config->Hbar * K;
         long double K_sqr = K * K;
@@ -167,7 +169,7 @@ void polar_sim_rel_ele(struct config *config)
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
 
-        curr_itr->dr = rMinMax[0];
+        curr_itr->dr = radial_bounds->r_min;
 
         curr_itr->gamma = calc_rel_gamma(curr_l, config->electron_mass, curr_itr->dr, curr_itr->r_dot);
 
@@ -243,7 +245,7 @@ void polar_sim_rel_ele(struct config *config)
             next_itr = temp;
         }
 
-        free(rMinMax);
+        free(radial_bounds);
         end_iteration(&ctx);
         log_iteration(res_f, curr_itr);
 

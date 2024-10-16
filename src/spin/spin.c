@@ -33,7 +33,7 @@ void spin_sim_ele(struct config *config)
         long double K = curr_orbit->k;
         long double m = curr_orbit->m;
 
-        long double *rMinMax = calc_rmin_rmax(N, K);
+        struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
 
         long double N_phi = K - m;
 
@@ -44,7 +44,7 @@ void spin_sim_ele(struct config *config)
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
 
-        curr_itr->dr = rMinMax[0];
+        curr_itr->dr = radial_bounds->r_min;
         curr_itr->theta = theta_min;
 
         curr_itr->phi_dot_0 = spin_calc_phi_dot_0(
@@ -108,7 +108,7 @@ void spin_sim_ele(struct config *config)
         end_iteration(&ctx);
         log_iteration(res_f, curr_itr);
 
-        free(rMinMax);
+        free(radial_bounds);
         fclose(res_f);
 
         free(curr_orbit);
