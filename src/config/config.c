@@ -118,6 +118,7 @@ char *construct_result_path(struct linked_list *filterList)
     if (make_dir(result_path) == -1)
     {
         printf("error creating file");
+        free(time_str);
         return NULL;
     }
 
@@ -132,6 +133,7 @@ char *construct_result_path(struct linked_list *filterList)
             if (make_dir(result_path) == -1)
             {
                 printf("error creating file");
+                free(time_str);
                 return NULL;
             }
 
@@ -145,6 +147,7 @@ char *construct_result_path(struct linked_list *filterList)
             if (make_dir(result_path) == -1)
             {
                 printf("error creating file");
+                free(time_str);
                 return NULL;
             }
 
@@ -170,14 +173,14 @@ struct config *load_config(const char *config_path)
     char **configLines = read_lines(config_f, &length);
 
     struct config *config = (struct config *)malloc(sizeof(struct config));
+    memset(config, 0, sizeof(struct config));
 
-    char *curr_line = readline(config_f);
+    const char *curr_line = readline(config_f);
     for (int i = 0; i < length; i++)
     {
 
         if (strstr(curr_line, "revolutions =") == curr_line)
         {
-            //TODO: it was parseDouble(currLine) before, why it did not do + 13?
             config->revolutions = strtod(curr_line + 13, NULL);
         }
         else if (strstr(curr_line, "iterationMode =") == curr_line)
@@ -190,7 +193,7 @@ struct config *load_config(const char *config_path)
         }
         else if (strstr(curr_line, "itrs =") == curr_line)
         {
-            config->iters = strtol(curr_line + 6, NULL, 10);
+            config->iters = atoi(curr_line + 6);
         }
         else if (strstr(curr_line, "Hbar =") == curr_line)
         {
@@ -214,7 +217,7 @@ struct config *load_config(const char *config_path)
         }
         else if (strstr(curr_line, "logPerod =") == curr_line)
         {
-            config->log_p = strtol(curr_line + 10, NULL, 10);
+            config->log_p = atoi(curr_line + 10);
         }
     }
 
@@ -239,6 +242,11 @@ struct config *load_config(const char *config_path)
     fclose(config_f);
 
     config_f = fopen(CONFIG_PATH, "w");
+    if (config_f == NULL)
+    {
+        perror("ERROR opening Config file");
+        exit(1);
+    }
 
     for (int i = 0; i < length; i++)
     {
@@ -261,6 +269,8 @@ struct config *load_config(const char *config_path)
     if (!store_metadata(meta_filepath))
     {
         printf("error saving meta data");
+        free(config->timestamp);
+        free(config);
         return NULL;
     }
 
