@@ -93,7 +93,7 @@ double rel_sphere_calc_theta_min(double N_phi, double k)
 
 double rel_sphere_calc_spc_case_r_dot_dot(
     double r, double theta_dot, double charge,
-    double mass, double gamma)
+    double mass)
 {
 
     double arg1 = r * theta_dot * theta_dot;
@@ -117,17 +117,14 @@ double rel_sphere_calc_spc_case_theta_dot(
     return arg1 / arg2;
 }
 
-double rel_sphere_calc_deltaPhi(double *currMaxVec, double *prevMaxVec, double rMax)
+double rel_sphere_calc_delta_phi(const double *curr_max_vec, const double *prev_max_vec, double rMax)
 {
 
-    double arg1 = dot_product(currMaxVec, prevMaxVec, 3);
+    double arg1 = dot_product(curr_max_vec, prev_max_vec, 3);
 
-    // printf("scalar Mult = %e\n",arg1);
-    double rmax_curr = sqrt(currMaxVec[0] * currMaxVec[0] + currMaxVec[1] * currMaxVec[1] + currMaxVec[2] * currMaxVec[2]);
-    double rmax_prev = sqrt(prevMaxVec[0] * prevMaxVec[0] + prevMaxVec[1] * prevMaxVec[1] + prevMaxVec[2] * prevMaxVec[2]);
+    double rmax_curr = sqrt(dot_product(curr_max_vec, curr_max_vec, 3));
+    double rmax_prev = sqrt(dot_product(prev_max_vec, prev_max_vec, 3));
     arg1 /= (rmax_curr * rmax_prev);
-    // printf("rmax_curr %.*e , rmax_prev %.*e \n",rmax_curr,DECIMAL_DIG,rmax_prev,DECIMAL_DIG);
-    // printf("cos(psi) = %.*e\n",arg1,DECIMAL_DIG);
 
     return acos(arg1);
 }
@@ -148,12 +145,11 @@ double *stoc(double roh, double phi, double theta)
     return cords;
 }
 
-double dot_product(double *v1, double *v2, int size)
+double dot_product(const double *v1, const double *v2, size_t size)
 {
     double sum = 0;
     for (int i = 0; i < size; i++)
     {
-
         sum += v1[i] * v2[i];
     }
     return sum;

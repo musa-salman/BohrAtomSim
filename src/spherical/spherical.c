@@ -141,7 +141,7 @@ void spherical_sim_ele(struct config *config)
                     if (prev_max_vec != NULL)
                     {
 
-                        curr_itr->delta_phi = rel_sphere_calc_deltaPhi(curr_max_vec, prev_max_vec, rMinMax[1]);
+                        curr_itr->delta_phi = rel_sphere_calc_delta_phi(curr_max_vec, prev_max_vec, rMinMax[1]);
 
                         if (config->delta_psi_mode)
                         {
@@ -373,7 +373,7 @@ void spherical_sim_rel_ele(struct config *config)
                     if (prev_max_vec != NULL)
                     {
 
-                        curr_itr->delta_phi = rel_sphere_calc_deltaPhi(
+                        curr_itr->delta_phi = rel_sphere_calc_delta_phi(
                             curr_max_vec, prev_max_vec, rMinMax[1]);
 
                         if (config->delta_psi_mode)

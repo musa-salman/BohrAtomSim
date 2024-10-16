@@ -10,7 +10,7 @@ long double calc_rel_phi_dot(long double l, long double gamma, long double r, lo
 
     long double arg1 = gamma * m;
     arg1 *= r;
-    return (l / arg1);
+    return l / arg1;
 }
 
 long double calc_rel_gamma(long double l, long double m, long double r, long double r_dot)
