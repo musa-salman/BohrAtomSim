@@ -17,8 +17,6 @@ void spin_sim_ele(struct config *config)
     struct sim_itr *curr_itr = malloc(sizeof(*curr_itr));
     struct sim_itr *next_itr = malloc(sizeof(*next_itr));
 
-    long double Hbar_sqr = HBAR(config) * HBAR(config);
-
     size_t list_size = linked_list_size(config->log_files);
     bool is_interested = false;
 
@@ -34,9 +32,6 @@ void spin_sim_ele(struct config *config)
         long double N = curr_orbit->n;
         long double K = curr_orbit->k;
         long double m = curr_orbit->m;
-
-        long double curr_l = HBAR(config) * K;
-        long double K_sqr = K * K;
 
         long double *rMinMax = calc_rmin_rmax(N, K);
 
