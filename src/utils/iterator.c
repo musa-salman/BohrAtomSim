@@ -86,43 +86,43 @@ bool iterate(struct sim_ctx *ctx)
 
 void log_iteration(FILE *result_f, const struct sim_itr *itr)
 {
-    fprintf(result_f, "t= %E\t", DT(itr));
+    fprintf(result_f, "t= %LE\t", DT(itr));
 
-    fprintf(result_f, "r= %E\t", DR(itr));
+    fprintf(result_f, "r= %LE\t", DR(itr));
 
-    fprintf(result_f, "r'= %E\t", R_DOT(itr));
-    fprintf(result_f, "r''= %E\t", R_DOT_DOT(itr));
+    fprintf(result_f, "r'= %LE\t", R_DOT(itr));
+    fprintf(result_f, "r''= %LE\t", R_DOT_DOT(itr));
 
-    fprintf(result_f, "phi= %E\t", PHI(itr));
-    fprintf(result_f, "phi'= %E\t", PHI_DOT(itr));
+    fprintf(result_f, "phi= %LE\t", PHI(itr));
+    fprintf(result_f, "phi'= %LE\t", PHI_DOT(itr));
 
     if (PHI_DOT_0(itr) != -1.0)
     {
-        fprintf(result_f, "phi'_0= %E\t", PHI_DOT_0(itr));
+        fprintf(result_f, "phi'_0= %LE\t", PHI_DOT_0(itr));
     }
     if (THETA(itr) != -1.0)
     {
-        fprintf(result_f, "theta= %E\t", THETA(itr));
+        fprintf(result_f, "theta= %LE\t", THETA(itr));
     }
     if (THETA_DOT(itr) != -1.0)
     {
-        fprintf(result_f, "theta'= %E\t", THETA_DOT(itr));
+        fprintf(result_f, "theta'= %LE\t", THETA_DOT(itr));
     }
     if (THETA_DOT_DOT(itr) != -1.0)
     {
-        fprintf(result_f, "theta''= %E\t", THETA_DOT_DOT(itr));
+        fprintf(result_f, "theta''= %LE\t", THETA_DOT_DOT(itr));
     }
     if (GAMMA(itr) != -1.0)
     {
-        fprintf(result_f, "gamma= %E\t", GAMMA(itr));
+        fprintf(result_f, "gamma= %LE\t", GAMMA(itr));
     }
     if (DELTA_PHI(itr) != -1.0)
     {
-        fprintf(result_f, "deltaPhi= %E\t", DELTA_PHI(itr));
+        fprintf(result_f, "deltaPhi= %LE\t", DELTA_PHI(itr));
     }
     if (EPSILON(itr) != -1.0)
     {
-        fprintf(result_f, "epsilon= %E\t", EPSILON(itr));
+        fprintf(result_f, "epsilon= %LE\t", EPSILON(itr));
     }
 
     fprintf(result_f, "\n");
