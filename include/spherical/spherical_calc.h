@@ -8,9 +8,9 @@
  *
  * @param Nphi
  * @param k
- * @return double
+ * @return long double
  */
-double sphere_calc_theta_min(double Nphi, double k);
+long double sphere_calc_theta_min(long double Nphi, long double k);
 
 /**
     @brief Calculates R_dot_dot "acceleration" of and electron
@@ -18,10 +18,10 @@ double sphere_calc_theta_min(double Nphi, double k);
 
         m*r_dot_dot = (l^2)/(m*(r^3)) - (e^2)/(r^2)
 
-    @param double m = 9.109383e-28 double e = 4.803 e-10 l_sqr = Calc_l_sqr r = r of the currnt itration
-    @return double r_dot_dot
+    @param long double m = 9.109383e-28 long double e = 4.803 e-10 l_sqr = Calc_l_sqr r = r of the currnt itration
+    @return long double r_dot_dot
  */
-double sphere_calc_r_dot_dot(double m, double r, double e, double k_sqr, double Hbar_sqr);
+long double sphere_calc_r_dot_dot(long double m, long double r, long double e, long double k_sqr, long double Hbar_sqr);
 
 /**
  * @brief Calcuates the angular acceleration of the electrion
@@ -34,16 +34,16 @@ double sphere_calc_r_dot_dot(double m, double r, double e, double k_sqr, double 
  * @param theta
  * @param theta_dot
  * @param phi_dot
- * @return double
+ * @return long double
  */
-double sphere_calc_theta_dot_dot(double r, double r_dot, double theta, double theta_dot, double phi_dot);
+long double sphere_calc_theta_dot_dot(long double r, long double r_dot, long double theta, long double theta_dot, long double phi_dot);
 
-double sphere_calc_phi_dot(double Nphi, double Hbar, double theta, double mass, double r);
+long double sphere_calc_phi_dot(long double Nphi, long double Hbar, long double theta, long double mass, long double r);
 
-double sphere_calc_init_phi_dot(double K, double Hbar, double nphi, double mass, double r);
+long double sphere_calc_init_phi_dot(long double K, long double Hbar, long double nphi, long double mass, long double r);
 
-double sphere_calc_spc_case_r_dot_dot(double r, double theta_dot, double charge, double mass);
+long double sphere_calc_spc_case_r_dot_dot(long double r, long double theta_dot, long double charge, long double mass);
 
-double sphere_calc_spc_case_theta_dot(double k, double Hbar, double mass, double r);
+long double sphere_calc_spc_case_theta_dot(long double k, long double Hbar, long double mass, long double r);
 
 #endif // SPHERE_CALC_H
