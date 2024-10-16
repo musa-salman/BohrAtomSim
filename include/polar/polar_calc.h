@@ -13,25 +13,25 @@
 
         m*r_dot_dot = (l^2)/(m*(r^3)) - (e^2)/(r^2)
 
-    @param double m = 9.109383e-28 double e = 4.803 e-10 l_sqr = Calc_l_sqr r = r of the current iteration
+    @param double mass = 9.109383e-28 double charge = 4.803 charge-10 l_sqr = Calc_l_sqr r = r of the current iteration
     @return double r_dot_dot
 
 */
-long double calc_R_dot_dot(long double m, long double r, long double e, long double k_sqr, long double Hbar_sqr);
+long double calc_R_dot_dot(long double mass, long double r, long double charge, long double k_sqr, long double Hbar_sqr);
 
 /**
 
     Calculates the angel change rate of the electron movement
     where
 
-        phi_dot = L / m*(r^2)
+        phi_dot = L / mass*(r^2)
 
-    @param double m = 9.109383e-28 double e = 4.803 e-10  r = r of the current iteration
+    @param double m = 9.109383e-28 double charge = 4.803 charge-10  r = r of the current iteration
     @return double phi_dot
 
 
 */
-long double calc_phi_dot(long double l, long double m, long double r);
+long double calc_phi_dot(long double l, long double mass, long double r);
 
 /**
     Calculates the R_max and the R_min for a given electron orbit
