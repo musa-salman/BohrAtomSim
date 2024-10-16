@@ -1,0 +1,12 @@
+# Ignore Visual Studio Code settings
+.vscode/
+
+# Ignore build artifacts
+bin/
+
+# Ignore libraries
+lib/
+
+# Ignore temporary files
+*.tmp
+*.log
