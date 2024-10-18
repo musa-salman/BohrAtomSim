@@ -26,22 +26,22 @@ char *timestamp2str(const struct tm *time_info)
     return time_str;
 }
 
-FILE *load_orbit_file(const struct orbit *orbit, char *timestamp)
+FILE *load_orbit_file(const struct electron_orbit *orbit, char *timestamp)
 {
     const size_t len = strlen(timestamp);
     char *orbit_path = (char *)malloc(len + 100);
 
-    if (orbit->m == -1)
+    if (orbit->magnetic == -1)
     {
 
         sprintf(orbit_path, "%s/%s/results_N%hi/results_K%hi.txt", RESULT_P,
-                timestamp, orbit->n, orbit->k);
+                timestamp, orbit->principal, orbit->angular);
     }
     else
     {
 
         sprintf(orbit_path, "%s/%s/results_N%hi/results_K%hi/results_M%hi.txt",
-                RESULT_P, timestamp, orbit->n, orbit->k, orbit->m);
+                RESULT_P, timestamp, orbit->principal, orbit->angular, orbit->magnetic);
     }
 
     FILE *logFile = fopen(orbit_path, "w");
@@ -124,11 +124,11 @@ char *construct_result_path(struct linked_list *filterList)
 
     for (int i = 0; i < list_size; i++)
     {
-        struct orbit *orbit = (struct orbit *)linked_list_pop(filterList);
+        struct electron_orbit *orbit = (struct electron_orbit *)linked_list_pop(filterList);
 
-        if (orbit->n > last_n)
+        if (orbit->principal > last_n)
         {
-            sprintf(result_path, "%s/%s/results_N%hi", RESULT_P, time_str, orbit->n);
+            sprintf(result_path, "%s/%s/results_N%hi", RESULT_P, time_str, orbit->principal);
 
             if (make_dir(result_path) == -1)
             {
@@ -138,11 +138,11 @@ char *construct_result_path(struct linked_list *filterList)
             }
 
             last_k = 0;
-            last_n = orbit->n;
+            last_n = orbit->principal;
         }
-        if (orbit->k > last_k && orbit->m != -1)
+        if (orbit->angular > last_k && orbit->magnetic != -1)
         {
-            sprintf(result_path, "%s/%s/results_N%hi/results_K%hi", RESULT_P, time_str, orbit->n, orbit->k);
+            sprintf(result_path, "%s/%s/results_N%hi/results_K%hi", RESULT_P, time_str, orbit->principal, orbit->angular);
 
             if (make_dir(result_path) == -1)
             {
@@ -151,7 +151,7 @@ char *construct_result_path(struct linked_list *filterList)
                 return NULL;
             }
 
-            last_k = orbit->k;
+            last_k = orbit->angular;
         }
 
         linked_list_append(filterList, orbit);
@@ -231,7 +231,7 @@ struct config *load_config(const char *config_path)
 
     for (int i = 0; i < list_size; i++)
     {
-        struct orbit *orbit = (struct orbit *)linked_list_pop(config->filter_list);
+        struct electron_orbit *orbit = (struct electron_orbit *)linked_list_pop(config->filter_list);
 
         FILE *log_file = load_orbit_file(orbit, config->timestamp);
 

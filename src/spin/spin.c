@@ -27,11 +27,11 @@ void spin_sim_ele(struct config *config)
     for (int i = 0; i < list_size; i++)
     {
         start_iteration(&ctx);
-        struct orbit *curr_orbit = (struct orbit *)linked_list_pop(config->log_files);
+        struct electron_orbit *curr_orbit = (struct electron_orbit *)linked_list_pop(config->log_files);
 
-        long double N = curr_orbit->n;
-        long double K = curr_orbit->k;
-        long double m = curr_orbit->m;
+        long double N = curr_orbit->principal;
+        long double K = curr_orbit->angular;
+        long double m = curr_orbit->magnetic;
 
         struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
 
@@ -44,20 +44,20 @@ void spin_sim_ele(struct config *config)
         init_iteration(curr_itr, config->type);
         init_iteration(next_itr, config->type);
 
-        curr_itr->dr = radial_bounds->r_min;
+        curr_itr->r = radial_bounds->r_min;
         curr_itr->theta = theta_min;
 
-        curr_itr->phi_dot_0 = spin_calc_phi_dot_0(
-            DR(curr_itr), MASS(config), N_phi,
+        curr_itr->initial_phi_dot = spin_calc_phi_dot_0(
+            R(curr_itr), MASS(config), N_phi,
             HBAR(config), THETA(curr_itr));
-        curr_itr->epsilon = spin_calc_epsilon(DR(curr_itr), MASS(config), CHARGE(config), THETA(curr_itr), N_phi);
+        curr_itr->epsilon = spin_calc_epsilon(R(curr_itr), MASS(config), CHARGE(config), THETA(curr_itr), N_phi);
 
         curr_itr->phi_dot = spin_calc_phi_dot(PHI_DOT_0(curr_itr), EPSILON(curr_itr));
         curr_itr->theta_dot_dot = spin_calc_theta_dot_dot(
-            DR(curr_itr), R_DOT(curr_itr), THETA(curr_itr),
+            R(curr_itr), R_DOT(curr_itr), THETA(curr_itr),
             THETA(curr_itr), PHI_DOT_0(curr_itr), EPSILON(curr_itr));
         curr_itr->r_dot_dot = spin_calc_r_dot_dot(
-            DR(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
+            R(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
             PHI_DOT_0(curr_itr), EPSILON(curr_itr), MASS(config), CHARGE(config));
 
         log_iteration(res_f, curr_itr);
@@ -70,18 +70,18 @@ void spin_sim_ele(struct config *config)
 
             is_interested = iterate(&ctx);
 
-            next_itr->phi_dot_0 = spin_calc_phi_dot_0(
-                DR(curr_itr), MASS(config), N_phi,
+            next_itr->initial_phi_dot = spin_calc_phi_dot_0(
+                R(curr_itr), MASS(config), N_phi,
                 HBAR(config), THETA(curr_itr));
-            next_itr->epsilon = spin_calc_epsilon(DR(curr_itr), MASS(config),
+            next_itr->epsilon = spin_calc_epsilon(R(curr_itr), MASS(config),
                                                   CHARGE(config), THETA(curr_itr), N_phi);
 
             next_itr->phi_dot = spin_calc_phi_dot(PHI_DOT_0(curr_itr), EPSILON(curr_itr));
             next_itr->theta_dot_dot = spin_calc_theta_dot_dot(
-                DR(curr_itr), R_DOT(curr_itr), THETA(curr_itr),
+                R(curr_itr), R_DOT(curr_itr), THETA(curr_itr),
                 THETA(curr_itr), PHI_DOT_0(curr_itr), EPSILON(curr_itr));
             next_itr->r_dot_dot = spin_calc_r_dot_dot(
-                DR(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
+                R(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
                 PHI_DOT_0(curr_itr), EPSILON(curr_itr), MASS(config), CHARGE(config));
 
             if (it % LOG_P(config) == 0)

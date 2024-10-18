@@ -7,22 +7,22 @@
 #include <config.h>
 #include <filter.h>
 
-void m_block(struct linked_list *list, char **filter_lines, int n, int k)
+void m_block(struct linked_list *list, char **filter_lines, unsigned char principle, unsigned char angular)
 {
     const char *curr_line = filter_lines[0];
 
-    int m = atoi(curr_line);
+    const signed char m = (unsigned char)atoi(curr_line);
 
-    struct orbit *orbit = malloc(sizeof(struct orbit));
+    struct electron_orbit *orbit = malloc(sizeof(struct electron_orbit));
 
-    *orbit = (struct orbit){n, k, m};
+    *orbit = (struct electron_orbit){principle, angular, m};
 
     linked_list_append(list, orbit);
 
     return;
 }
 
-void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, int line_count, int n)
+void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, int line_count, int energy_level)
 {
     int k = 0;
     for (int i = 0; i < line_count; i++)
@@ -33,8 +33,8 @@ void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
             k = atoi(line);
             if (type == POLAR || type == REL_POLAR)
             {
-                struct orbit *orbit = malloc(sizeof(struct orbit));
-                *orbit = (struct orbit){n, k, -1};
+                struct electron_orbit *orbit = malloc(sizeof(struct electron_orbit));
+                *orbit = (struct electron_orbit){energy_level, k, -1};
                 linked_list_append(list, orbit);
                 return;
             }
@@ -48,16 +48,16 @@ void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
                 for (int m = 0; m <= k; m++)
                 {
 
-                    struct orbit *orbit = malloc(sizeof(struct orbit));
-                    *orbit = (struct orbit){n, k, m};
+                    struct electron_orbit *orbit = malloc(sizeof(struct electron_orbit));
+                    *orbit = (struct electron_orbit){energy_level, k, m};
 
                     linked_list_append(list, orbit);
                 }
             }
             else
             {
-                struct orbit *orbit = malloc(sizeof(struct orbit));
-                *orbit = (struct orbit){n, k, -1};
+                struct electron_orbit *orbit = malloc(sizeof(struct electron_orbit));
+                *orbit = (struct electron_orbit){energy_level, k, -1};
 
                 linked_list_append(list, orbit);
             }
@@ -65,7 +65,7 @@ void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
         }
         else if (strstr(line, "M") != NULL)
         { // block not empty
-            m_block(list, filter_lines + i, n, k);
+            m_block(list, filter_lines + i, energy_level, k);
         }
         else if (strstr(line, "}") != NULL)
         {
@@ -76,35 +76,35 @@ void k_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
 
 void n_block(enum sim_type type, struct linked_list *list, char **filter_lines, int line_count)
 {
-    int n = 0;
+    unsigned char principal = 0;
 
     for (int i = 0; i < line_count; i++)
     {
         const char *curr_line = filter_lines[i];
         if (strstr(curr_line, "N") != NULL)
         {
-            n = atoi(curr_line);
+            principal = (unsigned char)atoi(curr_line);
             if (strstr(curr_line, "{}") != NULL)
             { // if the block is empty simulate all
-                for (int k = 1; k <= n; k++)
+                for (unsigned char k = 1; k <= principal; k++)
                 {
 
                     if (type == SPIN || type == SPHERICAL || type == REL_SPHERICAL)
                     {
 
-                        for (int m = 0; m <= k; m++)
+                        for (signed char m = 0; m <= k; m++)
                         {
 
-                            struct orbit *orbit = malloc(sizeof(struct orbit));
-                            *orbit = (struct orbit){n, k, m};
+                            struct electron_orbit *orbit = malloc(sizeof(struct electron_orbit));
+                            *orbit = (struct electron_orbit){principal, k, m};
                             linked_list_append(list, orbit);
                         }
                     }
                     else
                     {
 
-                        struct orbit *orbit = malloc(sizeof(struct orbit));
-                        *orbit = (struct orbit){n, k, -1};
+                        struct electron_orbit *orbit = malloc(sizeof(struct electron_orbit));
+                        *orbit = (struct electron_orbit){principal, k, -1};
                         linked_list_append(list, orbit);
                     }
                 }
@@ -112,18 +112,18 @@ void n_block(enum sim_type type, struct linked_list *list, char **filter_lines, 
         }
         else if (strstr(curr_line, "K") != NULL)
         { // block not empty
-            k_block(type, list, filter_lines + i, line_count - i, n);
+            k_block(type, list, filter_lines + i, line_count - i, principal);
         }
     }
 }
 
 char *print_filter(void *data)
 {
-    const struct orbit *orbit = (struct orbit *)data;
+    const struct electron_orbit *orbit = (struct electron_orbit *)data;
 
     char *output = malloc(sizeof(char[100]));
 
-    sprintf(output, "[%hi %hi %hi]", orbit->n, orbit->k, orbit->m);
+    sprintf(output, "[%hi %hi %hi]", orbit->principal, orbit->angular, orbit->magnetic);
 
     return output;
 }

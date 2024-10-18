@@ -3,12 +3,12 @@
 
 // sim_itr macros
 #define DT(itr) (itr)->dt
-#define DR(itr) (itr)->dr
+#define DR(itr) (itr)->r
 #define R_DOT(itr) (itr)->r_dot
 #define R_DOT_DOT(itr) (itr)->r_dot_dot
 #define PHI(itr) (itr)->phi
 #define PHI_DOT(itr) (itr)->phi_dot
-#define PHI_DOT_0(itr) (itr)->phi_dot_0
+#define PHI_DOT_0(itr) (itr)->initial_phi_dot
 #define DELTA_PHI(itr) (itr)->delta_phi
 #define GAMMA(itr) (itr)->gamma
 #define DELTA_PHI(itr) (itr)->delta_phi

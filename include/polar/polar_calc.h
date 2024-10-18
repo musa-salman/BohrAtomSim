@@ -23,7 +23,7 @@ struct radial_bounds
     @return double r_dot_dot
 
 */
-long double calc_R_dot_dot(long double mass, long double r, long double charge, long double k_sqr, long double Hbar_sqr);
+long double compute_r_dot_dot(long double mass, long double r, long double charge, long double k_sqr, long double Hbar_sqr);
 
 /**
 
@@ -37,7 +37,7 @@ long double calc_R_dot_dot(long double mass, long double r, long double charge, 
 
 
 */
-long double calc_phi_dot(long double l, long double mass, long double r);
+long double compute_phi_dot(long double l, long double mass, long double r);
 
 /**
     Calculates the R_max and the R_min for a given electron orbit
@@ -49,6 +49,6 @@ long double calc_phi_dot(long double l, long double mass, long double r);
         where a = n^2 * BOHR_R
         and   b = k/n * a
 */
-struct radial_bounds *compute_radial_limits(long double n, long double k);
+struct radial_bounds *compute_radial_limits(long double energy_level, long double k);
 
 #endif // EVAL_H

@@ -15,7 +15,7 @@ void end_iteration(struct sim_ctx *ctx)
 {
     ctx->end_time = clock();
     printf("\n\nfinished calculation for orbit N = %hi , K = %hi , M = %hi time = %f s \n\n",
-           ctx->orbit.n, ctx->orbit.k, ctx->orbit.m,
+           ctx->electron_orbit.principal, ctx->electron_orbit.angular, ctx->electron_orbit.magnetic,
            (double)(ctx->end_time - ctx->start_time) / CLOCKS_PER_SEC);
 }
 
@@ -23,7 +23,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type)
 {
     *itr = (struct sim_itr){
         .dt = 0,
-        .dr = 0,
+        .r = 0,
         .r_dot = 0,
         .r_dot_dot = 0,
         .phi = 0,
@@ -37,7 +37,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type)
         .theta_dot_dot = -1,
         // spin
         .epsilon = -1,
-        .phi_dot_0 = -1};
+        .initial_phi_dot = -1};
 
     if (type == REL_POLAR || type == REL_SPHERICAL || type == REL_SPIN)
     {
@@ -54,7 +54,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type)
     if (type == SPIN || type == REL_SPIN)
     {
         itr->epsilon = 0;
-        itr->phi_dot_0 = 0;
+        itr->initial_phi_dot = 0;
     }
 }
 
@@ -66,7 +66,7 @@ bool iterate(struct sim_ctx *ctx)
     enum sim_type type = ctx->config->type;
 
     next_itr->dt += TIME_INTERVAL(config);
-    next_itr->dr = R_DOT(curr_itr) + R_DOT(curr_itr) * TIME_INTERVAL(config);
+    next_itr->r = R_DOT(curr_itr) + R_DOT(curr_itr) * TIME_INTERVAL(config);
     next_itr->r_dot = R_DOT(curr_itr) + R_DOT_DOT(curr_itr) * TIME_INTERVAL(config);
     next_itr->phi = PHI(curr_itr) + PHI_DOT(curr_itr) * TIME_INTERVAL(config);
 
