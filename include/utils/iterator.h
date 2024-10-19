@@ -8,7 +8,7 @@
 struct sim_ctx {
     clock_t start_time;
     clock_t end_time;
-    struct electron_orbit electron_orbit;
+    struct electron_orbit* electron_orbit;
 
     struct sim_itr curr_itr;
     struct sim_itr next_itr;

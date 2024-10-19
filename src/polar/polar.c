@@ -10,66 +10,84 @@
 #include <utils/iterator.h>
 #include <utils/macros.h>
 
-void simulate_orbit(struct sim_ctx *ctx, struct electron_orbit *orbit);
-void handle_maximum_condition(
-    struct sim_itr *curr_itr, struct sim_itr *next_itr, const struct config *config,
-    FILE *res_f, long double *prev_max_vec, long double *prevR);
+void simulate_orbit(struct sim_ctx *ctx);
+bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l, long double Hbar_sqr,
+                         bool *is_maximum, long double *prev_max_vec, long double *prevR, FILE *res_f);
 
-void simulate_orbit_rel(struct sim_ctx *ctx, struct electron_orbit *orbit);
-void handle_maximum_condition_rel(
-    struct sim_itr *curr_itr, struct sim_itr *next_itr, const struct config *config,
-    FILE *res_f, long double *prev_max_vec, const long double *chi);
+void simulate_orbit_rel(struct sim_ctx *ctx);
+bool simulate_orbit_rel_step(struct sim_ctx *ctx, long double curr_l, long double Hbar_sqr,
+                             bool *is_maximum, long double *prev_max_vec, FILE *res_f);
 
 void polar_sim_ele(struct config *config)
 {
-    struct sim_itr *curr_itr = malloc(sizeof(*curr_itr));
-    struct sim_itr *next_itr = malloc(sizeof(*next_itr));
+    struct sim_itr curr_itr;
+    struct sim_itr next_itr;
 
-    size_t list_size = linked_list_size(config->filter_list);
+    const size_t list_size = linked_list_size(config->filter_list);
 
     struct sim_ctx ctx = {
         .config = config,
-        .curr_itr = *curr_itr,
-        .next_itr = *next_itr};
+        .curr_itr = curr_itr,
+        .next_itr = next_itr};
     for (int i = 0; i < list_size; i++)
     {
-        simulate_orbit(&ctx, (struct electron_orbit *)linked_list_pop(config->filter_list));
+        ctx.electron_orbit = (struct electron_orbit *)linked_list_pop(config->filter_list);
+        simulate_orbit(&ctx);
+        free(ctx.electron_orbit);
     }
-
-    free(curr_itr);
-    free(next_itr);
 }
 
-void handle_maximum_condition(
-    struct sim_itr *curr_itr, struct sim_itr *next_itr, const struct config *config,
-    FILE *res_f, long double *prev_max_vec, long double *prevR)
+bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l, long double Hbar_sqr, bool *is_maximum,
+                         long double *prev_max_vec, long double *prev_r, FILE *res_f)
 {
-    if (*prev_max_vec != 0)
-    {
-        curr_itr->delta_phi += curr_itr->phi - *prev_max_vec;
+    struct sim_itr *curr_itr = &ctx->curr_itr;
+    struct sim_itr *next_itr = &ctx->next_itr;
+    const struct config *config = ctx->config;
+    long double K = ctx->electron_orbit->angular;
+    long double K_sqr = K * K;
 
-        if (config->delta_psi_mode)
+    const bool is_at_interest = iterate(&ctx);
+
+    next_itr->r_dot_dot = compute_r_dot_dot(config->electron_mass, curr_itr->r,
+                                            config->electron_charge, K_sqr, Hbar_sqr);
+    next_itr->phi_dot = compute_phi_dot(curr_l, config->electron_mass, curr_itr->r);
+
+    if (!is_at_interest)
+        return false;
+
+    *is_maximum = !(*is_maximum);
+
+    if (*is_maximum)
+    {
+        if (*prev_max_vec != 0)
         {
-            log_iteration(res_f, curr_itr);
+            curr_itr->delta_phi += curr_itr->phi - *prev_max_vec;
+
+            if (config->delta_psi_mode)
+            {
+                log_iteration(res_f, curr_itr);
+            }
+
+            next_itr->delta_phi = curr_itr->delta_phi;
         }
 
-        next_itr->delta_phi = curr_itr->delta_phi;
+        *prev_r = R(curr_itr);
+        printf("r = %LE PHI = %LE\n", *prev_r, *prev_max_vec);
+        *prev_max_vec = PHI(curr_itr);
     }
 
-    *prevR = R(curr_itr);
-    printf("r = %LE PHI = %LE\n", *prevR, *prev_max_vec);
-    *prev_max_vec = PHI(curr_itr);
+    return is_at_interest;
 }
 
-void simulate_orbit(struct sim_ctx *ctx, struct electron_orbit *orbit)
+void simulate_orbit(struct sim_ctx *ctx)
 {
     start_iteration(&ctx);
     struct sim_itr *curr_itr = &ctx->curr_itr;
     struct sim_itr *next_itr = &ctx->next_itr;
     struct config *config = ctx->config;
 
-    double N = orbit->principal;
-    double K = orbit->angular;
+    double N = ctx->electron_orbit->principal;
+    double K = ctx->electron_orbit->angular;
 
     FILE *res_f = linked_list_pop(config->log_files);
 
@@ -99,25 +117,11 @@ void simulate_orbit(struct sim_ctx *ctx, struct electron_orbit *orbit)
     unsigned long j = 1;
     for (unsigned long it = 1; j < config->iters; it++)
     {
+        const bool is_at_interest = simulate_orbit_step(
+            ctx, curr_l, Hbar_sqr, &is_maximum,
+            &prev_max_vec, &prevR, res_f);
 
-        bool is_at_interest = iterate(&ctx);
-
-        next_itr->r_dot_dot = compute_r_dot_dot(config->electron_mass,
-                                             curr_itr->r, config->electron_charge,
-                                             K_sqr, Hbar_sqr);
-        next_itr->phi_dot = compute_phi_dot(curr_l, config->electron_mass, curr_itr->r);
-
-        if (is_at_interest)
-        {
-
-            is_maximum = !is_maximum;
-
-            if (is_maximum)
-            {
-                handle_maximum_condition(curr_itr, next_itr, config, res_f, &prev_max_vec, &prevR);
-            }
-        }
-        if (it % config->log_p == 0 && !(config->delta_psi_mode))
+        if (it % config->log_p == 0 && !config->delta_psi_mode)
         {
             log_iteration(res_f, curr_itr);
         }
@@ -135,49 +139,87 @@ void simulate_orbit(struct sim_ctx *ctx, struct electron_orbit *orbit)
             }
         }
 
-        struct sim_itr *temp = curr_itr;
-        curr_itr = next_itr;
-        next_itr = temp;
+        const struct sim_itr *temp = curr_itr;
+        ctx->curr_itr = *next_itr;
+        ctx->next_itr = *temp;
     }
 
     log_iteration(res_f, curr_itr);
     end_iteration(&ctx);
     free(radial_bounds);
     fclose(res_f);
-    free(orbit);
 }
 
 void polar_sim_rel_ele(struct config *config)
 {
-    struct sim_itr *curr_itr;
-    struct sim_itr *next_itr;
-
-    // keep track of vars for iteration i adn a i+1
-    curr_itr = malloc(sizeof(*curr_itr));
-    next_itr = malloc(sizeof(*next_itr));
+    struct sim_itr curr_itr;
+    struct sim_itr next_itr;
 
     size_t list_size = linked_list_size(config->filter_list);
     struct sim_ctx ctx = {
         .config = config,
-        .curr_itr = *curr_itr,
-        .next_itr = *next_itr};
+        .curr_itr = curr_itr,
+        .next_itr = next_itr};
     for (int i = 0; i < list_size; i++)
     {
-        simulate_orbit_rel(&ctx, (struct electron_orbit *)linked_list_pop(config->filter_list));
+        ctx.electron_orbit = (struct electron_orbit *)linked_list_pop(config->filter_list);
+        simulate_orbit_rel(&ctx);
+        free(ctx.electron_orbit);
     }
-
-    free(curr_itr);
-    free(next_itr);
 }
 
-void simulate_orbit_rel(struct sim_ctx *ctx, struct electron_orbit *orbit)
+bool simulate_orbit_rel_step(struct sim_ctx *ctx, long double curr_l, long double Hbar_sqr,
+                             bool *is_maximum, long double *prev_max_vec, FILE *res_f)
+{
+    const struct config *config = ctx->config;
+    struct sim_itr *curr_itr = &ctx->curr_itr;
+    struct sim_itr *next_itr = &ctx->next_itr;
+    long double K = ctx->electron_orbit->angular;
+    long double K_sqr = K * K;
+    const bool is_at_interest = iterate(&ctx);
+
+    next_itr->r_dot_dot = calc_rel_r_dot_dot(
+        K_sqr * Hbar_sqr, config->electron_mass, curr_itr->gamma,
+        curr_itr->r, config->electron_charge, curr_itr->r_dot);
+
+    next_itr->phi_dot = calc_rel_phi_dot(curr_l, curr_itr->gamma, curr_itr->r, config->electron_mass);
+
+    if (!is_at_interest)
+        return false;
+    *is_maximum = !(*is_maximum);
+    if (*is_maximum)
+    {
+        long double chi = calc_rel_chi(config->electron_mass, config->electron_charge, ctx->electron_orbit->angular);
+
+        if (*prev_max_vec != 0)
+        {
+
+            curr_itr->delta_phi += PHI(curr_itr) - *prev_max_vec;
+            if (config->delta_psi_mode)
+            {
+                log_iteration(res_f, curr_itr);
+            }
+            next_itr->delta_phi = DELTA_PHI(curr_itr);
+
+            printf(" currMaxth - prevMaxVec  %LE, accurate %LE \n", PHI(curr_itr) - *prev_max_vec,
+                   (((2 * PI) / chi) - 2 * PI));
+        }
+
+        *prev_max_vec = PHI(curr_itr);
+    }
+
+    next_itr->gamma = calc_rel_gamma(curr_l, config->electron_mass, R(curr_itr), R_DOT(curr_itr));
+    return is_at_interest;
+}
+
+void simulate_orbit_rel(struct sim_ctx *ctx)
 {
     struct config *config = ctx->config;
     struct sim_itr *curr_itr = &ctx->curr_itr;
     struct sim_itr *next_itr = &ctx->next_itr;
 
-    double N = orbit->principal;
-    double K = orbit->angular;
+    double N = ctx->electron_orbit->principal;
+    double K = ctx->electron_orbit->angular;
 
     FILE *res_f = linked_list_pop(config->log_files);
 
@@ -215,28 +257,9 @@ void simulate_orbit_rel(struct sim_ctx *ctx, struct electron_orbit *orbit)
     };
     for (unsigned long it = 1; j < config->iters; it++)
     {
-
-        is_at_interest = iterate(&ctx);
-
-        next_itr->r_dot_dot = calc_rel_r_dot_dot(
-            K_sqr * Hbar_sqr, config->electron_mass, curr_itr->gamma,
-            curr_itr->r, config->electron_charge, curr_itr->r_dot);
-
-        next_itr->phi_dot = calc_rel_phi_dot(curr_l, curr_itr->gamma, curr_itr->r, config->electron_mass);
-
-        if (is_at_interest)
-        {
-            at_max = !at_max;
-            if (at_max)
-            {
-                long double chi = calc_rel_chi(config->electron_mass, config->electron_charge, K);
-                handle_maximum_condition_rel(
-                    curr_itr, next_itr, config, res_f,
-                    &prev_max_vec, &chi);
-            }
-        }
-
-        next_itr->gamma = calc_rel_gamma(curr_l, config->electron_mass, R(curr_itr), R_DOT(curr_itr));
+        is_at_interest = simulate_orbit_rel_step(
+            &ctx, curr_l, Hbar_sqr, &at_max,
+            &prev_max_vec, res_f);
 
         if (it % config->log_p == 0 && !(config->delta_psi_mode))
         {
@@ -255,8 +278,8 @@ void simulate_orbit_rel(struct sim_ctx *ctx, struct electron_orbit *orbit)
             }
         }
         struct sim_itr *temp = curr_itr;
-        curr_itr = next_itr;
-        next_itr = temp;
+        ctx->curr_itr = *next_itr;
+        ctx->next_itr = *temp;
     }
 
     free(radial_bounds);
@@ -264,27 +287,4 @@ void simulate_orbit_rel(struct sim_ctx *ctx, struct electron_orbit *orbit)
     log_iteration(res_f, curr_itr);
 
     fclose(res_f);
-    free(orbit);
-}
-
-void handle_maximum_condition_rel(
-    struct sim_itr *curr_itr, struct sim_itr *next_itr, const struct config *config,
-    FILE *res_f, long double *prev_max_vec, const long double *chi)
-{
-
-    if (*prev_max_vec != 0)
-    {
-
-        curr_itr->delta_phi += PHI(curr_itr) - *prev_max_vec;
-        if (config->delta_psi_mode)
-        {
-            log_iteration(res_f, curr_itr);
-        }
-        next_itr->delta_phi = DELTA_PHI(curr_itr);
-
-        printf(" currMaxth - prevMaxVec  %LE, acurrate %LE \n", PHI(curr_itr) - *prev_max_vec,
-               (((2 * PI) / *chi) - 2 * PI));
-    }
-
-    *prev_max_vec = PHI(curr_itr);
 }

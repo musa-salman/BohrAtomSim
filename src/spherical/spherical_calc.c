@@ -13,6 +13,7 @@ long double sphere_calc_phi_dot(
     long double N_phi, long double Hbar, long double theta,
     long double mass, long double r)
 {
+    // TODO: in docs gamma was part of the equation but in the code it is not
 
     long double arg1 = N_phi * Hbar;
 

@@ -88,7 +88,7 @@ void log_iteration(FILE *result_f, const struct sim_itr *itr)
 {
     fprintf(result_f, "t= %LE\t", DT(itr));
 
-    fprintf(result_f, "r= %LE\t", DR(itr));
+    fprintf(result_f, "r= %LE\t", R(itr));
 
     fprintf(result_f, "r'= %LE\t", R_DOT(itr));
     fprintf(result_f, "r''= %LE\t", R_DOT_DOT(itr));
