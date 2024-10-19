@@ -21,17 +21,7 @@ void linked_list_free(struct linked_list* list);
 
 void linked_list_append(struct linked_list* list, void* data);
 
-void linked_list_prepend(struct linked_list* list, void* data);
-
 void* linked_list_pop(struct linked_list* list);
-
-void* linked_list_remove(struct linked_list* list, size_t index);
-
-void* linked_list_get(struct linked_list* list, size_t index);
-
-void linked_list_insert(struct linked_list* list, size_t index, void* data);
-
-void linked_list_set(struct linked_list* list, size_t index, void* data);
 
 void linked_list_print(struct linked_list* list, void (*print)(void*));
 
