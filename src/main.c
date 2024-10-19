@@ -3,7 +3,8 @@
 #include <math.h>
 #include <time.h>
 
-#include <polar/polar.h>
+#include <polar/polar_sim.h>
+#include <polar/polar_sim_rel.h>
 #include <spherical/spherical.h>
 #include <spin/spin.h>
 #include <config.h>
