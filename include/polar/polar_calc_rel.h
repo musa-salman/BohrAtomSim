@@ -47,7 +47,7 @@ long double calc_rel_gamma(long double l, long double mass, long double r, long 
 long double calc_rel_r_dot_dot(long double l_sqr, long double mass, long double gamma, long double r, long double charge, long double r_dot);
 
 /**
- * @brief calcuates the analitcal ratio of the apocenter
+ * @brief calculates the analytical ratio of the apocenter
  *
  *          CHI = (1 - (e^2 / (h_bar*C*energy_level))^2)
  *
@@ -60,7 +60,7 @@ long double calc_rel_r_dot_dot(long double l_sqr, long double mass, long double 
 long double calc_rel_chi(long double h_bar, long double charge, long double energy_level);
 
 /**
- * @brief Calculates Rmin with relativty incorporated the starting point of the simulation
+ * @brief Calculates Rmin with relativity incorporated the starting point of the simulation
  *
  *                      RMIN = ( ( -B + (B^2 - A*C)^0.5 ) / A )
  * @param a

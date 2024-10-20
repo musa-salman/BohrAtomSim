@@ -24,11 +24,4 @@
 #define CHARGE(config) (config)->electron_charge
 #define LOG_P(config) (config)->log_p
 
-// constants 
-// TODO: move them to a constants.h file
-#define BOHR_R 5.29177210903e-9
-#define PI 3.14159265358979323846
-#define _2_PI 6.28318530717958647692
-#define C 29979245800
-
 #endif // MACROS_H

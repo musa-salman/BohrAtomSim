@@ -13,16 +13,12 @@ struct config
     // TODO what is delta_psi_mode?
     bool delta_psi_mode;
     int log_p; // the number of iterations to skip before logging
-    int iters; // number of iteration to run
+    size_t iters; // number of iteration to run
     long double revolutions;
     long double electron_charge; // electron charge value = 4.803e-10 esu
     long double electron_mass;   // electron max value = 9.109383e-28 g
     long double time_interval;   // time elapsed between each iteration
-
-    // TODO what is l? what is Hbar?
-    long double Hbar; // inital value of l if needs to be changed
-
-    // TODO is this filter list?
+    
     struct linked_list *filter_list; // contains the exact orbits to simulate
     struct linked_list *log_files;   // contains the files to write
     char *timestamp;                 // the id of the test results

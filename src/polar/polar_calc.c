@@ -1,20 +1,19 @@
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 
-#include <polar/polar_calc.h>
-#include <utils/macros.h>
+#include "polar/polar_calc.h"
+#include "utils/constants.h"
 
 long double compute_phi_dot(long double l, long double mass, long double r)
 {
     return l / (mass * r * r);
 }
 
-long double compute_r_dot_dot(long double mass, long double r, long double charge,
-                           long double k_sqr, long double Hbar_sqr)
+long double compute_r_dot_dot(
+    long double mass, long double r,
+    long double charge, long double k)
 {
-    // TODO: what is Hbar_sqr?
-    return ((k_sqr * Hbar_sqr) / (mass * r * r * r)) - (charge * charge / (r * r));
+    return ((k * k * H_BAR_SQR) / (mass * r * r * r)) - (charge * charge / (r * r));
 }
 
 struct radial_bounds *compute_radial_limits(long double principle, long double angular)

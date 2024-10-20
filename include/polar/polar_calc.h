@@ -23,7 +23,7 @@ struct radial_bounds
     @return double r_dot_dot
 
 */
-long double compute_r_dot_dot(long double mass, long double r, long double charge, long double k_sqr, long double Hbar_sqr);
+long double compute_r_dot_dot(long double mass, long double r, long double charge, long double k_sqr);
 
 /**
 

@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <float.h>
-#include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -10,10 +9,7 @@
 #include <spherical/spherical_calc_rel.h>
 #include <polar/polar_calc.h>
 #include <polar/polar_calc_rel.h>
-#include <utils/macros.h>
-#include <utils/types.h>
-#include <utils/linked_list.h>
-#include <utils/iterator.h>
+#include <utils/utils.h>
 
 void spherical_sim_ele(struct config *config)
 {
@@ -22,8 +18,6 @@ void spherical_sim_ele(struct config *config)
 
     bool is_at_interest = false;
 
-    long double Hbar_sqr = HBAR(config) * HBAR(config);
-    
     size_t list_size = linked_list_size(config->filter_list);
 
     struct sim_ctx ctx = {
@@ -70,7 +64,7 @@ void spherical_sim_ele(struct config *config)
         {
             next_itr->phi = PI / 2;
             curr_itr->phi = PI / 2;
-            curr_itr->theta_dot = sphere_calc_spc_case_theta_dot(K, HBAR(config), MASS(config), R(curr_itr));
+            curr_itr->theta_dot = sphere_calc_spc_case_theta_dot(K, H_BAR, MASS(config), R(curr_itr));
             next_itr->theta_dot = THETA_DOT(curr_itr);
 
             curr_itr->phi_dot = 0;
@@ -79,13 +73,13 @@ void spherical_sim_ele(struct config *config)
         else
         {
 
-            curr_itr->phi_dot = sphere_calc_phi_dot(N_phi, HBAR(config), THETA(curr_itr),
+            curr_itr->phi_dot = sphere_calc_phi_dot(N_phi, H_BAR, THETA(curr_itr),
                                                     MASS(config), R(curr_itr));
             curr_itr->theta_dot_dot = sphere_calc_theta_dot_dot(
                 R(curr_itr), R_DOT(curr_itr),
                 THETA(curr_itr), THETA_DOT(curr_itr), PHI_DOT(curr_itr));
         }
-        next_itr->r_dot_dot = sphere_calc_r_dot_dot(MASS(config), R(curr_itr), CHARGE(config), K_sqr, Hbar_sqr);
+        next_itr->r_dot_dot = sphere_calc_r_dot_dot(MASS(config), R(curr_itr), CHARGE(config), K_sqr, H_BAR_SQR);
 
         log_iteration(res_f, curr_itr);
 
@@ -97,7 +91,7 @@ void spherical_sim_ele(struct config *config)
 
             if (m == K)
             {
-                curr_itr->theta_dot = sign * sphere_calc_spc_case_theta_dot(K, HBAR(config), MASS(config), R(curr_itr));
+                curr_itr->theta_dot = sign * sphere_calc_spc_case_theta_dot(K, H_BAR, MASS(config), R(curr_itr));
                 next_itr->theta_dot = THETA_DOT(curr_itr);
 
                 if (THETA(curr_itr) >= PI && !theta_flag)
@@ -117,14 +111,14 @@ void spherical_sim_ele(struct config *config)
             }
             else
             {
-                next_itr->phi_dot = sphere_calc_phi_dot(N_phi, HBAR(config), THETA(curr_itr),
+                next_itr->phi_dot = sphere_calc_phi_dot(N_phi, H_BAR, THETA(curr_itr),
                                                         MASS(config), R(curr_itr));
                 next_itr->theta_dot_dot = sphere_calc_theta_dot_dot(R(curr_itr), R_DOT(curr_itr),
                                                                     THETA(curr_itr), THETA_DOT(curr_itr),
                                                                     PHI_DOT(curr_itr));
             }
 
-            next_itr->r_dot_dot = sphere_calc_r_dot_dot(MASS(config), R(curr_itr), CHARGE(config), K_sqr, Hbar_sqr);
+            next_itr->r_dot_dot = sphere_calc_r_dot_dot(MASS(config), R(curr_itr), CHARGE(config), K_sqr, H_BAR_SQR);
 
             if (is_at_interest)
             {
@@ -197,8 +191,6 @@ void spherical_sim_rel_ele(struct config *config)
 
     bool is_interested = false;
 
-    long double Hbar_sqr = HBAR(config) * HBAR(config);
-
     size_t list_size = linked_list_size(config->filter_list);
 
     struct sim_ctx ctx = {
@@ -215,7 +207,7 @@ void spherical_sim_rel_ele(struct config *config)
         long double K = curr_orbit->angular;
         long double m = curr_orbit->magnetic;
 
-        long double curr_l = HBAR(config) * K;
+        long double curr_l = H_BAR * K;
         long double K_sqr = K * K;
 
         struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
@@ -249,7 +241,7 @@ void spherical_sim_rel_ele(struct config *config)
             curr_itr->phi = PI / 2;
 
             curr_itr->theta_dot = sign * rel_sphere_calc_spc_case_theta_dot(
-                                             K, HBAR(config), MASS(config),
+                                             K, H_BAR, MASS(config),
                                              R(curr_itr), GAMMA(curr_itr));
 
             if (THETA(curr_itr) >= PI && !theta_flag)
@@ -268,7 +260,7 @@ void spherical_sim_rel_ele(struct config *config)
         {
 
             curr_itr->phi_dot = rel_sphere_calc_phi_dot(
-                N_phi, HBAR(config), THETA(curr_itr),
+                N_phi, H_BAR, THETA(curr_itr),
                 MASS(config), R(curr_itr), GAMMA(curr_itr));
 
             curr_itr->theta_dot_dot = rel_sphere_calc_theta_dot_dot((spherical_calc_rel_params){
@@ -276,7 +268,7 @@ void spherical_sim_rel_ele(struct config *config)
         }
 
         curr_itr->r_dot_dot = rel_sphere_calc_r_dot_dot(
-            K_sqr, Hbar_sqr, MASS(config),
+            K_sqr, H_BAR_SQR, MASS(config),
             GAMMA(curr_itr), R(curr_itr), CHARGE(config),
             R_DOT(curr_itr));
 
@@ -324,9 +316,7 @@ void spherical_sim_rel_ele(struct config *config)
                     R(curr_itr), GAMMA(curr_itr));
 
                 next_itr->theta_dot_dot = rel_sphere_calc_theta_dot_dot((spherical_calc_rel_params){
-                    .r = R(curr_itr), .r_dot = R_DOT(curr_itr), .theta = THETA(curr_itr), 
-                    .theta_dot = THETA_DOT(curr_itr), .phi_dot = PHI_DOT(curr_itr),
-                     .charge = CHARGE(config), .mass = MASS(config), .gamma = GAMMA(curr_itr)});
+                    .r = R(curr_itr), .r_dot = R_DOT(curr_itr), .theta = THETA(curr_itr), .theta_dot = THETA_DOT(curr_itr), .phi_dot = PHI_DOT(curr_itr), .charge = CHARGE(config), .mass = MASS(config), .gamma = GAMMA(curr_itr)});
             }
 
             next_itr->r_dot_dot = rel_sphere_calc_r_dot_dot(
