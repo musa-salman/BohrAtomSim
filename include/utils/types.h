@@ -11,27 +11,6 @@ enum sim_type
     REL_SPIN
 };
 
-struct electron_orbit
-{
-    /**
-     * The principal quantum number is orbital size and energy level (n)
-     * n = 1, 2, 3,...
-     */
-    unsigned char principal;
-
-    /**
-     * The azimuthal quantum number is the orbital shape aka subshell (l)
-     * l = 0, 1, 2,..., n-1
-     */
-    unsigned char angular;
-
-    /**
-     * The magnetic quantum number is the orbital orientation (m)
-     * m = -l, -l+1, ..., 0, ..., l-1, l
-     */
-    signed char magnetic;
-};
-
 // simulation iteration to hold the current and next iteration values
 struct sim_itr
 {
