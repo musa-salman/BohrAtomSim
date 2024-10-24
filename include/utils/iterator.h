@@ -1,29 +1,27 @@
 #ifndef ITERATOR_H
 #define ITERATOR_H
 
-#include <stdio.h>
-#include <time.h>
 #include "types.h"
+#include <time.h>
 
-struct sim_ctx {
+struct iter_ctx {
     clock_t start_time;
     clock_t end_time;
-    struct electron_orbit* electron_orbit;
 
-    struct sim_itr curr_itr;
-    struct sim_itr next_itr;
+    unsigned char orbit_i;
+    struct electron_orbit *electron_orbit;
 
-    struct config *config;
+    struct sim_itr *curr_itr;
+    struct sim_itr *next_itr;
 };
 
-void start_iteration(struct sim_ctx *ctx);
+void start_iteration(struct iter_ctx *ctx);
 
-void end_iteration(struct sim_ctx *ctx);
+void end_iteration(struct iter_ctx *ctx);
 
-bool iterate(struct sim_ctx *ctx);
+bool iterate(struct iter_ctx *ctx, long double time_interval,
+             enum sim_type type);
 
 void init_iteration(struct sim_itr *itr, enum sim_type type);
-
-void log_iteration(FILE *result_f, const struct sim_itr *itr);
 
 #endif // ITERATOR_H
