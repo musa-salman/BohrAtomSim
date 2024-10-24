@@ -1,77 +1,76 @@
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 
-#include "config.h"
-#include <polar/polar_calc.h>
-#include <polar/polar_sim.h>
-#include <utils/utils.h>
+#include "atom/atom_bohr_sim.h"
+#include "polar/polar_calc.h"
+#include "polar/polar_sim.h"
+#include "utils/constants.h"
+#include "utils/iterator.h"
+#include "utils/macros.h"
+#include "utils/types.h"
 
 void simulate_orbit(struct sim_ctx *ctx);
 bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
                          bool *is_maximum, long double *prev_max_vec,
-                         long double *prevR, FILE *res_f);
+                         long double *prevR);
 
-void polar_sim_ele(struct config *config) {
-    const size_t list_size = linked_list_size(config->filter_list);
-
-    struct sim_ctx ctx = {.config = config};
-    for (size_t i = 0; i < list_size; i++) {
-        ctx.electron_orbit = linked_list_pop(config->filter_list);
-        simulate_orbit(&ctx);
-        free(ctx.electron_orbit);
+void polar_sim_ele(struct sim_ctx *ctx) {
+    ctx->iter_ctx->orbit_i = 0;
+    for (; ctx->iter_ctx->orbit_i < ctx->atom->electrons_count;
+         ctx->iter_ctx->orbit_i++) {
+        ctx->iter_ctx->electron_orbit =
+            ctx->atom->electrons + ctx->iter_ctx->orbit_i;
+        simulate_orbit(ctx);
     }
 }
 
 bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
                          bool *is_maximum, long double *prev_max_vec,
-                         long double *prev_r, FILE *res_f) {
-    struct sim_itr *curr_itr = &ctx->curr_itr;
-    struct sim_itr *next_itr = &ctx->next_itr;
-    const struct config *config = ctx->config;
-    long double K = ctx->electron_orbit->angular;
+                         long double *prev_r) {
+    struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
+    struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
+    long double K = ctx->iter_ctx->electron_orbit->angular;
 
-    const bool is_at_interest = iterate(ctx);
+    const bool is_at_interest =
+        iterate(ctx->iter_ctx, ctx->time_interval, POLAR);
 
-    next_itr->r_dot_dot = compute_r_dot_dot(config->electron_mass, curr_itr->r,
-                                            config->electron_charge, K);
+    next_itr->r_dot_dot = compute_r_dot_dot(
+        ctx->atom->electron_mass, curr_itr->r, ctx->atom->electron_charge, K);
     next_itr->phi_dot =
-        compute_phi_dot(curr_l, config->electron_mass, curr_itr->r);
+        compute_phi_dot(curr_l, ctx->atom->electron_mass, curr_itr->r);
 
     if (!is_at_interest)
         return false;
 
     *is_maximum = !(*is_maximum);
+    if (!(*is_maximum))
+        return true;
 
-    if (*is_maximum) {
-        if (*prev_max_vec != 0) {
-            curr_itr->delta_phi += curr_itr->phi - *prev_max_vec;
+    if (*prev_max_vec != 0) {
+        curr_itr->delta_phi += curr_itr->phi - *prev_max_vec;
 
-            if (config->delta_psi_mode) {
-                log_iteration(res_f, curr_itr);
-            }
-
-            next_itr->delta_phi = curr_itr->delta_phi;
+        if (ctx->delta_psi_mode) {
+            RECORD_ITERATION(ctx, curr_itr);
         }
 
-        *prev_r = R(curr_itr);
-        printf("r = %LE PHI = %LE\n", *prev_r, *prev_max_vec);
-        *prev_max_vec = PHI(curr_itr);
+        next_itr->delta_phi = curr_itr->delta_phi;
     }
 
-    return is_at_interest;
+    *prev_r = R(curr_itr);
+    *prev_max_vec = PHI(curr_itr);
+
+    return true;
 }
 
 void simulate_orbit(struct sim_ctx *ctx) {
-    start_iteration(ctx);
-    struct sim_itr *curr_itr = &ctx->curr_itr;
-    struct sim_itr *next_itr = &ctx->next_itr;
-    struct config *config = ctx->config;
+    struct iter_ctx *iter_ctx = ctx->iter_ctx;
+    start_iteration(iter_ctx);
+    struct sim_itr *curr_itr = iter_ctx->curr_itr;
+    struct sim_itr *next_itr = iter_ctx->next_itr;
+    const struct atom *atom = ctx->atom;
 
-    double N = ctx->electron_orbit->principal;
-    double K = ctx->electron_orbit->angular;
-
-    FILE *res_f = linked_list_pop(config->log_files);
+    double N = iter_ctx->electron_orbit->principal;
+    double K = iter_ctx->electron_orbit->angular;
 
     struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
     long double curr_l = H_BAR * K;
@@ -79,44 +78,40 @@ void simulate_orbit(struct sim_ctx *ctx) {
     long double prev_max_vec = 0;
     long double prevR = 0;
 
-    init_iteration(curr_itr, config->type);
-    init_iteration(next_itr, config->type);
+    init_iteration(curr_itr, POLAR);
+    init_iteration(next_itr, POLAR);
 
     curr_itr->r = radial_bounds->r_min;
-    curr_itr->r_dot_dot = compute_r_dot_dot(config->electron_mass, curr_itr->r,
-                                            config->electron_charge, K);
-    curr_itr->phi_dot =
-        compute_phi_dot(curr_l, config->electron_mass, curr_itr->r);
+    curr_itr->r_dot_dot =
+        compute_r_dot_dot(MASS(atom), curr_itr->r, CHARGE(atom), K);
+    curr_itr->phi_dot = compute_phi_dot(curr_l, MASS(atom), curr_itr->r);
 
-    long double revolutions = config->revolutions;
+    long double revolutions = ctx->revolutions;
 
     bool is_maximum = true;
 
-    unsigned long j = 1;
-    for (unsigned long it = 1; j < config->iters; it++) {
-        const bool is_at_interest = simulate_orbit_step(
-            ctx, curr_l, &is_maximum, &prev_max_vec, &prevR, res_f);
+    for (unsigned long it = 1; it < ctx->max_iters; it++) {
 
-        if (it % config->log_p == 0 && !config->delta_psi_mode) {
-            log_iteration(res_f, curr_itr);
+        const bool is_at_interest = simulate_orbit_step(
+            ctx, curr_l, &is_maximum, &prev_max_vec, &prevR);
+
+        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode) {
+            RECORD_ITERATION(ctx, curr_itr);
         }
 
-        if (config->itr_mode) {
-            j++;
-        } else if (is_at_interest) {
+        if (is_at_interest) {
             revolutions -= 0.5;
             if (revolutions <= 0) {
                 break;
             }
         }
 
-        const struct sim_itr *temp = curr_itr;
-        ctx->curr_itr = *next_itr;
-        ctx->next_itr = *temp;
+        struct sim_itr *temp = curr_itr;
+        iter_ctx->curr_itr = next_itr;
+        iter_ctx->next_itr = temp;
     }
 
-    log_iteration(res_f, curr_itr);
-    end_iteration(ctx);
+    RECORD_ITERATION(ctx, curr_itr);
+    end_iteration(iter_ctx);
     free(radial_bounds);
-    fclose(res_f);
 }
