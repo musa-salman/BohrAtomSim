@@ -1,7 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-enum sim_type
+enum sim_type: unsigned char
 {
     POLAR,
     REL_POLAR,

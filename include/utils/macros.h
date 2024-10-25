@@ -17,11 +17,11 @@
 #define THETA_DOT_DOT(itr) (itr)->theta_dot_dot
 #define EPSILON(itr) (itr)->epsilon
 
-// config macros
-#define TIME_INTERVAL(config) (config)->time_interval
-#define HBAR(config) (config)->Hbar
-#define MASS(config) (config)->electron_mass
-#define CHARGE(config) (config)->electron_charge
-#define LOG_P(config) (config)->log_p
+// atom macros
+#define TIME_INTERVAL(ctx) (ctx)->time_interval
+#define HBAR(atom) (atom)->Hbar
+#define MASS(atom) (atom)->electron_mass
+#define CHARGE(atom) (atom)->electron_charge
+#define LOG_P(atom) (atom)->log_p
 
 #endif // MACROS_H

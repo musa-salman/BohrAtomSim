@@ -8,7 +8,12 @@ bin/
 lib/
 
 build/
+.venv/
 
-# Ignore temporary files
+__pycache__/
+test.py
+
 *.tmp
 *.log
+*.egg-info
+*.so
