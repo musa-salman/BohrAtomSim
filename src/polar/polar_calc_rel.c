@@ -78,7 +78,10 @@ long double calc_rel_rmin(long double a, long double b, long double c) {
 
 long double calc_rel_A(long double m, long double w) {
     long double arg1 = w * w;
-    arg1 /= (C * C);
+
+    // its separated to avoid overflow
+    arg1 /= C;
+    arg1 /= C;
 
     long double arg2 = 2 * m * w;
 
@@ -88,7 +91,10 @@ long double calc_rel_A(long double m, long double w) {
 long double calc_rel_B(long double m, long double e, long double w) {
     long double e_sqr = e * e;
     long double arg1 = e_sqr * w;
-    arg1 /= (C * C);
+
+    // its separated to avoid overflow
+    arg1 /= C;
+    arg1 /= C;
 
     long double arg2 = m * e_sqr;
 
@@ -97,14 +103,17 @@ long double calc_rel_B(long double m, long double e, long double w) {
 
 long double calc_rel_C(long double l_sqr, long double e) {
     long double arg1 = e * e * e * e;
-    arg1 /= (C * C);
+
+    // its separated to avoid overflow
+    arg1 /= C;
+    arg1 /= C;
 
     return l_sqr - arg1;
 }
 
 long double calc_rel_w(long double energy_level, long double h_mult,
                        long double m, long double alpha) {
-    long double alpha_sqr = (alpha * alpha);
+    long double alpha_sqr = alpha * alpha;
 
     long double h_mult_sqr = h_mult * h_mult;
 
