@@ -31,7 +31,7 @@ long double rel_sphere_calc_spc_case_r_dot_dot(long double r, long double theta_
 
 long double rel_sphere_calc_spc_case_theta_dot(long double k, long double Hbar, long double mass, long double r, long double gamma);
 
-long double rel_sphere_calc_delta_phi(const long double *curr_max_vec, const long double *prev_max_vec, long double rMax);
+long double rel_sphere_calc_delta_phi(const long double *curr_max_vec, const long double *prev_max_vec);
 
 long double *stoc(long double roh, long double phi, long double theta);
 

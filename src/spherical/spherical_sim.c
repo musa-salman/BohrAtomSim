@@ -12,8 +12,8 @@
 
 static void simulate_orbit(struct sim_ctx *ctx);
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
-                                long double **prev_max_vec, long double r_max,
-                                int *sign, bool *theta_flag, long double N_phi,
+                                long double **prev_max_vec, int *sign,
+                                bool *theta_flag, long double N_phi,
                                 long double k_sqr);
 
 void spherical_sim_ele(struct sim_ctx *ctx) {
@@ -85,8 +85,7 @@ static void simulate_orbit(struct sim_ctx *ctx) {
     for (size_t it = 0; it < ctx->max_iters; it++) {
 
         const bool is_at_interest = simulate_orbit_step(
-            ctx, &at_max, &prev_max_vec, radial_bounds->r_max, &sign,
-            &theta_flag, N_phi, k_sqr);
+            ctx, &at_max, &prev_max_vec, &sign, &theta_flag, N_phi, k_sqr);
 
         if (it % ctx->record_interval == 0 && !(ctx->delta_psi_mode)) {
             RECORD_ITERATION(ctx, curr_itr);
@@ -109,8 +108,8 @@ static void simulate_orbit(struct sim_ctx *ctx) {
 }
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
-                                long double **prev_max_vec, long double r_max,
-                                int *sign, bool *theta_flag, long double N_phi,
+                                long double **prev_max_vec, int *sign,
+                                bool *theta_flag, long double N_phi,
                                 long double k_sqr) {
     const struct atom *atom = ctx->atom;
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
@@ -160,7 +159,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
 
     if (*prev_max_vec != NULL) {
         curr_itr->delta_phi =
-            rel_sphere_calc_delta_phi(curr_max_vec, *prev_max_vec, r_max);
+            rel_sphere_calc_delta_phi(curr_max_vec, *prev_max_vec);
 
         if (ctx->delta_psi_mode) {
             RECORD_ITERATION(ctx, curr_itr);

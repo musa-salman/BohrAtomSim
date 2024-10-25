@@ -1,9 +1,8 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <spherical/spherical_calc_rel.h>
-#include <utils/macros.h>
-#include <utils/types.h>
+#include "spherical/spherical_calc_rel.h"
+#include "utils/constants.h"
 
 long double rel_sphere_calc_r_dot_dot(long double k_sqr, long double Hbar_sqr,
                                       long double mass, long double gamma,
