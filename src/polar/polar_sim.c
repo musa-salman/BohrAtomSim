@@ -9,10 +9,10 @@
 #include "utils/macros.h"
 #include "utils/types.h"
 
-void simulate_orbit(struct sim_ctx *ctx);
-bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
-                         bool *is_maximum, long double *prev_max_vec,
-                         long double *prevR);
+static void simulate_orbit(struct sim_ctx *ctx);
+static bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
+                                bool *is_maximum, long double *prev_max_vec,
+                                long double *prevR);
 
 void polar_sim_ele(struct sim_ctx *ctx) {
     ctx->iter_ctx->orbit_i = 0;
@@ -24,9 +24,9 @@ void polar_sim_ele(struct sim_ctx *ctx) {
     }
 }
 
-bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
-                         bool *is_maximum, long double *prev_max_vec,
-                         long double *prev_r) {
+static bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
+                                bool *is_maximum, long double *prev_max_vec,
+                                long double *prev_r) {
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
     long double K = ctx->iter_ctx->electron_orbit->angular;
@@ -62,7 +62,7 @@ bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
     return true;
 }
 
-void simulate_orbit(struct sim_ctx *ctx) {
+static void simulate_orbit(struct sim_ctx *ctx) {
     struct iter_ctx *iter_ctx = ctx->iter_ctx;
     start_iteration(iter_ctx);
     struct sim_itr *curr_itr = iter_ctx->curr_itr;
