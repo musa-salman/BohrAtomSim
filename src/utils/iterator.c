@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <time.h>
 
 #include "utils/constants.h"

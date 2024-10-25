@@ -1,8 +1,10 @@
 #ifndef ITERATOR_H
 #define ITERATOR_H
 
-#include "types.h"
 #include <time.h>
+#include <stdbool.h>
+
+#include "types.h"
 
 struct iter_ctx {
     clock_t start_time;

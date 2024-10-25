@@ -3,6 +3,8 @@
 
 #include <Python.h>
 
+#include <stdbool.h>
+
 #include "utils/iterator.h"
 
 typedef void (*record_func)(void *record_in, const unsigned char orbit_i,
