@@ -58,84 +58,6 @@ long double calc_rel_r_dot_dot(long double l_sqr, long double m,
 
     return arg1;
 }
-
-long double calc_rel_rmin(long double a, long double b, long double c) {
-    long double arg1 = b * b;
-
-    arg1 -= (a * c);
-    if (arg1 < 0) {
-        printf("WARNING negative under sqrt with value = %LE\n\n", arg1);
-        arg1 = 0;
-    }
-    arg1 = sqrtl(arg1);
-
-    long double arg2 = -1 * b;
-
-    arg2 += arg1;
-
-    return (arg2 / a);
-}
-
-long double calc_rel_A(long double m, long double w) {
-    long double arg1 = w * w;
-
-    // its separated to avoid overflow
-    arg1 /= C;
-    arg1 /= C;
-
-    long double arg2 = 2 * m * w;
-
-    return arg1 + arg2;
-}
-
-long double calc_rel_B(long double m, long double e, long double w) {
-    long double e_sqr = e * e;
-    long double arg1 = e_sqr * w;
-
-    // its separated to avoid overflow
-    arg1 /= C;
-    arg1 /= C;
-
-    long double arg2 = m * e_sqr;
-
-    return arg1 + arg2;
-}
-
-long double calc_rel_C(long double l_sqr, long double e) {
-    long double arg1 = e * e * e * e;
-
-    // its separated to avoid overflow
-    arg1 /= C;
-    arg1 /= C;
-
-    return l_sqr - arg1;
-}
-
-long double calc_rel_w(long double energy_level, long double h_mult,
-                       long double m, long double alpha) {
-    long double alpha_sqr = alpha * alpha;
-
-    long double h_mult_sqr = h_mult * h_mult;
-
-    long double arg1 = (h_mult_sqr - alpha_sqr);
-
-    arg1 = sqrtl(arg1);
-
-    arg1 += (energy_level - h_mult);
-    arg1 *= arg1;
-
-    arg1 = alpha_sqr / arg1;
-    arg1++;
-
-    arg1 = sqrtl(arg1);
-    arg1 = 1 / arg1;
-
-    arg1--;
-
-    long double arg2 = m * C * C;
-    return arg1 * arg2;
-}
-
 long double calc_rel_chi(long double h_bar, long double e,
                          long double energy_level) {
     long double arg1 = h_bar * C * energy_level;
@@ -144,10 +66,4 @@ long double calc_rel_chi(long double h_bar, long double e,
     arg1 = 1 - arg1;
 
     return sqrtl(arg1);
-}
-
-long double calc_alpha(long double charge, long double hbar) {
-    long double e_sqr = charge * charge;
-    long double arg1 = hbar * C;
-    return (e_sqr / arg1);
 }
