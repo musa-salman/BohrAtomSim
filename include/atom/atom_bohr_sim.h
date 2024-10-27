@@ -1,8 +1,6 @@
 #ifndef ATOM_BOHR_SIM_H
 #define ATOM_BOHR_SIM_H
 
-#include <Python.h>
-
 #include <stdbool.h>
 
 #include "utils/iterator.h"
@@ -71,9 +69,10 @@ struct sim_ctx {
     // Simulation control
     double revolutions;
     size_t max_iters;
-    long double time_interval;
     bool delta_psi_mode;
-    unsigned char record_interval;
+    
+    long double time_interval;
+    unsigned short record_interval;
 };
 
 #endif // ATOM_BOHR_SIM_H

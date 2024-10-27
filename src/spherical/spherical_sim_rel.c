@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "polar/polar_calc.h"

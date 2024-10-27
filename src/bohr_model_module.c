@@ -14,61 +14,9 @@
 #include "spherical/spherical_sim.h"
 #include "spherical/spherical_sim_rel.h"
 
+#include "atom/result_recorders.h"
 #include "utils/iterator.h"
-#include "utils/macros.h"
 #include "utils/types.h"
-
-static void record2ndarray(void *record_in, const unsigned char orbit_i,
-                           const unsigned char iter_i,
-                           const struct sim_itr *iter) {
-    PyArrayObject *result =
-        (PyArrayObject *)((PyListObject *)record_in)->ob_item[orbit_i];
-    unsigned char i = 0;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)iter->dt;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)iter->r;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)iter->r_dot;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)iter->r_dot_dot;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)iter->phi;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)iter->phi_dot;
-
-    if (PHI_DOT_0(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) =
-            (double)PHI_DOT_0(iter);
-    }
-
-    if (THETA(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)THETA(iter);
-    }
-
-    if (THETA_DOT(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) =
-            (double)THETA_DOT(iter);
-    }
-
-    if (THETA_DOT_DOT(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) =
-            (double)THETA_DOT_DOT(iter);
-    }
-
-    if (EPSILON(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)EPSILON(iter);
-    }
-
-    if (GAMMA(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = (double)GAMMA(iter);
-    }
-
-    if (DELTA_PHI(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) =
-            (double)DELTA_PHI(iter);
-    }
-}
 
 static struct electron_orbit *list2electron_orbits(PyObject *electrons) {
     struct electron_orbit *electron_orbits = NULL;
@@ -106,10 +54,9 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     double time_interval;
     enum sim_type sim_type;
     bool delta_psi_mode;
-    unsigned char record_interval;
+    unsigned short record_interval;
 
-    // "dddkBBBBO!" means:
-    if (!PyArg_ParseTuple(args, "ddddkBBBO!", &electron_charge, &electron_mass,
+    if (!PyArg_ParseTuple(args, "ddddkBBHO!", &electron_charge, &electron_mass,
                           &revolutions, &time_interval, &max_iters, &sim_type,
                           &delta_psi_mode, &record_interval, &PyList_Type,
                           &electrons)) {
@@ -117,7 +64,7 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     }
 
     PyObject *result = NULL;
-    const npy_intp dims[2] = {max_iters, 6};
+    const npy_intp dims[2] = {max_iters, 7};
 
     result = PyList_New(PyList_Size(electrons));
 
@@ -178,6 +125,7 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
         break;
     }
 
+    free(atom.electrons);
     return result;
 }
 

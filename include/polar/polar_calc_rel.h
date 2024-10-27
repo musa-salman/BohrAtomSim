@@ -46,15 +46,4 @@ long double calc_rel_gamma(long double l, long double mass, long double r, long 
  */
 long double calc_rel_r_dot_dot(long double l_sqr, long double mass, long double gamma, long double r, long double charge, long double r_dot);
 
-/**
- * @brief calculates the analytical ratio of the apocenter
- *
- *          CHI = (1 - (e^2 / (h_bar*C*energy_level))^2)
- *
- * @param charge
- * @param angular
- * @return double
- */
-long double calc_rel_chi(long double charge, long double angular);
-
 #endif // EVAL_REL_H
