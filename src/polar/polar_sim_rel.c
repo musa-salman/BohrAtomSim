@@ -47,19 +47,12 @@ bool simulate_orbit_rel_step(struct sim_ctx *ctx, long double curr_l,
         return false;
     *is_maximum = !(*is_maximum);
     if (*is_maximum) {
-        long double chi =
-            calc_rel_chi(atom->electron_mass, atom->electron_charge,
-                         ctx->iter_ctx->electron_orbit->angular);
-
         if (*prev_max_vec != 0) {
             curr_itr->delta_phi += PHI(curr_itr) - *prev_max_vec;
             if (ctx->delta_psi_mode) {
                 RECORD_ITERATION(ctx, curr_itr);
             }
             next_itr->delta_phi = DELTA_PHI(curr_itr);
-
-            printf(" currMaxth - prevMaxVec  %LE, accurate %LE \n",
-                   PHI(curr_itr) - *prev_max_vec, (((2 * PI) / chi) - 2 * PI));
         }
 
         *prev_max_vec = PHI(curr_itr);

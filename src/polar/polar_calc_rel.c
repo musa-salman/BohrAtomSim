@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdio.h>
 
 #include "polar/polar_calc_rel.h"
 #include "utils/constants.h"
@@ -57,13 +56,4 @@ long double calc_rel_r_dot_dot(long double l_sqr, long double m,
     arg1 /= gamma * m;
 
     return arg1;
-}
-long double calc_rel_chi(long double h_bar, long double e,
-                         long double energy_level) {
-    long double arg1 = h_bar * C * energy_level;
-    arg1 = (e * e) / arg1;
-    arg1 *= arg1;
-    arg1 = 1 - arg1;
-
-    return sqrtl(arg1);
 }

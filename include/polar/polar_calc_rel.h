@@ -51,12 +51,10 @@ long double calc_rel_r_dot_dot(long double l_sqr, long double mass, long double 
  *
  *          CHI = (1 - (e^2 / (h_bar*C*energy_level))^2)
  *
- * @param h_bar
  * @param charge
- * @param r
- * @param energy_level
+ * @param angular
  * @return double
  */
-long double calc_rel_chi(long double h_bar, long double charge, long double energy_level);
+long double calc_rel_chi(long double charge, long double angular);
 
 #endif // EVAL_REL_H
