@@ -38,12 +38,10 @@ long double sphere_calc_r_dot_dot(long double m, long double r, long double e, l
  */
 long double sphere_calc_theta_dot_dot(long double r, long double r_dot, long double theta, long double theta_dot, long double phi_dot);
 
-long double sphere_calc_phi_dot(long double n_phi, long double Hbar, long double theta, long double mass, long double r);
-
-long double sphere_calc_init_phi_dot(long double K, long double Hbar, long double n_phi, long double mass, long double r);
+long double sphere_calc_phi_dot(long double n_phi, long double theta, long double mass, long double r);
 
 long double sphere_calc_spc_case_r_dot_dot(long double r, long double theta_dot, long double charge, long double mass);
 
-long double sphere_calc_spc_case_theta_dot(long double k, long double Hbar, long double mass, long double r);
+long double sphere_calc_spc_case_theta_dot(long double k, long double mass, long double r);
 
 #endif // SPHERE_CALC_H

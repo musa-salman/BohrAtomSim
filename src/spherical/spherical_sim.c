@@ -66,14 +66,14 @@ static void simulate_orbit(struct sim_ctx *ctx) {
         next_itr->phi = PI / 2;
         curr_itr->phi = PI / 2;
         curr_itr->theta_dot =
-            sphere_calc_spc_case_theta_dot(K, H_BAR, MASS(atom), R(curr_itr));
+            sphere_calc_spc_case_theta_dot(K, MASS(atom), R(curr_itr));
         next_itr->theta_dot = THETA_DOT(curr_itr);
 
         curr_itr->phi_dot = 0;
         curr_itr->theta_dot_dot = 0;
     } else {
 
-        curr_itr->phi_dot = sphere_calc_phi_dot(N_phi, H_BAR, THETA(curr_itr),
+        curr_itr->phi_dot = sphere_calc_phi_dot(N_phi, THETA(curr_itr),
                                                 MASS(atom), R(curr_itr));
         curr_itr->theta_dot_dot = sphere_calc_theta_dot_dot(
             R(curr_itr), R_DOT(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
@@ -122,8 +122,8 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
         ctx->iter_ctx->electron_orbit->angular) {
         curr_itr->theta_dot =
             (*sign) * sphere_calc_spc_case_theta_dot(
-                          ctx->iter_ctx->electron_orbit->angular, H_BAR,
-                          MASS(atom), R(curr_itr));
+                          ctx->iter_ctx->electron_orbit->angular, MASS(atom),
+                          R(curr_itr));
         next_itr->theta_dot = THETA_DOT(curr_itr);
 
         if (THETA(curr_itr) >= PI && !(*theta_flag)) {
@@ -138,7 +138,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
             next_itr->phi = -PHI(next_itr);
         }
     } else {
-        next_itr->phi_dot = sphere_calc_phi_dot(N_phi, H_BAR, THETA(curr_itr),
+        next_itr->phi_dot = sphere_calc_phi_dot(N_phi, THETA(curr_itr),
                                                 MASS(atom), R(curr_itr));
         next_itr->theta_dot_dot = sphere_calc_theta_dot_dot(
             R(curr_itr), R_DOT(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
