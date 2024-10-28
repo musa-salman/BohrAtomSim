@@ -13,7 +13,7 @@
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
                                 long double **prev_max_vec, int *sign,
-                                bool *theta_flag, long double N_phi,
+                                bool *theta_flag, long double n_phi,
                                 long double k_sqr);
 
 void simulate_spherical_orbit(struct sim_ctx *ctx) {
@@ -68,8 +68,8 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
             R(curr_itr), R_DOT(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
             PHI_DOT(curr_itr));
     }
-    next_itr->r_dot_dot = sphere_calc_r_dot_dot(MASS(atom), R(curr_itr),
-                                                CHARGE(atom), k_sqr, H_BAR_SQR);
+    next_itr->r_dot_dot =
+        sphere_calc_r_dot_dot(MASS(atom), R(curr_itr), CHARGE(atom), k_sqr);
 
     RECORD_ITERATION(ctx, curr_itr);
     for (size_t it = 0; it < ctx->max_iters; it++) {
@@ -99,7 +99,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
                                 long double **prev_max_vec, int *sign,
-                                bool *theta_flag, long double N_phi,
+                                bool *theta_flag, long double n_phi,
                                 long double k_sqr) {
     const struct atom *atom = ctx->atom;
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
@@ -127,15 +127,15 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
             next_itr->phi = -PHI(next_itr);
         }
     } else {
-        next_itr->phi_dot = sphere_calc_phi_dot(N_phi, THETA(curr_itr),
+        next_itr->phi_dot = sphere_calc_phi_dot(n_phi, THETA(curr_itr),
                                                 MASS(atom), R(curr_itr));
         next_itr->theta_dot_dot = sphere_calc_theta_dot_dot(
             R(curr_itr), R_DOT(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
             PHI_DOT(curr_itr));
     }
 
-    next_itr->r_dot_dot = sphere_calc_r_dot_dot(MASS(atom), R(curr_itr),
-                                                CHARGE(atom), k_sqr, H_BAR_SQR);
+    next_itr->r_dot_dot =
+        sphere_calc_r_dot_dot(MASS(atom), R(curr_itr), CHARGE(atom), k_sqr);
 
     if (!is_at_interest)
         return false;

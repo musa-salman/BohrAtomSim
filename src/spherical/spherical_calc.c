@@ -21,14 +21,14 @@ long double sphere_calc_phi_dot(long double n_phi, long double theta,
 }
 
 long double sphere_calc_r_dot_dot(long double m, long double r, long double e,
-                                  long double k_sqr, long double Hbar_sqr) {
+                                  long double k_sqr) {
 
     long double arg1;
     long double arg2;
 
     long double r_sq = r * r;
 
-    arg1 = k_sqr * Hbar_sqr;
+    arg1 = k_sqr * H_BAR_SQR;
     arg1 /= m * r_sq * r;
 
     arg2 = e * e;

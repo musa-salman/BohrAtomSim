@@ -17,7 +17,7 @@
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
                                 long double **prev_max_vec, int *sign,
-                                bool *theta_flag, long double N_phi,
+                                bool *theta_flag, long double n_phi,
                                 long double k_sqr);
 
 void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
@@ -129,7 +129,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
                                 long double **prev_max_vec, int *sign,
-                                bool *theta_flag, long double N_phi,
+                                bool *theta_flag, long double n_phi,
                                 long double k_sqr) {
     const struct atom *atom = ctx->atom;
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
@@ -162,7 +162,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
         }
     } else {
         next_itr->phi_dot =
-            rel_sphere_calc_phi_dot(N_phi, H_BAR, THETA(curr_itr), MASS(atom),
+            rel_sphere_calc_phi_dot(n_phi, H_BAR, THETA(curr_itr), MASS(atom),
                                     R(curr_itr), GAMMA(curr_itr));
         next_itr->theta_dot_dot =
             rel_sphere_calc_theta_dot_dot((spherical_calc_rel_params){

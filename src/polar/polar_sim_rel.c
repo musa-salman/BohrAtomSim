@@ -11,7 +11,7 @@
 #include "utils/types.h"
 
 static bool simulate_orbit_rel_step(struct sim_ctx *ctx, long double curr_l,
-                                    long double Hbar_sqr, bool *is_maximum,
+                                    bool *is_maximum,
                                     long double *prev_max_vec);
 
 void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
@@ -50,8 +50,8 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
     bool at_max = true;
     bool is_at_interest = false;
     for (unsigned long it = 1; it < ctx->max_iters; it++) {
-        is_at_interest = simulate_orbit_rel_step(ctx, curr_l, H_BAR_SQR,
-                                                 &at_max, &prev_max_vec);
+        is_at_interest =
+            simulate_orbit_rel_step(ctx, curr_l, &at_max, &prev_max_vec);
 
         if (it % ctx->record_interval == 0 && !(ctx->delta_psi_mode)) {
             RECORD_ITERATION(ctx, curr_itr);
@@ -75,7 +75,7 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
 }
 
 static bool simulate_orbit_rel_step(struct sim_ctx *ctx, long double curr_l,
-                                    long double Hbar_sqr, bool *is_maximum,
+                                    bool *is_maximum,
                                     long double *prev_max_vec) {
     const struct atom *atom = ctx->atom;
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
@@ -86,7 +86,7 @@ static bool simulate_orbit_rel_step(struct sim_ctx *ctx, long double curr_l,
         iterate(ctx->iter_ctx, ctx->time_interval, POLAR);
 
     next_itr->r_dot_dot = calc_rel_r_dot_dot(
-        K_sqr * Hbar_sqr, atom->electron_mass, curr_itr->gamma, curr_itr->r,
+        K_sqr * H_BAR_SQR, atom->electron_mass, curr_itr->gamma, curr_itr->r,
         atom->electron_charge, curr_itr->r_dot);
 
     next_itr->phi_dot = calc_rel_phi_dot(curr_l, curr_itr->gamma, curr_itr->r,

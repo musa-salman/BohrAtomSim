@@ -21,7 +21,7 @@ long double sphere_calc_theta_min(long double n_phi, long double k);
     @param long double m = 9.109383e-28 long double e = 4.803 e-10 l_sqr = Calc_l_sqr r = r of the current iteration
     @return long double r_dot_dot
  */
-long double sphere_calc_r_dot_dot(long double m, long double r, long double e, long double k_sqr, long double Hbar_sqr);
+long double sphere_calc_r_dot_dot(long double m, long double r, long double e, long double k_sqr);
 
 /**
  * @brief Calculates the angular acceleration of the electron
