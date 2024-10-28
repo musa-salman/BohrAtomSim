@@ -2,8 +2,11 @@
 #include <stdlib.h>
 
 #include "atom/atom_bohr_sim.h"
+#include "orbital_math.h"
+
 #include "polar/polar_calc.h"
 #include "polar/polar_sim.h"
+
 #include "utils/constants.h"
 #include "utils/iterator.h"
 #include "utils/macros.h"
@@ -21,10 +24,10 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
     const struct atom *atom = ctx->atom;
 
     double N = iter_ctx->electron_orbit->principal;
-    double K = iter_ctx->electron_orbit->angular;
+    double k = iter_ctx->electron_orbit->angular;
 
-    struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
-    long double curr_l = H_BAR * K;
+    struct radial_bounds *radial_bounds = compute_radial_limits(N, k);
+    long double curr_l = H_BAR * k;
 
     long double prev_max_vec = 0;
     long double prevR = 0;
@@ -34,7 +37,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
 
     curr_itr->r = radial_bounds->r_min;
     curr_itr->r_dot_dot =
-        compute_r_dot_dot(MASS(atom), curr_itr->r, CHARGE(atom), K);
+        compute_r_dot_dot(MASS(atom), curr_itr->r, CHARGE(atom), k);
     curr_itr->phi_dot = compute_phi_dot(curr_l, MASS(atom), curr_itr->r);
 
     long double revolutions = ctx->revolutions;
@@ -72,13 +75,13 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
                                 long double *prev_r) {
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
-    long double K = ctx->iter_ctx->electron_orbit->angular;
+    long double k = ctx->iter_ctx->electron_orbit->angular;
 
     const bool is_at_interest =
         iterate(ctx->iter_ctx, ctx->time_interval, POLAR);
 
     next_itr->r_dot_dot = compute_r_dot_dot(
-        ctx->atom->electron_mass, curr_itr->r, ctx->atom->electron_charge, K);
+        ctx->atom->electron_mass, curr_itr->r, ctx->atom->electron_charge, k);
     next_itr->phi_dot =
         compute_phi_dot(curr_l, ctx->atom->electron_mass, curr_itr->r);
 

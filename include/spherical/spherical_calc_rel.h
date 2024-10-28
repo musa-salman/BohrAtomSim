@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-long double rel_sphere_calc_theta_min(long double N_phi, long double k);
+long double rel_sphere_calc_theta_min(long double n_phi, long double k);
 
 long double rel_sphere_calc_r_dot_dot(long double k_sqr, long double Hbar_sqr, long double mass,
                                       long double gamma, long double r, long double charge, long double r_dot);

@@ -14,20 +14,6 @@ struct radial_bounds
 */
 
 /**
-    Calculates R_dot_dot "acceleration" of and electron
-    where
-
-        m*r_dot_dot = ((l^2)/(m*(r^3)) - (e^2)/(r^2)
-
-        r_dot_dot = (k^2 * H_BAR_SQR / (m*r^3) - e^2 / (r^2)) / m
-
-    @param double mass = 9.109383e-28 double charge = 4.803e-10 l_sqr = Calc_l_sqr r = r of the current iteration
-    @return double r_dot_dot
-
-*/
-long double compute_r_dot_dot(long double mass, long double r, long double charge, long double k);
-
-/**
 
     Calculates the angel change rate of the electron movement
     where

@@ -12,16 +12,7 @@
  */
 long double sphere_calc_theta_min(long double n_phi, long double k);
 
-/**
-    @brief Calculates R_dot_dot "acceleration" of and electron
-    where
-
-        m*r_dot_dot = (l^2)/(m*(r^3)) - (e^2)/(r^2)
-
-    @param long double m = 9.109383e-28 long double e = 4.803 e-10 l_sqr = Calc_l_sqr r = r of the current iteration
-    @return long double r_dot_dot
- */
-long double sphere_calc_r_dot_dot(long double m, long double r, long double e, long double k_sqr);
+long double sphere_calc_theta_dot(long double k, long double mass, long double r);
 
 /**
  * @brief Calculates the angular acceleration of the electron
@@ -39,9 +30,5 @@ long double sphere_calc_r_dot_dot(long double m, long double r, long double e, l
 long double sphere_calc_theta_dot_dot(long double r, long double r_dot, long double theta, long double theta_dot, long double phi_dot);
 
 long double sphere_calc_phi_dot(long double n_phi, long double theta, long double mass, long double r);
-
-long double sphere_calc_spc_case_r_dot_dot(long double r, long double theta_dot, long double charge, long double mass);
-
-long double sphere_calc_spc_case_theta_dot(long double k, long double mass, long double r);
 
 #endif // SPHERE_CALC_H
