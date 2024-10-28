@@ -1,6 +1,7 @@
 #include <Python.h>
 
-// as stated in https://github.com/numpy/numpy/issues/21865
+// This need to be defined as stated in
+// https://github.com/numpy/numpy/issues/21865
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include "listobject.h"
@@ -9,12 +10,8 @@
 #include <stdlib.h>
 
 #include "atom/atom_bohr_sim.h"
-#include "polar/polar_sim.h"
-#include "polar/polar_sim_rel.h"
-#include "spherical/spherical_sim.h"
-#include "spherical/spherical_sim_rel.h"
-
 #include "atom/result_recorders.h"
+#include "simulation_runner/simulation_runner.h"
 #include "utils/iterator.h"
 #include "utils/types.h"
 
@@ -106,24 +103,17 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
         .iter_ctx = &iter_ctx,
     };
 
-    switch (sim_type) {
-    case POLAR:
-        polar_sim_ele(&ctx);
-        break;
-    case REL_POLAR:
-        polar_sim_rel_ele(&ctx);
-        break;
-    case SPHERICAL:
-        spherical_sim_ele(&ctx);
-        break;
-    case REL_SPHERICAL:
-        spherical_sim_rel_ele(&ctx);
-        break;
-    case SPIN:
-        break;
-    case REL_SPIN:
-        break;
+    struct simulator sim;
+
+    init_simulation(&sim, &ctx, sim_type);
+
+    if (sim.simulate_orbit == NULL) {
+        free(atom.electrons);
+        PyErr_SetString(PyExc_ValueError, "Invalid simulation type.");
+        return NULL;
     }
+
+    run_simulation(&sim);
 
     free(atom.electrons);
     return result;

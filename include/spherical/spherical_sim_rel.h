@@ -3,6 +3,6 @@
 
 #include "atom/atom_bohr_sim.h"
 
-void spherical_sim_rel_ele(struct sim_ctx *ctx);
+void simulate_spherical_rel_orbit(struct sim_ctx *ctx);
 
 #endif // SPHERICAL_SIM_REL_H

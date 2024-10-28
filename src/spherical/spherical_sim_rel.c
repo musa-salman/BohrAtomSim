@@ -2,32 +2,25 @@
 #include <stdlib.h>
 
 #include "atom/atom_bohr_sim.h"
+
 #include "polar/polar_calc.h"
 #include "polar/polar_calc_rel.h"
+
 #include "spherical/spherical_calc.h"
 #include "spherical/spherical_calc_rel.h"
+#include "spherical/spherical_sim_rel.h"
+
 #include "utils/constants.h"
 #include "utils/iterator.h"
 #include "utils/macros.h"
 #include "utils/types.h"
 
-static void simulate_orbit(struct sim_ctx *ctx);
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
                                 long double **prev_max_vec, int *sign,
                                 bool *theta_flag, long double N_phi,
                                 long double k_sqr);
 
-void spherical_sim_rel_ele(struct sim_ctx *ctx) {
-    ctx->iter_ctx->orbit_i = 0;
-    for (; ctx->iter_ctx->orbit_i < ctx->atom->electrons_count;
-         ctx->iter_ctx->orbit_i++) {
-        ctx->iter_ctx->electron_orbit =
-            ctx->atom->electrons + ctx->iter_ctx->orbit_i;
-        simulate_orbit(ctx);
-    }
-}
-
-static void simulate_orbit(struct sim_ctx *ctx) {
+void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
     const struct atom *atom = ctx->atom;

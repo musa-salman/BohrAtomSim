@@ -3,6 +3,6 @@
 
 #include "atom/atom_bohr_sim.h"
 
-void polar_sim_ele(struct sim_ctx *ctx);
+void simulate_polar_orbit(struct sim_ctx *ctx);
 
 #endif // POLAR_SIM_H
