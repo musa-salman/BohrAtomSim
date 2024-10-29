@@ -123,3 +123,10 @@ long double compute_spherical_phi_dot(long double n_phi, long double theta,
 
     return arg1 / arg2;
 }
+
+long double compute_angular_distance(long double theta1, long double phi1,
+                                     long double theta2, long double phi2) {
+
+    return acosl(sinl(theta1) * sinl(theta2) * cosl(phi1 - phi2) +
+                 cosl(theta1) * cosl(theta2));
+}

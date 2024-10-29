@@ -95,9 +95,12 @@ long double compute_rel_r_dot_dot(long double angular, long double mass,
 long double compute_theta_min(long double n_phi, long double angular);
 
 
-#define REL_SPHERICAL_PHI_DOT(n_phi, theta, mass, r, gamma)                              \
+#define REL_SPHERICAL_PHI_DOT(n_phi, theta, mass, r, gamma) \
     compute_spherical_phi_dot(n_phi, theta, mass, r) / gamma
 
 long double compute_spherical_phi_dot(long double n_phi, long double theta, long double mass, long double r);
+
+long double compute_angular_distance(long double theta1, long double phi1,
+                                     long double theta2, long double phi2);
 
 #endif // ORBITAL_MATH_H
