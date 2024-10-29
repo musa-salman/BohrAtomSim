@@ -3,13 +3,10 @@
 
 #include "atom/atom_bohr_sim.h"
 
-#include "polar/polar_calc.h"
-#include "polar/polar_calc_rel.h"
-
-#include "spherical/spherical_calc.h"
 #include "spherical/spherical_calc_rel.h"
 #include "spherical/spherical_sim_rel.h"
 
+#include "orbital_math.h"
 #include "utils/constants.h"
 #include "utils/iterator.h"
 #include "utils/macros.h"
@@ -17,8 +14,7 @@
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
                                 long double **prev_max_vec, int *sign,
-                                bool *theta_flag, long double n_phi,
-                                long double k_sqr);
+                                bool *theta_flag, long double n_phi);
 
 void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
@@ -33,17 +29,16 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
     long double K = curr_orbit->angular;
     long double m = curr_orbit->magnetic;
 
-    long double curr_l = H_BAR * K; // in relativity
-    long double k_sqr = K * K;
+    long double curr_l = H_BAR * K;
 
     struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
 
     int sign = 1;
     bool theta_flag = false;
 
-    long double N_phi = K - m;
+    long double n_phi = K - m;
 
-    long double theta_min = sphere_calc_theta_min(N_phi, K);
+    long double theta_min = compute_theta_min(n_phi, K);
 
     long double *prev_max_vec = NULL;
     bool at_max = true;
@@ -56,8 +51,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
     long double revolutions = ctx->revolutions;
 
-    curr_itr->gamma = calc_rel_gamma(curr_l, MASS(atom), R(curr_itr),
-                                     R_DOT(curr_itr)); // in relativity
+    curr_itr->gamma = compute_rel_gamma(curr_l, MASS(atom), R(curr_itr),
+                                        R_DOT(curr_itr)); // in relativity
 
     if (m == K) {
         next_itr->phi = PI / 2;
@@ -65,8 +60,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
         // in relativity
         curr_itr->theta_dot =
-            sign * rel_sphere_calc_spc_case_theta_dot(
-                       K, H_BAR, MASS(atom), R(curr_itr), GAMMA(curr_itr));
+            sign * SPHERICAL_THETA_DOT_REL(K, MASS(atom), R(curr_itr),
+                                           GAMMA(curr_itr));
 
         // in relativity
         if (THETA(curr_itr) >= PI && !theta_flag) {
@@ -79,9 +74,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
         curr_itr->theta_dot_dot = 0;
     } else {
 
-        curr_itr->phi_dot =
-            rel_sphere_calc_phi_dot(N_phi, H_BAR, THETA(curr_itr), MASS(atom),
-                                    R(curr_itr), GAMMA(curr_itr));
+        curr_itr->phi_dot = REL_SPHERICAL_PHI_DOT(
+            n_phi, THETA(curr_itr), MASS(atom), R(curr_itr), GAMMA(curr_itr));
 
         curr_itr->theta_dot_dot = rel_sphere_calc_theta_dot_dot(
             (spherical_calc_rel_params){.r = R(curr_itr),
@@ -94,17 +88,17 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
                                         .gamma = GAMMA(curr_itr)});
     }
     next_itr->r_dot_dot =
-        rel_sphere_calc_r_dot_dot(k_sqr, H_BAR_SQR, MASS(atom), GAMMA(curr_itr),
-                                  R(curr_itr), CHARGE(atom), R_DOT(curr_itr));
+        compute_rel_r_dot_dot(K, MASS(atom), GAMMA(curr_itr), R(curr_itr),
+                              CHARGE(atom), R_DOT(curr_itr));
 
     RECORD_ITERATION(ctx, curr_itr);
     for (size_t it = 0; it < ctx->max_iters; it++) {
 
         const bool is_at_interest = simulate_orbit_step(
-            ctx, &at_max, &prev_max_vec, &sign, &theta_flag, N_phi, k_sqr);
+            ctx, &at_max, &prev_max_vec, &sign, &theta_flag, n_phi);
 
         next_itr->gamma =
-            calc_rel_gamma(curr_l, MASS(atom), R(next_itr), R_DOT(next_itr));
+            compute_rel_gamma(curr_l, MASS(atom), R(next_itr), R_DOT(next_itr));
 
         // SAME
         if (it % ctx->record_interval == 0 && !(ctx->delta_psi_mode)) {
@@ -129,8 +123,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
                                 long double **prev_max_vec, int *sign,
-                                bool *theta_flag, long double n_phi,
-                                long double k_sqr) {
+                                bool *theta_flag, long double n_phi) {
     const struct atom *atom = ctx->atom;
     struct sim_itr *curr_itr = ctx->iter_ctx->curr_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
@@ -140,9 +133,8 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
     if (ctx->iter_ctx->electron_orbit->magnetic ==
         ctx->iter_ctx->electron_orbit->angular) {
         curr_itr->theta_dot =
-            (*sign) * rel_sphere_calc_spc_case_theta_dot(
-                          ctx->iter_ctx->electron_orbit->angular, H_BAR,
-                          MASS(atom), R(curr_itr), GAMMA(curr_itr));
+            (*sign) * SPHERICAL_THETA_DOT_REL(THETA(curr_itr), MASS(atom),
+                                              R(curr_itr), GAMMA(curr_itr));
         next_itr->theta_dot = THETA_DOT(curr_itr);
 
         if (THETA(curr_itr) >= PI && !(*theta_flag)) {
@@ -161,9 +153,9 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
             next_itr->phi = -PHI(next_itr);
         }
     } else {
-        next_itr->phi_dot =
-            rel_sphere_calc_phi_dot(n_phi, H_BAR, THETA(curr_itr), MASS(atom),
-                                    R(curr_itr), GAMMA(curr_itr));
+        next_itr->phi_dot = REL_SPHERICAL_PHI_DOT(
+            n_phi, THETA(curr_itr), MASS(atom), R(curr_itr), GAMMA(curr_itr));
+
         next_itr->theta_dot_dot =
             rel_sphere_calc_theta_dot_dot((spherical_calc_rel_params){
                 .r = R(curr_itr),
@@ -177,9 +169,9 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
             });
     }
 
-    next_itr->r_dot_dot =
-        rel_sphere_calc_r_dot_dot(k_sqr, H_BAR_SQR, MASS(atom), GAMMA(curr_itr),
-                                  R(curr_itr), CHARGE(atom), R_DOT(curr_itr));
+    next_itr->r_dot_dot = compute_rel_r_dot_dot(
+        ctx->iter_ctx->electron_orbit->angular, MASS(atom), GAMMA(curr_itr),
+        R(curr_itr), CHARGE(atom), R_DOT(curr_itr));
 
     if (!is_at_interest)
         return false;
@@ -189,7 +181,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
         return true;
 
     long double *curr_max_vec =
-        stoc(R(next_itr), PHI(next_itr), THETA(next_itr));
+        sph2cart(R(next_itr), PHI(next_itr), THETA(next_itr));
 
     if (*prev_max_vec != NULL) {
         curr_itr->delta_phi =

@@ -2,19 +2,6 @@
 #define SPHERE_CALC_H
 
 /**
- * @brief Calculates the starting point for theta
- *
- *          THETA_MIN = arcsin( n_phi/K )
- *
- * @param n_phi
- * @param k
- * @return long double
- */
-long double sphere_calc_theta_min(long double n_phi, long double k);
-
-long double sphere_calc_theta_dot(long double k, long double mass, long double r);
-
-/**
  * @brief Calculates the angular acceleration of the electron
  * where
  *
@@ -28,7 +15,5 @@ long double sphere_calc_theta_dot(long double k, long double mass, long double r
  * @return long double
  */
 long double sphere_calc_theta_dot_dot(long double r, long double r_dot, long double theta, long double theta_dot, long double phi_dot);
-
-long double sphere_calc_phi_dot(long double n_phi, long double theta, long double mass, long double r);
 
 #endif // SPHERE_CALC_H

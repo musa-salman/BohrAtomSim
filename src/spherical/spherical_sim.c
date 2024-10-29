@@ -4,7 +4,6 @@
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
-#include "polar/polar_calc.h"
 #include "spherical/spherical_calc.h"
 #include "spherical/spherical_calc_rel.h"
 #include "spherical/spherical_sim.h"
@@ -38,7 +37,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
 
     long double n_phi = K - m;
 
-    long double theta_min = sphere_calc_theta_min(n_phi, K);
+    long double theta_min = compute_theta_min(n_phi, K);
 
     long double *prev_max_vec = NULL;
     bool at_max = true;
@@ -54,15 +53,15 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     if (m == K) {
         next_itr->phi = PI / 2;
         curr_itr->phi = PI / 2;
-        curr_itr->theta_dot = sphere_calc_theta_dot(K, MASS(atom), R(curr_itr));
+        curr_itr->theta_dot = SPHERICAL_THETA_DOT(K, MASS(atom), R(curr_itr));
         next_itr->theta_dot = THETA_DOT(curr_itr);
 
         curr_itr->phi_dot = 0;
         curr_itr->theta_dot_dot = 0;
     } else {
 
-        curr_itr->phi_dot = sphere_calc_phi_dot(n_phi, THETA(curr_itr),
-                                                MASS(atom), R(curr_itr));
+        curr_itr->phi_dot = compute_spherical_phi_dot(n_phi, THETA(curr_itr),
+                                                      MASS(atom), R(curr_itr));
         curr_itr->theta_dot_dot = sphere_calc_theta_dot_dot(
             R(curr_itr), R_DOT(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
             PHI_DOT(curr_itr));
@@ -109,8 +108,8 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
         ctx->iter_ctx->electron_orbit->angular) {
         curr_itr->theta_dot =
             (*sign) *
-            sphere_calc_theta_dot(ctx->iter_ctx->electron_orbit->angular,
-                                  MASS(atom), R(curr_itr));
+            SPHERICAL_THETA_DOT(ctx->iter_ctx->electron_orbit->angular,
+                                MASS(atom), R(curr_itr));
         next_itr->theta_dot = THETA_DOT(curr_itr);
 
         if (THETA(curr_itr) >= PI && !(*theta_flag)) {
@@ -125,8 +124,8 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
             next_itr->phi = -PHI(next_itr);
         }
     } else {
-        next_itr->phi_dot = sphere_calc_phi_dot(n_phi, THETA(curr_itr),
-                                                MASS(atom), R(curr_itr));
+        next_itr->phi_dot = compute_spherical_phi_dot(n_phi, THETA(curr_itr),
+                                                      MASS(atom), R(curr_itr));
         next_itr->theta_dot_dot = sphere_calc_theta_dot_dot(
             R(curr_itr), R_DOT(curr_itr), THETA(curr_itr), THETA_DOT(curr_itr),
             PHI_DOT(curr_itr));
@@ -144,7 +143,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max,
         return true;
 
     long double *curr_max_vec =
-        stoc(R(next_itr), PHI(next_itr), THETA(next_itr));
+        sph2cart(R(next_itr), PHI(next_itr), THETA(next_itr));
 
     if (*prev_max_vec != NULL) {
         curr_itr->delta_phi =

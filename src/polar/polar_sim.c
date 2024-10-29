@@ -4,7 +4,6 @@
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
-#include "polar/polar_calc.h"
 #include "polar/polar_sim.h"
 
 #include "utils/constants.h"
@@ -38,7 +37,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
     curr_itr->r = radial_bounds->r_min;
     curr_itr->r_dot_dot =
         compute_r_dot_dot(MASS(atom), curr_itr->r, CHARGE(atom), k);
-    curr_itr->phi_dot = compute_phi_dot(curr_l, MASS(atom), curr_itr->r);
+    curr_itr->phi_dot = POLAR_PHI_DOT(k, MASS(atom), curr_itr->r);
 
     long double revolutions = ctx->revolutions;
 
@@ -83,7 +82,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, long double curr_l,
     next_itr->r_dot_dot = compute_r_dot_dot(
         ctx->atom->electron_mass, curr_itr->r, ctx->atom->electron_charge, k);
     next_itr->phi_dot =
-        compute_phi_dot(curr_l, ctx->atom->electron_mass, curr_itr->r);
+        compute_angular_rate(curr_l, ctx->atom->electron_mass, curr_itr->r);
 
     if (!is_at_interest)
         return false;
