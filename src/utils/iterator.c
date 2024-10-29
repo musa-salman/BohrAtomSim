@@ -46,7 +46,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
 
 bool iterate(struct iter_ctx *ctx, long double time_interval,
              enum sim_type type) {
-    const struct sim_itr *curr_itr = ctx->curr_itr;
+    const struct sim_itr *curr_itr = ctx->prev_itr;
     struct sim_itr *next_itr = ctx->next_itr;
 
     next_itr->dt += time_interval;

@@ -13,7 +13,7 @@ struct iter_ctx {
     unsigned char orbit_i;
     struct electron_orbit *electron_orbit;
 
-    struct sim_itr *curr_itr;
+    struct sim_itr *prev_itr;
     struct sim_itr *next_itr;
 };
 

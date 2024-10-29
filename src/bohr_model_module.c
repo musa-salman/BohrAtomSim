@@ -86,7 +86,7 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     struct sim_itr next_itr = {0};
 
     struct iter_ctx iter_ctx = {
-        .curr_itr = &curr_itr,
+        .prev_itr = &curr_itr,
         .next_itr = &next_itr,
         .orbit_i = 0,
         .electron_orbit = NULL,
