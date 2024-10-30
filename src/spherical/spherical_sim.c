@@ -4,7 +4,6 @@
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
-#include "spherical/spherical_calc.h"
 #include "spherical/spherical_sim.h"
 
 #include "utils/constants.h"

@@ -103,4 +103,35 @@ long double compute_spherical_phi_dot(long double n_phi, long double theta, long
 long double compute_angular_distance(long double theta1, long double phi1,
                                      long double theta2, long double phi2);
 
+/**
+ * @brief Calculates the angular acceleration of the electron
+ * where
+ *
+ *        THETA_DOT_DOT =  (sin(theta) * cos(theta) * phi_dot^2 )-( (r_dot / r) * 2* theta_dot )
+ *
+ * @param r electrons distance from the center of rotation
+ * @param r_dot electrons speed
+ * @param theta
+ * @param theta_dot
+ * @param phi_dot
+ * @return long double
+ */
+long double sphere_calc_theta_dot_dot(long double r, long double r_dot,
+                                      long double theta, long double theta_dot,
+                                      long double phi_dot);
+
+typedef struct spherical_calc_rel_params {
+    long double r;
+    long double r_dot;
+    long double theta;
+    long double theta_dot;
+    long double phi_dot;
+    long double charge;
+    long double mass;
+    long double gamma;
+} spherical_calc_rel_params;
+
+long double
+rel_sphere_calc_theta_dot_dot(struct spherical_calc_rel_params params);
+
 #endif // ORBITAL_MATH_H

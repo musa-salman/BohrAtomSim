@@ -3,7 +3,6 @@
 
 #include "atom/atom_bohr_sim.h"
 
-#include "spherical/spherical_calc_rel.h"
 #include "spherical/spherical_sim_rel.h"
 
 #include "orbital_math.h"
