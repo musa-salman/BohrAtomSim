@@ -1,5 +1,4 @@
 #include <stddef.h>
-#include <stdlib.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
@@ -27,7 +26,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     long double K = curr_orbit->angular;
     long double m = curr_orbit->magnetic;
 
-    struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
+    struct radial_bounds radial_bounds = compute_radial_limits(N, K);
 
     int sign = 1;
     bool theta_flag = false;
@@ -41,7 +40,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     init_iteration(prev_itr, SPHERICAL);
     init_iteration(next_itr, SPHERICAL);
 
-    prev_itr->r = radial_bounds->r_min;
+    prev_itr->r = radial_bounds.r_min;
     prev_itr->theta = theta_min;
 
     long double revolutions = ctx->revolutions;
@@ -86,7 +85,6 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     }
 
     RECORD_ITERATION(ctx, prev_itr);
-    free(radial_bounds);
     end_iteration(ctx->iter_ctx);
 }
 

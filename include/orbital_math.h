@@ -33,7 +33,7 @@ long double compute_r_dot_dot(long double mass, long double r, long double charg
         where a = n^2 * BOHR_R
         and   b = k/n * a
 */
-struct radial_bounds *compute_radial_limits(long double energy_level, long double k);
+struct radial_bounds compute_radial_limits(long double energy_level, long double k);
 
 #define POLAR_PHI_DOT(angular, mass, radius) compute_angular_rate(angular, mass, radius)
 #define SPHERICAL_THETA_DOT(angular, mass, radius) compute_angular_rate(angular, mass, radius)

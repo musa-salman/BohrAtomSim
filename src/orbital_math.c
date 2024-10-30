@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdlib.h>
 
 #include "orbital_math.h"
 
@@ -25,8 +24,8 @@ long double compute_r_dot_dot(long double mass, long double r,
     return arg1;
 }
 
-struct radial_bounds *compute_radial_limits(long double principle,
-                                            long double angular) {
+struct radial_bounds compute_radial_limits(long double principle,
+                                           long double angular) {
     long double a = principle * principle;
     long double b = angular / principle;
     b *= a;
@@ -36,13 +35,13 @@ struct radial_bounds *compute_radial_limits(long double principle,
 
     dis = sqrtl(dis);
 
-    struct radial_bounds *radial_bounds = malloc(sizeof(*radial_bounds));
-    radial_bounds->r_min = radial_bounds->r_max = a;
-    radial_bounds->r_min -= dis;
-    radial_bounds->r_max += dis;
+    struct radial_bounds radial_bounds;
+    radial_bounds.r_min = radial_bounds.r_max = a;
+    radial_bounds.r_min -= dis;
+    radial_bounds.r_max += dis;
 
-    radial_bounds->r_min *= BOHR_R;
-    radial_bounds->r_max *= BOHR_R;
+    radial_bounds.r_min *= BOHR_R;
+    radial_bounds.r_max *= BOHR_R;
 
     return radial_bounds;
 }

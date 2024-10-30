@@ -1,5 +1,4 @@
 #include <stddef.h>
-#include <stdlib.h>
 
 #include "atom/atom_bohr_sim.h"
 
@@ -24,7 +23,7 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
     double N = electron_orbit->principal;
     double K = electron_orbit->angular;
 
-    struct radial_bounds *radial_bounds = compute_radial_limits(N, K);
+    struct radial_bounds radial_bounds = compute_radial_limits(N, K);
 
     long double curr_l = H_BAR * K;
 
@@ -33,7 +32,7 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
     init_iteration(prev_itr, REL_POLAR);
     init_iteration(next_itr, REL_POLAR);
 
-    prev_itr->r = radial_bounds->r_min;
+    prev_itr->r = radial_bounds.r_min;
 
     prev_itr->gamma = compute_rel_gamma(curr_l, atom->electron_mass,
                                         prev_itr->r, prev_itr->r_dot);
@@ -66,7 +65,6 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
         ctx->iter_ctx->prev_itr = ctx->iter_ctx->next_itr;
     }
 
-    free(radial_bounds);
     end_iteration(ctx->iter_ctx);
     RECORD_ITERATION(ctx, prev_itr);
 }
