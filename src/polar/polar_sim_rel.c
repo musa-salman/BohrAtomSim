@@ -10,7 +10,7 @@
 #include "utils/types.h"
 
 static bool simulate_orbit_rel_step(struct sim_ctx *ctx, bool *is_maximum,
-                                    long double *prev_max_vec);
+                                    scalar *prev_max_vec);
 
 void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
@@ -22,7 +22,7 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
 
     struct radial_bounds radial_bounds = compute_radial_limits(N, angular);
 
-    long double prev_max_vec = 0;
+    scalar prev_max_vec = 0;
 
     init_iteration(prev_itr, REL_POLAR);
     init_iteration(next_itr, REL_POLAR);
@@ -36,7 +36,7 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
 
     prev_itr->phi_dot =
         POLAR_PHI_DOT_REL(angular, R(prev_itr), GAMMA(prev_itr));
-    long double revolutions = ctx->revolutions;
+    scalar revolutions = ctx->revolutions;
 
     bool at_max = true;
     bool is_at_interest = false;
@@ -62,10 +62,10 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
 }
 
 static bool simulate_orbit_rel_step(struct sim_ctx *ctx, bool *is_maximum,
-                                    long double *prev_max_vec) {
+                                    scalar *prev_max_vec) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
-    long double angular = ctx->iter_ctx->electron_orbit->angular;
+    scalar angular = ctx->iter_ctx->electron_orbit->angular;
 
     const bool is_at_interest =
         iterate(ctx->iter_ctx, ctx->time_interval, POLAR);

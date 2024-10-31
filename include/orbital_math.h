@@ -1,6 +1,8 @@
 #ifndef ORBITAL_MATH_H
 #define ORBITAL_MATH_H
 
+#include "utils/types.h"
+
 /*
 *************************************************************************************************************
 *** All calculations are done according to Atomic Structure And Spectral Lines
@@ -20,14 +22,14 @@
 #define C 29979245800
 
 struct radial_bounds {
-    long double r_min;
-    long double r_max;
+    scalar r_min;
+    scalar r_max;
 };
 
 struct vector3 {
-    long double x;
-    long double y;
-    long double z;
+    scalar x;
+    scalar y;
+    scalar z;
 };
 
 /**
@@ -38,7 +40,7 @@ struct vector3 {
         l = k * H_BAR
         r_dot_dot = (k^2 * H_BAR_SQR / (m*r^3) - e^2 / (r^2)) / m
 */
-long double compute_r_dot_dot(long double radius, long double angular);
+scalar compute_r_dot_dot(scalar radius, scalar angular);
 
 /**
     Calculates the R_max and the R_min for a given electron orbit
@@ -50,8 +52,7 @@ long double compute_r_dot_dot(long double radius, long double angular);
         where a = n^2 * BOHR_R
         and   b = k/n * a
 */
-struct radial_bounds compute_radial_limits(long double principal,
-                                           long double angular);
+struct radial_bounds compute_radial_limits(scalar principal, scalar angular);
 
 #define POLAR_PHI_DOT(angular, radius) compute_angular_rate(angular, radius)
 #define SPHERICAL_THETA_DOT(angular, radius)                                   \
@@ -62,7 +63,7 @@ struct radial_bounds compute_radial_limits(long double principal,
     where
         angular_velocity = (k * h_bar) / (mass * r^2)
 */
-long double compute_angular_rate(long double angular, long double radius);
+scalar compute_angular_rate(scalar angular, scalar radius);
 
 /**
  * @brief Calculates gamma  "change of the mass" of and electron
@@ -73,8 +74,7 @@ long double compute_angular_rate(long double angular, long double radius);
  * @param r_dot
  * @return double
  */
-long double compute_gamma(long double angular, long double radius,
-                          long double r_dot);
+scalar compute_gamma(scalar angular, scalar radius, scalar r_dot);
 
 #define POLAR_PHI_DOT_REL(angular, radius, gamma)                              \
     compute_rel_angular_rate(angular, radius, gamma)
@@ -86,8 +86,7 @@ long double compute_gamma(long double angular, long double radius,
     where
         angular_velocity = (k * H_BAR) / (r^2 * mass * gamma)
 */
-long double compute_rel_angular_rate(long double angular, long double radius,
-                                     long double gamma);
+scalar compute_rel_angular_rate(scalar angular, scalar radius, scalar gamma);
 
 /**
  * @brief Calculates R_dot_dot  with relativity incorporated "acceleration" of
@@ -101,8 +100,8 @@ long double compute_rel_angular_rate(long double angular, long double radius,
  * @param r_dot
  * @return double
  */
-long double compute_rel_r_dot_dot(long double angular, long double gamma,
-                                  long double radius, long double r_dot);
+scalar compute_rel_r_dot_dot(scalar angular, scalar gamma, scalar radius,
+                             scalar r_dot);
 
 /**
  * @brief Calculates the starting point for theta
@@ -111,21 +110,19 @@ long double compute_rel_r_dot_dot(long double angular, long double gamma,
  *
  * @param n_phi
  * @param k
- * @return long double
+ * @return scalar
  */
-long double compute_theta_min(long double n_phi, long double angular);
+scalar compute_theta_min(scalar n_phi, scalar angular);
 
 #define REL_SPHERICAL_PHI_DOT(n_phi, theta, r, gamma)                          \
     compute_spherical_phi_dot(n_phi, theta, r) / gamma
 
-long double compute_spherical_phi_dot(long double n_phi, long double theta,
-                                      long double radius);
+scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius);
 
-struct vector3 *spherical_to_cartesian(long double radius, long double theta,
-                                       long double phi);
+struct vector3 *spherical_to_cartesian(scalar radius, scalar theta, scalar phi);
 
-long double compute_angular_distance(const struct vector3 *v1,
-                                     const struct vector3 *v2);
+scalar compute_angular_distance(const struct vector3 *v1,
+                                const struct vector3 *v2);
 /**
  * @brief Calculates the angular acceleration of the electron
  * where
@@ -138,16 +135,13 @@ long double compute_angular_distance(const struct vector3 *v1,
  * @param theta
  * @param theta_dot
  * @param phi_dot
- * @return long double
+ * @return scalar
  */
-long double compute_sphere_theta_dot_dot(long double radius, long double r_dot,
-                                         long double theta,
-                                         long double theta_dot,
-                                         long double phi_dot);
+scalar compute_sphere_theta_dot_dot(scalar radius, scalar r_dot, scalar theta,
+                                    scalar theta_dot, scalar phi_dot);
 
-long double
-compute_sphere_rel_theta_dot_dot(long double radius, long double r_dot,
-                                 long double theta, long double theta_dot,
-                                 long double phi_dot, long double gamma);
+scalar compute_sphere_rel_theta_dot_dot(scalar radius, scalar r_dot,
+                                        scalar theta, scalar theta_dot,
+                                        scalar phi_dot, scalar gamma);
 
 #endif // ORBITAL_MATH_H

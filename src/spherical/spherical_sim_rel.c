@@ -11,7 +11,7 @@
 #include "utils/types.h"
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
-                                bool *theta_flag, long double n_phi,
+                                bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec);
 
 void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
@@ -22,18 +22,18 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
     const struct electron_orbit *curr_orbit = ctx->iter_ctx->electron_orbit;
 
-    long double N = curr_orbit->principal;
-    long double angular = curr_orbit->angular;
-    long double m = curr_orbit->magnetic;
+    scalar N = curr_orbit->principal;
+    scalar angular = curr_orbit->angular;
+    scalar m = curr_orbit->magnetic;
 
     struct radial_bounds radial_bounds = compute_radial_limits(N, angular);
 
     int sign = 1;
     bool theta_flag = false;
 
-    long double n_phi = angular - m;
+    scalar n_phi = angular - m;
 
-    long double theta_min = compute_theta_min(n_phi, angular);
+    scalar theta_min = compute_theta_min(n_phi, angular);
 
     bool at_max = true;
 
@@ -43,7 +43,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
     prev_itr->r = radial_bounds.r_min;
     prev_itr->theta = theta_min;
 
-    long double revolutions = ctx->revolutions;
+    scalar revolutions = ctx->revolutions;
 
     prev_itr->gamma = compute_gamma(angular, R(prev_itr), R_DOT(prev_itr));
 
@@ -105,7 +105,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 }
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
-                                bool *theta_flag, long double n_phi,
+                                bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
@@ -121,7 +121,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
 
         if (THETA(prev_itr) >= PI && !(*theta_flag)) {
             // TODO: Why not just 2 * PI - THETA(next_itr)?
-            long double overflow_angle = (THETA(next_itr) - PI);
+            scalar overflow_angle = (THETA(next_itr) - PI);
             next_itr->theta = PI - overflow_angle;
 
             *theta_flag = true;

@@ -11,7 +11,7 @@
 #include "utils/types.h"
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
-                                bool *theta_flag, long double n_phi,
+                                bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec);
 
 void simulate_spherical_orbit(struct sim_ctx *ctx) {
@@ -22,9 +22,9 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
 
     const struct electron_orbit *curr_orbit = ctx->iter_ctx->electron_orbit;
 
-    long double N = curr_orbit->principal;
-    long double angular = curr_orbit->angular;
-    long double m = curr_orbit->magnetic;
+    scalar N = curr_orbit->principal;
+    scalar angular = curr_orbit->angular;
+    scalar m = curr_orbit->magnetic;
 
     struct vector3 *prev_max_vec = NULL;
     struct radial_bounds radial_bounds = compute_radial_limits(N, angular);
@@ -32,9 +32,9 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     int sign = 1;
     bool theta_flag = false;
 
-    long double n_phi = angular - m;
+    scalar n_phi = angular - m;
 
-    long double theta_min = compute_theta_min(n_phi, angular);
+    scalar theta_min = compute_theta_min(n_phi, angular);
 
     bool at_max = true;
 
@@ -44,7 +44,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     prev_itr->r = radial_bounds.r_min;
     prev_itr->theta = theta_min;
 
-    long double revolutions = ctx->revolutions;
+    scalar revolutions = ctx->revolutions;
 
     if (m == angular) {
         next_itr->phi = PI / 2;
@@ -89,7 +89,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
 }
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
-                                bool *theta_flag, long double n_phi,
+                                bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;

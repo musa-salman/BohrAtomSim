@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+#include "orbital_math.h"
 #include "utils/iterator.h"
 
 typedef void (*record_func)(void *record_in, const unsigned char orbit_i,
@@ -68,7 +69,7 @@ struct sim_ctx {
     size_t max_iters;
     bool delta_psi_mode;
     
-    long double time_interval;
+    scalar time_interval;
     unsigned short record_interval;
 };
 

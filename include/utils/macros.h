@@ -19,9 +19,5 @@
 
 // atom macros
 #define TIME_INTERVAL(ctx) (ctx)->time_interval
-#define HBAR(atom) (atom)->Hbar
-#define MASS(atom) (atom)->electron_mass
-#define CHARGE(atom) (atom)->electron_charge
-#define LOG_P(atom) (atom)->log_p
 
 #endif // MACROS_H
