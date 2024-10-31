@@ -40,7 +40,7 @@ struct vector3 {
         l = k * H_BAR
         r_dot_dot = (k^2 * H_BAR_SQR / (m*r^3) - e^2 / (r^2)) / m
 */
-scalar compute_r_dot_dot(scalar radius, scalar angular);
+scalar compute_r_dot_dot(scalar radius, quantum_angular angular);
 
 /**
     Calculates the R_max and the R_min for a given electron orbit
@@ -52,7 +52,8 @@ scalar compute_r_dot_dot(scalar radius, scalar angular);
         where a = n^2 * BOHR_R
         and   b = k/n * a
 */
-struct radial_bounds compute_radial_limits(scalar principal, scalar angular);
+struct radial_bounds compute_radial_limits(quantum_principle principal,
+                                           quantum_angular angular);
 
 #define POLAR_PHI_DOT(angular, radius) compute_angular_rate(angular, radius)
 #define SPHERICAL_THETA_DOT(angular, radius)                                   \
@@ -63,7 +64,7 @@ struct radial_bounds compute_radial_limits(scalar principal, scalar angular);
     where
         angular_velocity = (k * h_bar) / (mass * r^2)
 */
-scalar compute_angular_rate(scalar angular, scalar radius);
+scalar compute_angular_rate(quantum_angular angular, scalar radius);
 
 /**
  * @brief Calculates gamma  "change of the mass" of and electron
@@ -74,7 +75,7 @@ scalar compute_angular_rate(scalar angular, scalar radius);
  * @param r_dot
  * @return double
  */
-scalar compute_gamma(scalar angular, scalar radius, scalar r_dot);
+scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot);
 
 #define POLAR_PHI_DOT_REL(angular, radius, gamma)                              \
     compute_rel_angular_rate(angular, radius, gamma)
@@ -86,7 +87,8 @@ scalar compute_gamma(scalar angular, scalar radius, scalar r_dot);
     where
         angular_velocity = (k * H_BAR) / (r^2 * mass * gamma)
 */
-scalar compute_rel_angular_rate(scalar angular, scalar radius, scalar gamma);
+scalar compute_rel_angular_rate(quantum_angular angular, scalar radius,
+                                scalar gamma);
 
 /**
  * @brief Calculates R_dot_dot  with relativity incorporated "acceleration" of
@@ -100,8 +102,8 @@ scalar compute_rel_angular_rate(scalar angular, scalar radius, scalar gamma);
  * @param r_dot
  * @return double
  */
-scalar compute_rel_r_dot_dot(scalar angular, scalar gamma, scalar radius,
-                             scalar r_dot);
+scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
+                             scalar radius, scalar r_dot);
 
 /**
  * @brief Calculates the starting point for theta
@@ -112,7 +114,7 @@ scalar compute_rel_r_dot_dot(scalar angular, scalar gamma, scalar radius,
  * @param k
  * @return scalar
  */
-scalar compute_theta_min(scalar n_phi, scalar angular);
+scalar compute_theta_min(scalar n_phi, quantum_angular angular);
 
 #define REL_SPHERICAL_PHI_DOT(n_phi, theta, r, gamma)                          \
     compute_spherical_phi_dot(n_phi, theta, r) / gamma

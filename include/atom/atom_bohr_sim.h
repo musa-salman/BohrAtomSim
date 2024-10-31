@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-#include "orbital_math.h"
 #include "utils/iterator.h"
+#include "utils/types.h"
 
 typedef void (*record_func)(void *record_in, const unsigned char orbit_i,
                             const unsigned char iter_i, const struct sim_itr *iter);
@@ -31,25 +31,25 @@ struct electron_orbit
      * The principal quantum number is orbital size and energy level (n)
      * n = 1, 2, 3,...
      */
-    unsigned char principal;
+    quantum_principle principal;
 
     /**
      * The azimuthal quantum number is the orbital shape aka subshell (l)
      * l = 0, 1, 2,..., n-1
      */
-    unsigned char angular;
+    quantum_angular angular;
 
     /**
      * The magnetic quantum number is the orbital orientation (m)
      * m = -l, -l+1, ..., 0, ..., l-1, l
      */
-    signed char magnetic;
+    quantum_magnetic magnetic;
 
     /**
      * The spin quantum number is the electron spin (s)
      * s = -1/2, 1/2
      */
-    float spin;
+    quantum_spin spin;
 };
 
 struct atom {
@@ -65,7 +65,7 @@ struct sim_ctx {
     struct iter_ctx *iter_ctx;
 
     // Simulation control
-    double revolutions;
+    float revolutions;
     size_t max_iters;
     bool delta_psi_mode;
     

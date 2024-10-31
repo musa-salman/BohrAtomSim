@@ -22,16 +22,17 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
     const struct electron_orbit *curr_orbit = ctx->iter_ctx->electron_orbit;
 
-    scalar N = curr_orbit->principal;
-    scalar angular = curr_orbit->angular;
-    scalar m = curr_orbit->magnetic;
+    quantum_principle principal = curr_orbit->principal;
+    quantum_angular angular = curr_orbit->angular;
+    quantum_magnetic magnetic = curr_orbit->magnetic;
 
-    struct radial_bounds radial_bounds = compute_radial_limits(N, angular);
+    struct radial_bounds radial_bounds =
+        compute_radial_limits(principal, angular);
 
     int sign = 1;
     bool theta_flag = false;
 
-    scalar n_phi = angular - m;
+    scalar n_phi = angular - magnetic;
 
     scalar theta_min = compute_theta_min(n_phi, angular);
 
@@ -49,7 +50,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
     struct vector3 *prev_max_vec = NULL;
 
-    if (m == angular) {
+    if (magnetic == angular) {
         next_itr->phi = PI / 2;
         prev_itr->phi = PI / 2;
 

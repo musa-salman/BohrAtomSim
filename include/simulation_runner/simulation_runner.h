@@ -2,7 +2,6 @@
 #define SIMULATION_RUNNER_H
 
 #include "atom/atom_bohr_sim.h"
-#include "utils/types.h"
 
 typedef void (*simulate_orbit_fn)(struct sim_ctx*);
 

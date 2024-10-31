@@ -2,14 +2,15 @@
 #include <stdlib.h>
 
 #include "orbital_math.h"
+#include "utils/types.h"
 
-scalar compute_r_dot_dot(scalar r, scalar k) {
+scalar compute_r_dot_dot(scalar r, quantum_angular angular) {
     scalar arg1;
     scalar arg2;
 
     scalar r_sqr = r * r;
 
-    arg1 = k * k * H_BAR_SQR;
+    arg1 = angular * angular * H_BAR_SQR;
     arg1 /= ELECTRON_CHARGE * r_sqr * r;
 
     arg2 = ELECTRON_CHARGE * ELECTRON_CHARGE;
@@ -22,9 +23,10 @@ scalar compute_r_dot_dot(scalar r, scalar k) {
     return arg1;
 }
 
-struct radial_bounds compute_radial_limits(scalar principle, scalar angular) {
+struct radial_bounds compute_radial_limits(quantum_principle principle,
+                                           quantum_angular angular) {
     scalar a = principle * principle;
-    scalar b = angular / principle;
+    scalar b = (scalar)angular / principle;
     b *= a;
 
     scalar dis = a * a;
@@ -43,21 +45,22 @@ struct radial_bounds compute_radial_limits(scalar principle, scalar angular) {
     return radial_bounds;
 }
 
-scalar compute_angular_rate(scalar angular, scalar radius) {
+scalar compute_angular_rate(quantum_angular angular, scalar radius) {
     scalar arg1 = angular * H_BAR;
     arg1 /= ELECTRON_MASS * radius * radius;
 
     return arg1;
 }
 
-scalar compute_rel_angular_rate(scalar angular, scalar radius, scalar gamma) {
+scalar compute_rel_angular_rate(quantum_angular angular, scalar radius,
+                                scalar gamma) {
     scalar arg1 = angular * H_BAR;
     arg1 /= radius * radius * ELECTRON_MASS * gamma;
 
     return arg1;
 }
 
-scalar compute_gamma(scalar angular, scalar radius, scalar r_dot) {
+scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
     scalar arg1 = C;
     arg1 *= ELECTRON_MASS * radius;
     arg1 = (angular * H_BAR) / arg1;
@@ -74,7 +77,7 @@ scalar compute_gamma(scalar angular, scalar radius, scalar r_dot) {
     return arg1;
 }
 
-scalar compute_rel_r_dot_dot(scalar angular, scalar gamma, scalar r,
+scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma, scalar r,
                              scalar r_dot) {
     scalar arg1;
     scalar arg2;
@@ -101,7 +104,9 @@ scalar compute_rel_r_dot_dot(scalar angular, scalar gamma, scalar r,
     return arg1;
 }
 
-scalar compute_theta_min(scalar n_phi, scalar k) { return asinl(n_phi / k); }
+scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
+    return asinl(n_phi / angular);
+}
 
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {
     scalar arg1 = n_phi * H_BAR;

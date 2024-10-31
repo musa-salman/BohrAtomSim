@@ -1,3 +1,4 @@
+#include "utils/types.h"
 #include <Python.h>
 
 // This need to be defined as stated in
@@ -25,12 +26,13 @@ static struct electron_orbit *list2electron_orbits(PyObject *electrons) {
 
         electron_orbits[i] = (struct electron_orbit){
             .principal =
-                (unsigned char)PyLong_AsLong(PyTuple_GetItem(electron, 0)),
+                (quantum_principle)PyLong_AsLong(PyTuple_GetItem(electron, 0)),
             .angular =
-                (unsigned char)PyLong_AsLong(PyTuple_GetItem(electron, 1)),
+                (quantum_angular)PyLong_AsLong(PyTuple_GetItem(electron, 1)),
             .magnetic =
-                (unsigned char)PyLong_AsLong(PyTuple_GetItem(electron, 2)),
-            .spin = (float)PyFloat_AsDouble(PyTuple_GetItem(electron, 3)),
+                (quantum_magnetic)PyLong_AsLong(PyTuple_GetItem(electron, 2)),
+            .spin =
+                (quantum_spin)PyFloat_AsDouble(PyTuple_GetItem(electron, 3)),
         };
     }
 
@@ -88,7 +90,7 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
 
     struct sim_ctx ctx = {
         .atom = &atom,
-        .revolutions = revolutions,
+        .revolutions = (float)revolutions,
         .max_iters = max_iters,
         .time_interval = time_interval,
         .record_handler = &rh,

@@ -18,10 +18,11 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
     struct sim_itr *prev_itr = iter_ctx->prev_itr;
     struct sim_itr *next_itr = iter_ctx->next_itr;
 
-    double N = iter_ctx->electron_orbit->principal;
-    double angular = iter_ctx->electron_orbit->angular;
+    quantum_principle principal = iter_ctx->electron_orbit->principal;
+    quantum_angular angular = iter_ctx->electron_orbit->angular;
 
-    struct radial_bounds radial_bounds = compute_radial_limits(N, angular);
+    struct radial_bounds radial_bounds =
+        compute_radial_limits(principal, angular);
 
     scalar prev_phi = 0;
     scalar prevR = 0;
@@ -64,7 +65,8 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *is_maximum,
                                 scalar *prev_phi, scalar *prev_r) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
-    scalar angular = ctx->iter_ctx->electron_orbit->angular;
+
+    quantum_angular angular = ctx->iter_ctx->electron_orbit->angular;
 
     const bool is_at_interest =
         iterate(ctx->iter_ctx, ctx->time_interval, POLAR);

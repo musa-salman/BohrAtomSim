@@ -17,10 +17,11 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
     const struct electron_orbit *electron_orbit = ctx->iter_ctx->electron_orbit;
 
-    double N = electron_orbit->principal;
-    double angular = electron_orbit->angular;
+    quantum_principle principal = electron_orbit->principal;
+    quantum_angular angular = electron_orbit->angular;
 
-    struct radial_bounds radial_bounds = compute_radial_limits(N, angular);
+    struct radial_bounds radial_bounds =
+        compute_radial_limits(principal, angular);
 
     scalar prev_max_vec = 0;
 
@@ -65,7 +66,8 @@ static bool simulate_orbit_rel_step(struct sim_ctx *ctx, bool *is_maximum,
                                     scalar *prev_max_vec) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
     struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
-    scalar angular = ctx->iter_ctx->electron_orbit->angular;
+
+    quantum_angular angular = ctx->iter_ctx->electron_orbit->angular;
 
     const bool is_at_interest =
         iterate(ctx->iter_ctx, ctx->time_interval, POLAR);
