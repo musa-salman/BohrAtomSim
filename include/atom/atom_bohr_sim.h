@@ -52,9 +52,6 @@ struct electron_orbit
 };
 
 struct atom {
-    long double electron_charge;
-    long double electron_mass;
-
     struct electron_orbit *electrons;
     unsigned char electrons_count;
 };

@@ -9,19 +9,17 @@ def orbital_math():
 
 
 @pytest.mark.parametrize(
-    "mass, radius, charge, angular, expected",
+    "radius, angular, expected",
     [
         (
-            9.10938299999999984642e-28,
             5.29177210903000035596e-09,
-            4.80299999999999985432e-10,
             1,
-            771311342549318697118.9800056,
-        ),  # 771311342549168713088.0 My result
+            -9044216113781726325202382.04042535180626,
+        ),
     ],
 )
-def test_compute_r_dot_dot(orbital_math, mass, radius, charge, angular, expected):
-    result = orbital_math.compute_r_dot_dot(mass, radius, charge, angular)
+def test_compute_r_dot_dot(orbital_math, radius, angular, expected):
+    result = orbital_math.compute_r_dot_dot(radius, angular)
 
     assert result == pytest.approx(expected)
 
@@ -50,43 +48,38 @@ def test_compute_radial_limits(orbital_math, principal, angular, expected):
 
 
 @pytest.mark.parametrize(
-    "angular, mass, radius, expected",
+    "angular, radius, expected",
     [
         (
             1,
-            9.109383e-28,
             5.286575e-09,
             4.142273e16,
         ),
         (
             1,
-            9.10938299999999984642e-28,
             5.28657494726808941049e-09,
             4.142273e16,
         ),
         (
             2,
-            9.10938299999999984642e-28,
             2.11808533420276745622e-08,
             5.160962e15,
         ),
         (
             1,
-            9.10938299999999984642e-28,
             4.08954807832393067593e-08,
             6.922085e14,
         ),
     ],
 )
-def test_compute_angular_rate(orbital_math, angular, mass, radius, expected):
-    result = orbital_math.compute_angular_rate(angular, mass, radius)
+def test_compute_angular_rate(orbital_math, angular, radius, expected):
+    result = orbital_math.compute_angular_rate(angular, radius)
     assert result == pytest.approx(expected)
 
 
 def test_compute_gamma(orbital_math):
     result = orbital_math.compute_gamma(
         1,
-        9.1093829999999998e-28,
         5.2977210902999997e-09,
         0.0,
     )
@@ -97,7 +90,6 @@ def test_compute_gamma(orbital_math):
 def test_compute_rel_angular_rate(orbital_math):
     result = orbital_math.compute_rel_angular_rate(
         1,
-        9.109383e-28,
         5.29177211e-09,
         1.00002662532601624434,
     )
@@ -108,21 +100,18 @@ def test_compute_rel_angular_rate(orbital_math):
 def test_compute_rel_r_dot_dot(orbital_math):
     result = orbital_math.compute_rel_r_dot_dot(
         1,
-        9.109383e-28,
         1.00002662532601624434,
         5.29177210903e-09,
-        4.8032068e-10,
         0.0,
     )
 
-    assert result == pytest.approx(-248254499349412178719.8396427854363533222)
+    assert result == pytest.approx(-240800562348868984710.9796105460)
 
 
 def test_compute_spherical_phi_dot(orbital_math):
     assert orbital_math.compute_spherical_phi_dot(
         1,
         1.57079632679489661926,
-        9.10938299999999984642e-28,
         5.29177210903000035596e-09,
     ) == pytest.approx(
         41341375827207185.15807488
@@ -154,3 +143,14 @@ def test_sphere_theta_dot_dot(orbital_math):
     assert orbital_math.compute_sphere_theta_dot_dot(
         5.2977210902999997e-09, 0, 1.5707963267948966, 0, 41248614476718784
     ) == pytest.approx(1.041836543725672e17)
+
+
+def test_compute_sphere_rel_theta_dot_dot(orbital_math):
+    assert orbital_math.compute_sphere_rel_theta_dot_dot(
+        5.2977210902999997e-09,
+        0,
+        1.5707963267948966,
+        0,
+        41248614476718784,
+        1.0000265656068432,
+    ) == pytest.approx(104183654372567210.3477391)

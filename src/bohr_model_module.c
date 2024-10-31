@@ -42,8 +42,6 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     import_array();
 
     PyObject *electrons = NULL;
-    double electron_charge;
-    double electron_mass;
 
     double revolutions;
     size_t max_iters;
@@ -53,10 +51,9 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     bool delta_psi_mode;
     unsigned short record_interval;
 
-    if (!PyArg_ParseTuple(args, "ddddkBBHO!", &electron_charge, &electron_mass,
-                          &revolutions, &time_interval, &max_iters, &sim_type,
-                          &delta_psi_mode, &record_interval, &PyList_Type,
-                          &electrons)) {
+    if (!PyArg_ParseTuple(args, "ddkBBHO!", &revolutions, &time_interval,
+                          &max_iters, &sim_type, &delta_psi_mode,
+                          &record_interval, &PyList_Type, &electrons)) {
         return NULL;
     }
 
@@ -76,8 +73,6 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     };
 
     struct atom atom = {
-        .electron_charge = electron_charge,
-        .electron_mass = electron_mass,
         .electrons = list2electron_orbits(electrons),
         .electrons_count = (unsigned char)PyList_Size(electrons),
     };
