@@ -1,6 +1,5 @@
 #include "simulation_runner/simulation_runner.h"
 #include "atom/atom_bohr_sim.h"
-#include "utils/types.h"
 
 #include "polar/polar_sim.h"
 #include "polar/polar_sim_rel.h"

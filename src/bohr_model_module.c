@@ -13,7 +13,6 @@
 #include "atom/result_recorders.h"
 #include "simulation_runner/simulation_runner.h"
 #include "utils/iterator.h"
-#include "utils/types.h"
 
 static struct electron_orbit *list2electron_orbits(PyObject *electrons) {
     struct electron_orbit *electron_orbits = NULL;
