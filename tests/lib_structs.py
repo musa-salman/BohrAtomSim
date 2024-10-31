@@ -20,3 +20,20 @@ class RadialBound(ctypes.Structure):
 
     def get_r_max(self):
         return self.r_max
+
+
+class Vector3(ctypes.Structure):
+    _fields_ = [
+        ("x", ctypes.c_longdouble),
+        ("y", ctypes.c_longdouble),
+        ("z", ctypes.c_longdouble),
+    ]
+
+    def __init__(self, x, y, z):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __repr__(self):
+        return f"Vector3({self.x}, {self.y}, {self.z})"
