@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdlib.h>
 
 #include "orbital_math.h"
@@ -32,7 +31,7 @@ struct radial_bounds compute_radial_limits(quantum_principle principle,
     scalar dis = a * a;
     dis -= b * b;
 
-    dis = sqrtl(dis);
+    dis = sqrt(dis);
 
     struct radial_bounds radial_bounds;
     radial_bounds.r_min = radial_bounds.r_max = a;
@@ -72,7 +71,7 @@ scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
     arg2 *= arg2;
     arg2 = 1 - arg2;
 
-    arg1 = sqrtl(arg1 / arg2);
+    arg1 = sqrt(arg1 / arg2);
 
     return arg1;
 }
@@ -105,13 +104,13 @@ scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma, scalar r,
 }
 
 scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
-    return asinl(n_phi / angular);
+    return asin(n_phi / angular);
 }
 
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {
     scalar arg1 = n_phi * H_BAR;
 
-    scalar arg2 = sinl(theta);
+    scalar arg2 = sin(theta);
     arg2 *= arg2;
     arg2 *= ELECTRON_MASS * radius * radius;
 
@@ -125,9 +124,9 @@ struct vector3 *spherical_to_cartesian(scalar radius, scalar theta,
         return NULL;
     }
 
-    vec->x = radius * sinl(theta) * cosl(phi);
-    vec->y = radius * sinl(theta) * sinl(phi);
-    vec->z = radius * cosl(theta);
+    vec->x = radius * sin(theta) * cos(phi);
+    vec->y = radius * sin(theta) * sin(phi);
+    vec->z = radius * cos(theta);
 
     return vec;
 }
@@ -140,12 +139,12 @@ scalar compute_angular_distance(const struct vector3 *v1,
     const scalar mag1 = VEC3_DOT(v1, v1);
     const scalar mag2 = VEC3_DOT(v2, v2);
 
-    return acosl(dot / sqrtl(mag1 * mag2));
+    return acos(dot / sqrt(mag1 * mag2));
 }
 
 scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                     scalar theta_dot, scalar phi_dot) {
-    scalar arg1 = sinl(theta) * cosl(theta);
+    scalar arg1 = sin(theta) * cos(theta);
     arg1 *= phi_dot * phi_dot;
 
     scalar arg2 = r_dot / r;
@@ -157,7 +156,7 @@ scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
 scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                         scalar theta_dot, scalar phi_dot,
                                         scalar gamma) {
-    scalar arg1 = sinl(theta) * cosl(theta);
+    scalar arg1 = sin(theta) * cos(theta);
     arg1 *= phi_dot * phi_dot;
 
     scalar arg2 = r_dot / r;

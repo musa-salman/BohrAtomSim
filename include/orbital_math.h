@@ -1,6 +1,8 @@
 #ifndef ORBITAL_MATH_H
 #define ORBITAL_MATH_H
 
+#include <math.h>
+
 #include "utils/types.h"
 
 /*
@@ -19,7 +21,7 @@
 
 #define PI 3.14159265358979323846
 #define _2_PI 6.28318530717958647692
-#define C 29979245800
+#define C 29979245800.0
 
 struct radial_bounds {
     scalar r_min;
@@ -31,6 +33,15 @@ struct vector3 {
     scalar y;
     scalar z;
 };
+
+#define sin(x) _Generic((x), float: sinf, default: sin, long double: sinl)(x)
+#define cos(x) _Generic((x), float: cosf, default: cos, long double: cosl)(x)
+#define asin(x)                                                                \
+    _Generic((x), float: asinf, default: asin, long double: asinl)(x)
+#define acos(x)                                                                \
+    _Generic((x), float: acosf, default: acos, long double: acosl)(x)
+#define sqrt(x)                                                                \
+    _Generic((x), float: sqrtf, default: sqrt, long double: sqrtl)(x)
 
 /**
     Calculates r_dot_dot "acceleration" of and electron
