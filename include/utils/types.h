@@ -1,6 +1,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include "_types.h"
+
 /**
  * @brief This header file defines the scalar type for mathematical operations.
  *
@@ -9,7 +11,7 @@
  *
  * It meant to make it easier to change the precision of the calculations.
  */
-typedef long double scalar;
+typedef __scalar scalar;
 
 typedef unsigned char quantum_principle;
 typedef unsigned char quantum_angular;
