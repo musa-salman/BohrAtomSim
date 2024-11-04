@@ -24,3 +24,7 @@ class BohrModule:
         if BohrModule.__mod is None:
             BohrModule.__mod = ctypes.CDLL(BohrModule.__module_path)
         return BohrModule.__mod
+
+    @staticmethod
+    def get_scalar():
+        return ctypes.c_float

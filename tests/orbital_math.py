@@ -6,14 +6,13 @@ from lib_structs import RadialBound, Vector3
 class OrbitalMath:
     def __init__(self):
         self.mod = BohrModule.get_bohr_module()
-
         self.compute_r_dot_dot_fn = wrap_function(
             self.mod,
             "compute_r_dot_dot",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                BohrModule.get_scalar(),
+                ctypes.c_ubyte,
             ],
         )
 
@@ -21,7 +20,7 @@ class OrbitalMath:
             self.mod,
             "compute_radial_limits",
             RadialBound,
-            [ctypes.c_longdouble, ctypes.c_longdouble],
+            [ctypes.c_ubyte, ctypes.c_ubyte],
         )
 
         self.spherical_to_cartesian_fn = wrap_function(
@@ -29,81 +28,70 @@ class OrbitalMath:
             "spherical_to_cartesian",
             ctypes.POINTER(Vector3),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
             ],
         )
 
         self.compute_angular_rate_fn = wrap_function(
             self.mod,
             "compute_angular_rate",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                ctypes.c_ubyte,
+                BohrModule.get_scalar(),
             ],
         )
 
         self.compute_gamma_fn = wrap_function(
             self.mod,
             "compute_gamma",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-            ],
-        )
-
-        self.compute_rel_angular_rate_fn = wrap_function(
-            self.mod,
-            "compute_rel_angular_rate",
-            ctypes.c_longdouble,
-            [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                ctypes.c_ubyte,
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
             ],
         )
 
         self.compute_rel_r_dot_dot_fn = wrap_function(
             self.mod,
             "compute_rel_r_dot_dot",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                ctypes.c_ubyte,
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
             ],
         )
 
         self.compute_theta_min_fn = wrap_function(
             self.mod,
             "compute_theta_min",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                BohrModule.get_scalar(),
+                ctypes.c_ubyte,
             ],
         )
 
         self.compute_spherical_phi_dot_fn = wrap_function(
             self.mod,
             "compute_spherical_phi_dot",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
             ],
         )
 
         self.compute_angular_distance_fn = wrap_function(
             self.mod,
             "compute_angular_distance",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
                 ctypes.POINTER(Vector3),
                 ctypes.POINTER(Vector3),
@@ -113,27 +101,27 @@ class OrbitalMath:
         self.compute_sphere_theta_dot_dot_fn = wrap_function(
             self.mod,
             "compute_sphere_theta_dot_dot",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
             ],
         )
 
         self.compute_sphere_rel_theta_dot_dot_fn = wrap_function(
             self.mod,
             "compute_sphere_rel_theta_dot_dot",
-            ctypes.c_longdouble,
+            BohrModule.get_scalar(),
             [
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
-                ctypes.c_longdouble,
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
+                BohrModule.get_scalar(),
             ],
         )
 
