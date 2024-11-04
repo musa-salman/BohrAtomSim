@@ -1,106 +1,53 @@
+#include <float.h>
+#include <math.h>
 #include <stdlib.h>
 
 #include "orbital_math.h"
 #include "utils/types.h"
 
-scalar compute_r_dot_dot(scalar r, quantum_angular angular) {
-    scalar arg1;
-    scalar arg2;
-
-    scalar r_sqr = r * r;
-
-    arg1 = angular * angular * H_BAR_SQR;
-    arg1 /= ELECTRON_CHARGE * r_sqr * r;
-
-    arg2 = ELECTRON_CHARGE * ELECTRON_CHARGE;
-    arg2 /= r_sqr;
-
-    arg1 = arg1 - arg2;
-
-    arg1 /= ELECTRON_MASS;
-
-    return arg1;
+scalar compute_r_dot_dot(scalar radius, quantum_angular angular) {
+    const scalar result =
+        ((angular * angular) / radius - 1) / (radius * radius);
+    return result;
 }
 
 struct radial_bounds compute_radial_limits(quantum_principle principle,
                                            quantum_angular angular) {
-    scalar a = principle * principle;
-    scalar b = (scalar)angular / principle;
-    b *= a;
+    const scalar term1 = principle * principle;
+    const scalar term2 = (scalar)angular * angular / term1;
 
-    scalar dis = a * a;
-    dis -= b * b;
-
-    dis = sqrt(dis);
+    const scalar term3 = sqrt(1 - term2);
 
     struct radial_bounds radial_bounds;
-    radial_bounds.r_min = radial_bounds.r_max = a;
-    radial_bounds.r_min -= dis;
-    radial_bounds.r_max += dis;
 
-    radial_bounds.r_min *= BOHR_R;
-    radial_bounds.r_max *= BOHR_R;
+    radial_bounds.r_min = term1 * (1 - term3);
+    radial_bounds.r_max = term1 * (1 + term3);
 
     return radial_bounds;
 }
 
 scalar compute_angular_rate(quantum_angular angular, scalar radius) {
-    scalar arg1 = angular * H_BAR;
-    arg1 /= ELECTRON_MASS * radius * radius;
-
-    return arg1;
-}
-
-scalar compute_rel_angular_rate(quantum_angular angular, scalar radius,
-                                scalar gamma) {
-    scalar arg1 = angular * H_BAR;
-    arg1 /= radius * radius * ELECTRON_MASS * gamma;
-
-    return arg1;
+    return angular / (radius * radius);
 }
 
 scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
-    scalar arg1 = C;
-    arg1 *= ELECTRON_MASS * radius;
-    arg1 = (angular * H_BAR) / arg1;
-    arg1 *= arg1;
-    arg1 += 1;
+    const scalar term1 =
+        (angular * angular) / (SPEED_OF_LIGHT_SQUARE * radius * radius);
+    const scalar term2 = (r_dot * r_dot) / SPEED_OF_LIGHT_SQUARE;
 
-    scalar arg2 = C;
-    arg2 = r_dot / arg2;
-    arg2 *= arg2;
-    arg2 = 1 - arg2;
-
-    arg1 = sqrt(arg1 / arg2);
-
-    return arg1;
+    const scalar result = sqrt((1 + term1) / (1 - term2));
+    return result;
 }
 
 scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma, scalar r,
                              scalar r_dot) {
-    scalar arg1;
-    scalar arg2;
-    scalar arg3;
 
-    scalar r_sq = r * r;
+    const scalar term1 = (angular * angular) / (gamma * r);
+    const scalar term2 = (r_dot * r_dot) / SPEED_OF_LIGHT_SQUARE;
 
-    arg1 = angular * angular * H_BAR_SQR;
-    arg1 /= gamma * ELECTRON_MASS * r_sq * r;
+    const scalar result = (term1 + term2 - 1) / (gamma * r * r);
 
-    arg2 = ELECTRON_CHARGE * ELECTRON_CHARGE;
-    arg2 /= r_sq;
-
-    arg3 = r_dot / C;
-    arg3 *= arg3;
-    arg3 = 1 - arg3;
-
-    arg2 *= arg3;
-
-    arg1 = arg1 - arg2;
-
-    arg1 /= gamma * ELECTRON_MASS;
-
-    return arg1;
+    return result;
 }
 
 scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
@@ -108,13 +55,10 @@ scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
 }
 
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {
-    scalar arg1 = n_phi * H_BAR;
+    const scalar sin_theta = sin(theta);
+    const scalar result = n_phi / (radius * radius * sin_theta * sin_theta);
 
-    scalar arg2 = sin(theta);
-    arg2 *= arg2;
-    arg2 *= ELECTRON_MASS * radius * radius;
-
-    return arg1 / arg2;
+    return result;
 }
 
 struct vector3 *spherical_to_cartesian(scalar radius, scalar theta,
@@ -131,7 +75,8 @@ struct vector3 *spherical_to_cartesian(scalar radius, scalar theta,
     return vec;
 }
 
-#define VEC3_DOT(v1, v2) (v1->x * v2->x + v1->y * v2->y + v1->z * v2->z)
+#define VEC3_DOT(v1, v2)                                                       \
+    ((v1)->x * (v2)->x + (v1)->y * (v2)->y + (v1)->z * (v2)->z)
 
 scalar compute_angular_distance(const struct vector3 *v1,
                                 const struct vector3 *v2) {
@@ -144,28 +89,23 @@ scalar compute_angular_distance(const struct vector3 *v1,
 
 scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                     scalar theta_dot, scalar phi_dot) {
-    scalar arg1 = sin(theta) * cos(theta);
-    arg1 *= phi_dot * phi_dot;
+    const scalar term1 = sin(theta) * cos(theta) * phi_dot * phi_dot;
+    const scalar term2 = 2 * r_dot * theta_dot / r;
 
-    scalar arg2 = r_dot / r;
-    arg2 *= 2 * theta_dot;
+    const scalar result = term1 - term2;
 
-    return arg1 - arg2;
+    return result;
 }
 
 scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                         scalar theta_dot, scalar phi_dot,
                                         scalar gamma) {
-    scalar arg1 = sin(theta) * cos(theta);
-    arg1 *= phi_dot * phi_dot;
 
-    scalar arg2 = r_dot / r;
-    arg2 *= 2 * theta_dot;
+    const scalar term1 = sin(theta) * cos(theta) * phi_dot * phi_dot;
+    const scalar term2 = 2 * r_dot * theta_dot / r;
+    const scalar term3 = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
 
-    scalar arg3 = gamma * ELECTRON_MASS * C * C * r;
-    arg3 = ELECTRON_CHARGE * ELECTRON_CHARGE / arg3;
-    arg3 = 1 - arg3;
-    arg2 *= arg3;
+    const scalar result = term1 - term2 * (1 - term3);
 
-    return arg1 - arg2;
+    return result;
 }

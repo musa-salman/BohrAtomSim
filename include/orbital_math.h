@@ -12,16 +12,11 @@
 *************************************************************************************************************
 */
 
-#define BOHR_R 5.29177210903e-9        // in cm
-#define H_BAR 1.0545718e-27            // in ergs
-#define H_BAR_SQR 1.11212168135524e-54 // in ergs^2
+#define SPEED_OF_LIGHT_SQUARE FLOAT_LITERAL_SUFFIX(18778.86507043055614177) // in a.u. of velocity sqr
 
-#define ELECTRON_CHARGE 4.803204672997660e-10 // in esu
-#define ELECTRON_MASS 9.10938356e-28          // in grams
-
-#define PI 3.14159265358979323846
-#define _2_PI 6.28318530717958647692
-#define C 29979245800.0
+#define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
+#define PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
+#define TOW_PI FLOAT_LITERAL_SUFFIX(6.28318530717958647692)
 
 struct radial_bounds {
     scalar r_min;
@@ -47,9 +42,9 @@ struct vector3 {
     Calculates r_dot_dot "acceleration" of and electron
     where
 
-        m*r_dot_dot = ((l^2)/(m*(r^3)) - (e^2)/(r^2)
+        m*r_dot_dot = ((k*h_bar)^2)/(m*(r^3)) - (e^2)/(r^2)
         l = k * H_BAR
-        r_dot_dot = (k^2 * H_BAR_SQR / (m*r^3) - e^2 / (r^2)) / m
+        r_dot_dot = (k^2 * H_BAR_SQR) / (m^2*r^3) - e^2 / (m * r^2)
 */
 scalar compute_r_dot_dot(scalar radius, quantum_angular angular);
 
@@ -88,24 +83,25 @@ scalar compute_angular_rate(quantum_angular angular, scalar radius);
  */
 scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot);
 
-#define POLAR_PHI_DOT_REL(angular, radius, gamma)                              \
-    compute_rel_angular_rate(angular, radius, gamma)
-#define SPHERICAL_THETA_DOT_REL(angular, radius, gamma)                        \
-    compute_rel_angular_rate(angular, radius, gamma)
-
 /**
     Calculates the angular change rate in relevistic
     where
         angular_velocity = (k * H_BAR) / (r^2 * mass * gamma)
 */
-scalar compute_rel_angular_rate(quantum_angular angular, scalar radius,
-                                scalar gamma);
+#define REL_ANGULAR_RATE(angular, radius, gamma)                               \
+    compute_angular_rate(angular, radius) / gamma
+
+#define POLAR_PHI_DOT_REL(angular, radius, gamma)                              \
+    REL_ANGULAR_RATE(angular, radius, gamma)
+#define SPHERICAL_THETA_DOT_REL(angular, radius, gamma)                        \
+    REL_ANGULAR_RATE(angular, radius, gamma)
 
 /**
  * @brief Calculates R_dot_dot  with relativity incorporated "acceleration" of
  * and electron
  *
- *                      gamma*m*r_dot_dot = (l^2)/(gamma*m*(r^3)) - (e^2)/(r^2)
+ *                      gamma*m*r_dot_dot = (l^2)/(gamma*m*(r^3)) -
+ * (e^2)/(r^2)(1-(r_dot/c)^2)
  *
  * @param angular
  * @param gamma = calc_rel_gamma

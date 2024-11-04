@@ -16,6 +16,6 @@ typedef __scalar scalar;
 typedef unsigned char quantum_principle;
 typedef unsigned char quantum_angular;
 typedef signed char quantum_magnetic;
-typedef float quantum_spin;
+typedef signed char quantum_spin;
 
 #endif // TYPES_H
