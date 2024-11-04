@@ -35,6 +35,8 @@ struct vector3 {
     _Generic((x), float: asinf, default: asin, long double: asinl)(x)
 #define acos(x)                                                                \
     _Generic((x), float: acosf, default: acos, long double: acosl)(x)
+#define atan2(y, x)                                                            \
+    _Generic((y), float: atan2f, default: atan2, long double: atan2l)(y, x)
 #define sqrt(x)                                                                \
     _Generic((x), float: sqrtf, default: sqrt, long double: sqrtl)(x)
 

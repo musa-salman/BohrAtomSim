@@ -88,7 +88,7 @@ scalar compute_angular_distance(const struct vector3 *v1,
     const scalar dot = VEC3_DOT(v1, v2);
     const scalar cross_mag = cross_magnitude(v1, v2);
 
-    return atan2f(cross_mag, dot);
+    return atan2(cross_mag, dot);
 }
 
 scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
