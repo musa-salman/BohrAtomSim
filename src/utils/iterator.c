@@ -49,12 +49,12 @@ bool iterate(struct iter_ctx *ctx, scalar time_interval, enum sim_type type) {
     struct sim_itr *next_itr = ctx->next_itr;
 
     next_itr->dt += time_interval;
-    next_itr->r = R_DOT(curr_itr) + R_DOT(curr_itr) * time_interval;
+    next_itr->r = R(curr_itr) + R_DOT(curr_itr) * time_interval;
     next_itr->r_dot = R_DOT(curr_itr) + R_DOT_DOT(curr_itr) * time_interval;
     next_itr->phi = PHI(curr_itr) + PHI_DOT(curr_itr) * time_interval;
 
-    if (PHI(next_itr) > _2_PI) {
-        next_itr->phi -= _2_PI;
+    if (PHI(next_itr) > TOW_PI) {
+        next_itr->phi -= TOW_PI;
     }
 
     if (type == SPHERICAL || type == REL_SPHERICAL || type == SPIN) {
