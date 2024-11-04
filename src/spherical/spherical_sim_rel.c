@@ -10,7 +10,7 @@
 #include "utils/macros.h"
 #include "utils/types.h"
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
+static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, scalar *sign,
                                 bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec);
 
@@ -29,7 +29,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
     struct radial_bounds radial_bounds =
         compute_radial_limits(principal, angular);
 
-    int sign = 1;
+    scalar sign = 1;
     bool theta_flag = false;
 
     scalar n_phi = angular - magnetic;
@@ -51,9 +51,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
     struct vector3 *prev_max_vec = NULL;
 
     if (magnetic == angular) {
-        next_itr->phi = PI / 2;
-        prev_itr->phi = PI / 2;
-
+        next_itr->phi = HALF_PI;
+        prev_itr->phi = HALF_PI;
         prev_itr->theta_dot = sign * SPHERICAL_THETA_DOT_REL(
                                          angular, R(prev_itr), GAMMA(prev_itr));
 
@@ -83,29 +82,32 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
         const bool is_at_interest = simulate_orbit_step(
             ctx, &at_max, &sign, &theta_flag, n_phi, &prev_max_vec);
 
-        next_itr->gamma = compute_gamma(angular, R(next_itr), R_DOT(next_itr));
+        next_itr->gamma = compute_gamma(angular, R(prev_itr), R_DOT(prev_itr));
 
-        // SAME
         if (it % ctx->record_interval == 0 && !(ctx->delta_psi_mode)) {
             RECORD_ITERATION(ctx, prev_itr);
         }
 
         if (is_at_interest) {
-            revolutions -= 0.5;
+            revolutions -= 0.5f;
             if (revolutions <= 0) {
                 break;
             }
         }
-        struct sim_itr *temp = prev_itr;
-        prev_itr = next_itr;
-        next_itr = temp;
+
+        struct sim_itr *tmp = prev_itr;
+        ctx->iter_ctx->prev_itr = next_itr;
+        prev_itr = ctx->iter_ctx->prev_itr;
+
+        ctx->iter_ctx->next_itr = tmp;
+        next_itr = ctx->iter_ctx->next_itr;
     }
 
     RECORD_ITERATION(ctx, prev_itr);
     end_iteration(ctx->iter_ctx);
 }
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
+static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, scalar *sign,
                                 bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
