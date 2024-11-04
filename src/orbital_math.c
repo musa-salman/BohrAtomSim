@@ -6,15 +6,14 @@
 #include "utils/types.h"
 
 scalar compute_r_dot_dot(scalar radius, quantum_angular angular) {
-    const scalar result =
-        ((angular * angular) / radius - 1) / (radius * radius);
+    const scalar result = (SQUARE(angular) / radius - 1) / SQUARE(radius);
     return result;
 }
 
 struct radial_bounds compute_radial_limits(quantum_principle principle,
                                            quantum_angular angular) {
-    const scalar term1 = principle * principle;
-    const scalar term2 = (scalar)angular * angular / term1;
+    const scalar term1 = SQUARE(principle);
+    const scalar term2 = SQUARE(angular) / term1;
 
     const scalar term3 = sqrt(1 - term2);
 
@@ -27,25 +26,25 @@ struct radial_bounds compute_radial_limits(quantum_principle principle,
 }
 
 scalar compute_angular_rate(quantum_angular angular, scalar radius) {
-    return angular / (radius * radius);
+    return angular / SQUARE(radius);
 }
 
 scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
     const scalar term1 =
-        (angular * angular) / (SPEED_OF_LIGHT_SQUARE * radius * radius);
-    const scalar term2 = (r_dot * r_dot) / SPEED_OF_LIGHT_SQUARE;
+        SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
+    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
 
     const scalar result = sqrt((1 + term1) / (1 - term2));
     return result;
 }
 
-scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma, scalar r,
-                             scalar r_dot) {
+scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
+                             scalar radius, scalar r_dot) {
 
-    const scalar term1 = (angular * angular) / (gamma * r);
-    const scalar term2 = (r_dot * r_dot) / SPEED_OF_LIGHT_SQUARE;
+    const scalar term1 = SQUARE(angular) / (gamma * radius);
+    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
 
-    const scalar result = (term1 + term2 - 1) / (gamma * r * r);
+    const scalar result = (term1 + term2 - 1) / (gamma * SQUARE(radius));
 
     return result;
 }
@@ -56,7 +55,7 @@ scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
 
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {
     const scalar sin_theta = sin(theta);
-    const scalar result = n_phi / (radius * radius * sin_theta * sin_theta);
+    const scalar result = n_phi / (SQUARE(radius * sin_theta));
 
     return result;
 }
@@ -79,9 +78,9 @@ struct vector3 *spherical_to_cartesian(scalar radius, scalar theta,
     ((v1)->x * (v2)->x + (v1)->y * (v2)->y + (v1)->z * (v2)->z)
 
 scalar cross_magnitude(const struct vector3 *v1, const struct vector3 *v2) {
-    return sqrt(powf(v1->y * v2->z - v1->z * v2->y, 2) +
-                powf(v1->z * v2->x - v1->x * v2->z, 2) +
-                powf(v1->x * v2->y - v1->y * v2->x, 2));
+    return sqrt(SQUARE(v1->y * v2->z - v1->z * v2->y) +
+                SQUARE(v1->z * v2->x - v1->x * v2->z) +
+                SQUARE(v1->x * v2->y - v1->y * v2->x));
 }
 
 scalar compute_angular_distance(const struct vector3 *v1,
@@ -94,7 +93,7 @@ scalar compute_angular_distance(const struct vector3 *v1,
 
 scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                     scalar theta_dot, scalar phi_dot) {
-    const scalar term1 = sin(theta) * cos(theta) * phi_dot * phi_dot;
+    const scalar term1 = sin(theta) * cos(theta) * SQUARE(phi_dot);
     const scalar term2 = 2 * r_dot * theta_dot / r;
 
     const scalar result = term1 - term2;
@@ -106,7 +105,7 @@ scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                         scalar theta_dot, scalar phi_dot,
                                         scalar gamma) {
 
-    const scalar term1 = sin(theta) * cos(theta) * phi_dot * phi_dot;
+    const scalar term1 = sin(theta) * cos(theta) * SQUARE(phi_dot);
     const scalar term2 = 2 * r_dot * theta_dot / r;
     const scalar term3 = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
 

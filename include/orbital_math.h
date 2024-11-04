@@ -38,6 +38,8 @@ struct vector3 {
 #define sqrt(x)                                                                \
     _Generic((x), float: sqrtf, default: sqrt, long double: sqrtl)(x)
 
+#define SQUARE(x) ((x) * (x))
+
 /**
     Calculates r_dot_dot "acceleration" of and electron
     where
