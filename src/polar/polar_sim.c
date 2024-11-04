@@ -54,7 +54,9 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
             }
         }
 
+        struct sim_itr *tmp = prev_itr;
         iter_ctx->prev_itr = next_itr;
+        iter_ctx->next_itr = tmp;
     }
 
     RECORD_ITERATION(ctx, prev_itr);

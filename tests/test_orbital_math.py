@@ -43,8 +43,8 @@ def test_compute_radial_limits(orbital_math):
 def test_compute_radial_limits(orbital_math, principal, angular, expected):
     result = orbital_math.compute_radial_limits(principal, angular)
 
-    assert result.get_r_min() == pytest.approx(expected.get_r_min(), rel=1e-2)
-    assert result.get_r_max() == pytest.approx(expected.get_r_max(), rel=1e-2)
+    assert result.get_r_min() == pytest.approx(expected.get_r_min())
+    assert result.get_r_max() == pytest.approx(expected.get_r_max())
 
 
 @pytest.mark.parametrize(

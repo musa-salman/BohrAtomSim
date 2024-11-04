@@ -27,4 +27,4 @@ class BohrModule:
 
     @staticmethod
     def get_scalar():
-        return ctypes.c_float
+        return ctypes.c_double

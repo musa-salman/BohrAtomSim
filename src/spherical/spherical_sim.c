@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "_types.h"
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
@@ -10,7 +11,7 @@
 #include "utils/macros.h"
 #include "utils/types.h"
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
+static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, scalar *sign,
                                 bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec);
 
@@ -30,7 +31,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     struct radial_bounds radial_bounds =
         compute_radial_limits(principal, angular);
 
-    int sign = 1;
+    scalar sign = 1;
     bool theta_flag = false;
 
     scalar n_phi = angular - magnetic;
@@ -76,7 +77,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
         }
 
         if (is_at_interest) {
-            revolutions -= 0.5;
+            revolutions -= FLOAT_LITERAL_SUFFIX(0.5);
             if (revolutions <= 0) {
                 break;
             }
@@ -89,7 +90,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     end_iteration(ctx->iter_ctx);
 }
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, int *sign,
+static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, scalar *sign,
                                 bool *theta_flag, scalar n_phi,
                                 struct vector3 **prev_max_vec) {
     struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
