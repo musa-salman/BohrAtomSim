@@ -78,13 +78,18 @@ struct vector3 *spherical_to_cartesian(scalar radius, scalar theta,
 #define VEC3_DOT(v1, v2)                                                       \
     ((v1)->x * (v2)->x + (v1)->y * (v2)->y + (v1)->z * (v2)->z)
 
+scalar cross_magnitude(const struct vector3 *v1, const struct vector3 *v2) {
+    return sqrt(powf(v1->y * v2->z - v1->z * v2->y, 2) +
+                powf(v1->z * v2->x - v1->x * v2->z, 2) +
+                powf(v1->x * v2->y - v1->y * v2->x, 2));
+}
+
 scalar compute_angular_distance(const struct vector3 *v1,
                                 const struct vector3 *v2) {
     const scalar dot = VEC3_DOT(v1, v2);
-    const scalar mag1 = VEC3_DOT(v1, v1);
-    const scalar mag2 = VEC3_DOT(v2, v2);
+    const scalar cross_mag = cross_magnitude(v1, v2);
 
-    return acos(dot / sqrt(mag1 * mag2));
+    return atan2f(cross_mag, dot);
 }
 
 scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
