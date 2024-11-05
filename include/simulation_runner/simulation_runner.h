@@ -12,6 +12,10 @@ struct simulator {
 
 void init_simulation(struct simulator* sim, struct sim_ctx* ctx, enum sim_type type);
 
+#define ITERATOR_INIT(iter_ctx) (iter_ctx)->orbit_i = 0
+#define ITERATOR_NEXT(iter_ctx) (iter_ctx)->orbit_i++
+#define ITERATOR_HAS_NEXT(iter_ctx, electron_count) (iter_ctx)->orbit_i < electron_count
+
 void run_simulation(struct simulator* sim);
 
 #endif // SIMULATION_RUNNER_H

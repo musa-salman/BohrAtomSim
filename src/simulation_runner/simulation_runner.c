@@ -34,8 +34,8 @@ void run_simulation(struct simulator *sim) {
     struct electron_orbit *electrons = sim->ctx->atom->electrons;
     const unsigned char electron_count = sim->ctx->atom->electrons_count;
 
-    for (iter_ctx->orbit_i = 0; iter_ctx->orbit_i < electron_count;
-         iter_ctx->orbit_i++) {
+    for (ITERATOR_INIT(iter_ctx); ITERATOR_HAS_NEXT(iter_ctx, electron_count);
+         ITERATOR_NEXT(iter_ctx)) {
 
         iter_ctx->electron_orbit = electrons + iter_ctx->orbit_i;
 
