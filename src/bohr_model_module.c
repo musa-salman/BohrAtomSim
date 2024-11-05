@@ -1,47 +1,18 @@
-#include "utils/types.h"
 #include <Python.h>
 
-// This need to be defined as stated in
-// https://github.com/numpy/numpy/issues/21865
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-#include "listobject.h"
-#include "numpy/npy_common.h"
-#include <numpy/arrayobject.h>
+#include <listobject.h>
 #include <stdlib.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
 #include "simulation_runner/simulation_runner.h"
 #include "utils/iterator.h"
+#include "utils/types.h"
 
-static struct electron_orbit *list2electron_orbits(PyObject *electrons) {
-    struct electron_orbit *electron_orbits = NULL;
-    Py_ssize_t electrons_count = PyList_Size(electrons);
-
-    electron_orbits = malloc(sizeof(struct electron_orbit[electrons_count]));
-
-    for (Py_ssize_t i = 0; i < electrons_count; i++) {
-        PyObject *electron = PyList_GetItem(electrons, i);
-
-        electron_orbits[i] = (struct electron_orbit){
-            .principal =
-                (quantum_principle)PyLong_AsLong(PyTuple_GetItem(electron, 0)),
-            .angular =
-                (quantum_angular)PyLong_AsLong(PyTuple_GetItem(electron, 1)),
-            .magnetic =
-                (quantum_magnetic)PyLong_AsLong(PyTuple_GetItem(electron, 2)),
-            .spin =
-                (quantum_spin)PyFloat_AsDouble(PyTuple_GetItem(electron, 3)),
-        };
-    }
-
-    return electron_orbits;
-}
+static struct electron_orbit *list2electron_orbits(PyObject *electrons);
+static PyObject *create_result_list(size_t num_orbits, size_t records_count);
 
 static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
-    import_array();
-
     PyObject *electrons = NULL;
 
     double revolutions;
@@ -58,18 +29,12 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
         return NULL;
     }
 
-    PyObject *result = NULL;
-    const npy_intp dims[2] = {max_iters, 7};
-
-    result = PyList_New(PyList_Size(electrons));
-
-    for (Py_ssize_t i = 0; i < PyList_Size(electrons); i++) {
-        PyList_SetItem(result, i, PyArray_SimpleNew(2, dims, NPY_DOUBLE));
-    }
+    PyObject *result =
+        create_result_list(PyList_Size(electrons), max_iters / record_interval);
 
     struct record_handler rh = {
         .record_in = result,
-        .record = &record2ndarray,
+        .record = &record2py_list,
         .curr_records = 0,
     };
 
@@ -78,8 +43,8 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
         .electrons_count = (unsigned char)PyList_Size(electrons),
     };
 
-    struct sim_itr curr_itr = {0};
-    struct sim_itr next_itr = {0};
+    struct sim_itr curr_itr = {};
+    struct sim_itr next_itr = {};
 
     struct iter_ctx iter_ctx = {
         .prev_itr = &curr_itr,
@@ -112,6 +77,35 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     run_simulation(&sim);
 
     free(atom.electrons);
+
+    return result;
+}
+
+static PyObject *create_result_list(size_t num_orbits, size_t records_count) {
+    PyObject *result = PyList_New(num_orbits);
+    if (!result) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create result list.");
+        return NULL;
+    }
+
+    for (size_t i = 0; i < num_orbits; i++) {
+        PyObject *iteration_list = PyList_New(records_count);
+        if (!iteration_list) {
+            Py_DECREF(result);
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to create iteration list.");
+            return NULL;
+        }
+
+        // Initialize each slot with Py_None as a placeholder.
+        for (size_t j = 0; j < records_count; j++) {
+            Py_INCREF(Py_None);
+            PyList_SET_ITEM(iteration_list, j, Py_None);
+        }
+
+        PyList_SET_ITEM(result, i, iteration_list); // Owned reference.
+    }
+
     return result;
 }
 
@@ -131,4 +125,28 @@ static struct PyModuleDef bohr_model_module = {
 
 PyMODINIT_FUNC PyInit_bohr_model(void) {
     return PyModule_Create(&bohr_model_module);
+}
+
+static struct electron_orbit *list2electron_orbits(PyObject *electrons) {
+    struct electron_orbit *electron_orbits = NULL;
+    Py_ssize_t electrons_count = PyList_Size(electrons);
+
+    electron_orbits = malloc(sizeof(struct electron_orbit[electrons_count]));
+
+    for (Py_ssize_t i = 0; i < electrons_count; i++) {
+        PyObject *electron = PyList_GetItem(electrons, i);
+
+        electron_orbits[i] = (struct electron_orbit){
+            .principal =
+                (quantum_principle)PyLong_AsLong(PyTuple_GetItem(electron, 0)),
+            .angular =
+                (quantum_angular)PyLong_AsLong(PyTuple_GetItem(electron, 1)),
+            .magnetic =
+                (quantum_magnetic)PyLong_AsLong(PyTuple_GetItem(electron, 2)),
+            .spin =
+                (quantum_spin)PyFloat_AsDouble(PyTuple_GetItem(electron, 3)),
+        };
+    }
+
+    return electron_orbits;
 }
