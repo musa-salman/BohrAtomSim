@@ -55,7 +55,11 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx) {
             }
         }
 
+        struct sim_itr *tmp = ctx->iter_ctx->prev_itr;
         ctx->iter_ctx->prev_itr = ctx->iter_ctx->next_itr;
+        prev_itr = ctx->iter_ctx->prev_itr;
+
+        ctx->iter_ctx->next_itr = tmp;
     }
 
     end_iteration(ctx->iter_ctx);
@@ -78,6 +82,8 @@ static bool simulate_orbit_rel_step(struct sim_ctx *ctx, bool *is_maximum,
     next_itr->phi_dot =
         POLAR_PHI_DOT_REL(angular, R(prev_itr), GAMMA(prev_itr));
 
+    next_itr->gamma = compute_gamma(angular, R(prev_itr), R_DOT(prev_itr));
+
     if (!is_at_interest)
         return false;
     *is_maximum = !(*is_maximum);
@@ -93,6 +99,5 @@ static bool simulate_orbit_rel_step(struct sim_ctx *ctx, bool *is_maximum,
         *prev_max_vec = PHI(prev_itr);
     }
 
-    next_itr->gamma = compute_gamma(angular, R(prev_itr), R_DOT(prev_itr));
     return is_at_interest;
 }

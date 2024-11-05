@@ -137,14 +137,10 @@ static struct electron_orbit *list2electron_orbits(PyObject *electrons) {
         PyObject *electron = PyList_GetItem(electrons, i);
 
         electron_orbits[i] = (struct electron_orbit){
-            .principal =
-                (quantum_principle)PyLong_AsLong(PyTuple_GetItem(electron, 0)),
-            .angular =
-                (quantum_angular)PyLong_AsLong(PyTuple_GetItem(electron, 1)),
-            .magnetic =
-                (quantum_magnetic)PyLong_AsLong(PyTuple_GetItem(electron, 2)),
-            .spin =
-                (quantum_spin)PyFloat_AsDouble(PyTuple_GetItem(electron, 3)),
+            (quantum_principle)PyLong_AsLong(PyTuple_GetItem(electron, 0)),
+            (quantum_angular)PyLong_AsLong(PyTuple_GetItem(electron, 1)),
+            (quantum_magnetic)PyLong_AsLong(PyTuple_GetItem(electron, 2)),
+            (quantum_spin)PyFloat_AsDouble(PyTuple_GetItem(electron, 3)),
         };
     }
 

@@ -1,10 +1,10 @@
 #include <Python.h>
 
-#include "floatobject.h"
-#include "listobject.h"
+#include <floatobject.h>
+#include <listobject.h>
+#include <pytypedefs.h>
 
 #include "atom/result_recorders.h"
-#include "pytypedefs.h"
 #include "utils/macros.h"
 
 void record2py_list(void *record_in, const unsigned char orbit_i,

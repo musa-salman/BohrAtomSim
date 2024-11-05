@@ -10,7 +10,7 @@
 #include "utils/types.h"
 
 static bool simulate_orbit_step(struct sim_ctx *ctx, bool *is_maximum,
-                                scalar *prev_phi, scalar *prevR);
+                                scalar *prev_phi, scalar *prev_r);
 
 void simulate_polar_orbit(struct sim_ctx *ctx) {
     struct iter_ctx *iter_ctx = ctx->iter_ctx;
@@ -25,7 +25,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
         compute_radial_limits(principal, angular);
 
     scalar prev_phi = 0;
-    scalar prevR = 0;
+    scalar prev_r = 0;
 
     init_iteration(prev_itr, POLAR);
     init_iteration(next_itr, POLAR);
@@ -41,7 +41,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
     for (unsigned long it = 1; it < ctx->max_iters; it++) {
 
         const bool is_at_interest =
-            simulate_orbit_step(ctx, &is_maximum, &prev_phi, &prevR);
+            simulate_orbit_step(ctx, &is_maximum, &prev_phi, &prev_r);
 
         if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode) {
             RECORD_ITERATION(ctx, prev_itr);
@@ -56,7 +56,10 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
 
         struct sim_itr *tmp = prev_itr;
         iter_ctx->prev_itr = next_itr;
+        prev_itr = next_itr;
+
         iter_ctx->next_itr = tmp;
+        next_itr = tmp;
     }
 
     RECORD_ITERATION(ctx, prev_itr);

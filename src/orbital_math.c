@@ -6,7 +6,7 @@
 #include "utils/types.h"
 
 scalar compute_r_dot_dot(scalar radius, quantum_angular angular) {
-    const scalar result = (SQUARE(angular) / radius - 1) / SQUARE(radius);
+    const scalar result = ((SQUARE(angular) / radius) - 1) / SQUARE(radius);
     return result;
 }
 
