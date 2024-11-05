@@ -1,58 +1,76 @@
 #include <Python.h>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-#include <numpy/ndarrayobject.h>
-#include <numpy/ndarraytypes.h>
+#include "floatobject.h"
+#include "listobject.h"
 
 #include "atom/result_recorders.h"
+#include "pytypedefs.h"
 #include "utils/macros.h"
 
-void record2ndarray(void *record_in, const unsigned char orbit_i,
+void record2py_list(void *record_in, const unsigned char orbit_i,
                     const unsigned char iter_i, const struct sim_itr *iter) {
-    PyArrayObject *result =
-        (PyArrayObject *)((PyListObject *)record_in)->ob_item[orbit_i];
+    PyObject *result = PyList_GetItem(record_in, orbit_i);
+
+    PyObject *record = NULL;
+    if (THETA(iter) != -1)
+        record = PyList_New(3); // Include 3D (theta) information.
+
+    else
+        record = PyList_New(2);
+
+    if (!record) {
+        char msg[100];
+        snprintf(msg, sizeof(msg),
+                 "Failed to create record list. orbit_i: %d, iter_i: %d",
+                 orbit_i, iter_i);
+        PyErr_SetString(PyExc_RuntimeError, msg);
+        return;
+    }
+
+    // Add r value.
+    PyObject *item = PyFloat_FromDouble(iter->r);
+    if (!item) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to build r value.");
+        Py_DECREF(record);
+        return;
+    }
+    PyList_SET_ITEM(record, 0, item);
+
+    // Add phi value.
+    item = PyFloat_FromDouble(iter->phi);
+    if (!item) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to build phi value.");
+        Py_DECREF(record);
+        return;
+    }
+    PyList_SET_ITEM(record, 1, item);
+
+    // Conditionally add theta value if 3D.
+    if (THETA(iter) != -1) {
+        item = PyFloat_FromDouble(THETA(iter));
+        if (!item) {
+            PyErr_SetString(PyExc_RuntimeError, "Failed to build theta value.");
+            Py_DECREF(record);
+            return;
+        }
+        PyList_SET_ITEM(record, 2, item);
+    }
+
+    // Set the record in the correct slot of the iteration list.
+    PyList_SET_ITEM(result, iter_i, record);
+}
+
+void record2array(void *record_in, const unsigned char orbit_i,
+                  const unsigned char iter_i, const struct sim_itr *iter) {
+    double(*result)[5000][2] = record_in;
+
     unsigned char i = 0;
 
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = iter->dt;
+    result[orbit_i][iter_i][i++] = iter->r;
+    result[orbit_i][iter_i][i++] = iter->phi;
 
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = iter->r;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = iter->r_dot;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = iter->r_dot_dot;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = iter->phi;
-
-    *(double *)PyArray_GETPTR2(result, iter_i, i++) = iter->phi_dot;
-
-    if (PHI_DOT_0(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = PHI_DOT_0(iter);
-    }
-
-    if (THETA(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = THETA(iter);
-    }
-
-    if (THETA_DOT(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = THETA_DOT(iter);
-    }
-
-    if (THETA_DOT_DOT(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = THETA_DOT_DOT(iter);
-    }
-
-    if (EPSILON(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = EPSILON(iter);
-    }
-
-    if (GAMMA(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = GAMMA(iter);
-    }
-
-    if (DELTA_PHI(iter) != -1) {
-        *(double *)PyArray_GETPTR2(result, iter_i, i++) = DELTA_PHI(iter);
-    }
+    if (THETA(iter) != -1)
+        result[orbit_i][iter_i][i++] = THETA(iter);
 }
 
 void record2printf(void *Py_UNUSED(record_in),

@@ -3,9 +3,12 @@
 
 #include "utils/iterator.h"
 
-void record2ndarray(void *record_in, const unsigned char orbit_i,
+void record2py_list(void *record_in, const unsigned char orbit_i,
                            const unsigned char iter_i,
                            const struct sim_itr *iter);
+
+void record2array(void *record_in, const unsigned char orbit_i,
+                  const unsigned char iter_i, const struct sim_itr *iter);
 
 #define print(x) _Generic((x), \
     float: printf("%s: %.10E\t", #x, (float)(x)), \
