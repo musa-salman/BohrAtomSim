@@ -68,6 +68,46 @@ void record2py_list(void *record_in, const unsigned char orbit_i,
     Py_DECREF(record);
 }
 
+void record2py_list_rel(void *record_in, const unsigned char orbit_i,
+                        const struct sim_itr *iter) {
+
+    PyObject *result = PyList_GetItem(record_in, orbit_i);
+    if (!result) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to retrieve result list.");
+        return;
+    }
+
+    PyObject *record = PyList_New(0);
+    if (!record) {
+        char msg[100];
+        snprintf(msg, sizeof(msg), "Failed to create record list. orbit_i: %d",
+                 orbit_i);
+        PyErr_SetString(PyExc_RuntimeError, msg);
+        return;
+    }
+
+    // Add delta_phi value.
+    PyObject *item = PyFloat_FromDouble(iter->delta_phi);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "Failed to append delta_phi value.");
+        Py_XDECREF(item);
+        Py_DECREF(record);
+        return;
+    }
+    Py_DECREF(item); // Release reference now that it is in the list
+
+    // Append `record` to `result` list at orbit_i.
+    if (PyList_Append(result, record) == -1) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "Failed to append record to result.");
+        Py_DECREF(record);
+        return;
+    }
+
+    Py_DECREF(record);
+}
+
 void record2printf(void *Py_UNUSED(record_in),
                    const unsigned char Py_UNUSED(orbit_i),
                    const struct sim_itr *iter) {

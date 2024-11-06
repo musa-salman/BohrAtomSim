@@ -30,9 +30,15 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
 
     PyObject *result = create_result_list(PyList_Size(electrons));
 
+    record_func record_fn;
+    if (sim_type == POLAR || sim_type == SPHERICAL)
+        record_fn = &record2py_list;
+    else
+        record_fn = &record2py_list_rel;
+
     struct record_handler rh = {
         .record_in = result,
-        .record = &record2py_list,
+        .record = record_fn,
         .curr_records = 0,
     };
 
