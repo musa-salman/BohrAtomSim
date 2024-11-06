@@ -7,7 +7,7 @@
 #include "utils/types.h"
 
 typedef void (*record_func)(void *record_in, const unsigned char orbit_i,
-                            const unsigned char iter_i, const struct sim_itr *iter);
+                             const struct sim_itr *iter);
 
 struct record_handler {
     void *record_in;
@@ -15,15 +15,10 @@ struct record_handler {
     unsigned char curr_records;
 };
 
-#define RECORD_ITERATION(sim_ctx, curr_itr) \
-    do { \
-        (sim_ctx)->record_handler->record( \
+#define RECORD_ITERATION(sim_ctx, curr_itr)    (sim_ctx)->record_handler->record( \
             (sim_ctx)->record_handler->record_in, \
             (sim_ctx)->iter_ctx->orbit_i, \
-            (sim_ctx)->record_handler->curr_records, \
-            (curr_itr)); \
-        (sim_ctx)->record_handler->curr_records++; \
-    } while (0)
+            (curr_itr)) \
 
 struct electron_orbit
 {
@@ -66,7 +61,6 @@ struct sim_ctx {
 
     // Simulation control
     float revolutions;
-    size_t max_iters;
     bool delta_psi_mode;
     
     scalar time_interval;

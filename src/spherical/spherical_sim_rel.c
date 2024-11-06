@@ -77,8 +77,9 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
                                                 R(prev_itr), R_DOT(prev_itr));
 
     RECORD_ITERATION(ctx, prev_itr);
-    for (size_t it = 0; it < ctx->max_iters; it++) {
+    size_t it = 0;
 
+    while (revolutions > 0) {
         const bool is_at_interest = simulate_orbit_step(
             ctx, &at_max, &sign, &theta_flag, n_phi, &prev_max_vec);
 
@@ -101,6 +102,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx) {
 
         ctx->iter_ctx->next_itr = tmp;
         next_itr = ctx->iter_ctx->next_itr;
+        it++;
     }
 
     RECORD_ITERATION(ctx, prev_itr);

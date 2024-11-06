@@ -8,74 +8,68 @@
 #include "utils/macros.h"
 
 void record2py_list(void *record_in, const unsigned char orbit_i,
-                    const unsigned char iter_i, const struct sim_itr *iter) {
+                    const struct sim_itr *iter) {
     PyObject *result = PyList_GetItem(record_in, orbit_i);
+    if (!result) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to retrieve result list.");
+        return;
+    }
 
-    PyObject *record = NULL;
-    if (THETA(iter) != -1)
-        record = PyList_New(3); // Include 3D (theta) information.
-
-    else
-        record = PyList_New(2);
-
+    PyObject *record = PyList_New(0);
     if (!record) {
         char msg[100];
-        snprintf(msg, sizeof(msg),
-                 "Failed to create record list. orbit_i: %d, iter_i: %d",
-                 orbit_i, iter_i);
+        snprintf(msg, sizeof(msg), "Failed to create record list. orbit_i: %d",
+                 orbit_i);
         PyErr_SetString(PyExc_RuntimeError, msg);
         return;
     }
 
     // Add r value.
     PyObject *item = PyFloat_FromDouble(iter->r);
-    if (!item) {
-        PyErr_SetString(PyExc_RuntimeError, "Failed to build r value.");
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append r value.");
+        Py_XDECREF(item);
         Py_DECREF(record);
         return;
     }
-    PyList_SET_ITEM(record, 0, item);
+    Py_DECREF(item); // Release reference now that it is in the list
 
     // Add phi value.
     item = PyFloat_FromDouble(iter->phi);
-    if (!item) {
-        PyErr_SetString(PyExc_RuntimeError, "Failed to build phi value.");
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append phi value.");
+        Py_XDECREF(item);
         Py_DECREF(record);
         return;
     }
-    PyList_SET_ITEM(record, 1, item);
+    Py_DECREF(item);
 
     // Conditionally add theta value if 3D.
     if (THETA(iter) != -1) {
         item = PyFloat_FromDouble(THETA(iter));
-        if (!item) {
-            PyErr_SetString(PyExc_RuntimeError, "Failed to build theta value.");
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append theta value.");
+            Py_XDECREF(item);
             Py_DECREF(record);
             return;
         }
-        PyList_SET_ITEM(record, 2, item);
+        Py_DECREF(item);
     }
 
-    // Set the record in the correct slot of the iteration list.
-    PyList_SET_ITEM(result, iter_i, record);
-}
+    // Append `record` to `result` list at orbit_i.
+    if (PyList_Append(result, record) == -1) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "Failed to append record to result.");
+        Py_DECREF(record);
+        return;
+    }
 
-void record2array(void *record_in, const unsigned char orbit_i,
-                  const unsigned char iter_i, const struct sim_itr *iter) {
-    double(*result)[5000][2] = record_in;
-
-    unsigned char i = 0;
-
-    result[orbit_i][iter_i][i++] = iter->r;
-    result[orbit_i][iter_i][i++] = iter->phi;
-
-    if (THETA(iter) != -1)
-        result[orbit_i][iter_i][i++] = THETA(iter);
+    Py_DECREF(record);
 }
 
 void record2printf(void *Py_UNUSED(record_in),
                    const unsigned char Py_UNUSED(orbit_i),
-                   const unsigned char Py_UNUSED(iter_i),
                    const struct sim_itr *iter) {
 
     print(iter->dt);

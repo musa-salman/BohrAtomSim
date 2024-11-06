@@ -67,8 +67,8 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
     next_itr->r_dot_dot = compute_r_dot_dot(R(prev_itr), angular);
 
     RECORD_ITERATION(ctx, prev_itr);
-    for (size_t it = 0; it < ctx->max_iters; it++) {
-
+    size_t it = 0;
+    while (revolutions > 0) {
         const bool is_at_interest = simulate_orbit_step(
             ctx, &at_max, &sign, &theta_flag, n_phi, &prev_max_vec);
 
@@ -83,7 +83,13 @@ void simulate_spherical_orbit(struct sim_ctx *ctx) {
             }
         }
 
+        struct sim_itr *tmp = prev_itr;
+        ctx->iter_ctx->prev_itr = next_itr;
         prev_itr = next_itr;
+
+        ctx->iter_ctx->next_itr = tmp;
+        next_itr = tmp;
+        it++;
     }
 
     RECORD_ITERATION(ctx, prev_itr);
