@@ -34,24 +34,23 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
     prev_itr->r_dot_dot = compute_r_dot_dot(R(prev_itr), angular);
     prev_itr->phi_dot = POLAR_PHI_DOT(angular, R(prev_itr));
 
+    scalar initial_phi = PHI(prev_itr);
+
     scalar revolutions = ctx->revolutions;
 
     bool is_maximum = true;
-
-    for (unsigned long it = 1; it < ctx->max_iters; it++) {
-
-        const bool is_at_interest =
-            simulate_orbit_step(ctx, &is_maximum, &prev_phi, &prev_r);
+    size_t it = 0;
+    while (revolutions > 0) {
+        simulate_orbit_step(ctx, &is_maximum, &prev_phi, &prev_r);
 
         if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode) {
             RECORD_ITERATION(ctx, prev_itr);
         }
 
-        if (is_at_interest) {
-            revolutions -= 0.5;
-            if (revolutions <= 0) {
+        if (TWO_PI - (prev_itr->phi - initial_phi) < 0.01) {
+            revolutions -= 1;
+            if (revolutions <= 0)
                 break;
-            }
         }
 
         struct sim_itr *tmp = prev_itr;
@@ -60,6 +59,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx) {
 
         iter_ctx->next_itr = tmp;
         next_itr = tmp;
+        it++;
     }
 
     RECORD_ITERATION(ctx, prev_itr);
