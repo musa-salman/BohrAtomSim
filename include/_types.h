@@ -1,6 +1,8 @@
 #ifndef _TYPES_H
 #define _TYPES_H
 
+#define LONG_DOUBLE_SCALAR
+
 #ifdef FLOAT_SCALAR
 typedef float __scalar; // not recommended
 #elif defined(LONG_DOUBLE_SCALAR)

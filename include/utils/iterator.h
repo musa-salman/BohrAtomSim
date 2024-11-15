@@ -18,14 +18,11 @@ enum sim_type: unsigned char
 };
 
 struct iter_ctx {
-    clock_t start_time;
-    clock_t end_time;
-
-    unsigned char orbit_i;
-    struct electron_orbit *electron_orbit;
-
     struct sim_itr *prev_itr;
     struct sim_itr *next_itr;
+
+    clock_t start_time;
+    clock_t end_time;
 };
 
 // simulation iteration to hold the current and next iteration values

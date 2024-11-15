@@ -9,95 +9,64 @@
 #include "utils/macros.h"
 #include "utils/types.h"
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *is_maximum,
-                                scalar *prev_phi, scalar *prev_r);
+static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar time_interval,
+                                quantum_angular angular);
 
-void simulate_polar_orbit(struct sim_ctx *ctx) {
-    struct iter_ctx *iter_ctx = ctx->iter_ctx;
-    start_iteration(iter_ctx);
-    struct sim_itr *prev_itr = iter_ctx->prev_itr;
-    struct sim_itr *next_itr = iter_ctx->next_itr;
+void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
+    struct sim_itr prev_itr = {};
+    struct sim_itr next_itr = {};
+    struct iter_ctx iter_ctx = {.prev_itr = &prev_itr, .next_itr = &next_itr};
 
-    quantum_principle principal = iter_ctx->electron_orbit->principal;
-    quantum_angular angular = iter_ctx->electron_orbit->angular;
+    start_iteration(&iter_ctx);
+
+    void *record_in =
+        ORBIT_RECORD_LOCATION(ctx->record_handler, orbit_hash(orbit));
 
     struct radial_bounds radial_bounds =
-        compute_radial_limits(principal, angular);
+        compute_radial_limits(orbit.principal, orbit.angular);
 
-    scalar prev_phi = 0;
-    scalar prev_r = 0;
+    init_iteration(&prev_itr, POLAR);
+    init_iteration(&next_itr, POLAR);
 
-    init_iteration(prev_itr, POLAR);
-    init_iteration(next_itr, POLAR);
-
-    prev_itr->r = radial_bounds.r_min;
-    prev_itr->r_dot_dot = compute_r_dot_dot(R(prev_itr), angular);
-    prev_itr->phi_dot = POLAR_PHI_DOT(angular, R(prev_itr));
-
-    scalar initial_phi = PHI(prev_itr);
+    prev_itr.r = radial_bounds.r_min;
+    prev_itr.r_dot_dot = compute_r_dot_dot(prev_itr.r, orbit.angular);
+    prev_itr.phi_dot = POLAR_PHI_DOT(orbit.angular, prev_itr.r);
 
     scalar revolutions = ctx->revolutions;
 
-    bool is_maximum = true;
     size_t it = 0;
     while (revolutions > 0) {
-        simulate_orbit_step(ctx, &is_maximum, &prev_phi, &prev_r);
+        simulate_orbit_step(&iter_ctx, ctx->time_interval, orbit.angular);
 
-        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode) {
-            RECORD_ITERATION(ctx, prev_itr);
-        }
+        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
+            RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
 
-        if (TWO_PI - (prev_itr->phi - initial_phi) < 0.01) {
-            revolutions -= 1;
+        if (iter_ctx.prev_itr->phi > TWO_PI - 1e-3) {
+            revolutions = revolutions - 1;
             if (revolutions <= 0)
                 break;
         }
 
-        struct sim_itr *tmp = prev_itr;
-        iter_ctx->prev_itr = next_itr;
-        prev_itr = next_itr;
+        struct sim_itr *tmp = iter_ctx.prev_itr;
+        iter_ctx.prev_itr = iter_ctx.next_itr;
 
-        iter_ctx->next_itr = tmp;
-        next_itr = tmp;
+        iter_ctx.next_itr = tmp;
         it++;
     }
 
-    RECORD_ITERATION(ctx, prev_itr);
-    end_iteration(iter_ctx);
+    RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
+    end_iteration(&iter_ctx);
 }
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *is_maximum,
-                                scalar *prev_phi, scalar *prev_r) {
-    struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
-    struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
+static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar time_interval,
+                                quantum_angular angular) {
+    const struct sim_itr *prev_itr = iter_ctx->prev_itr;
+    struct sim_itr *next_itr = iter_ctx->next_itr;
 
-    quantum_angular angular = ctx->iter_ctx->electron_orbit->angular;
-
-    const bool is_at_interest =
-        iterate(ctx->iter_ctx, ctx->time_interval, POLAR);
+    const bool is_at_interest = iterate(iter_ctx, time_interval, POLAR);
 
     next_itr->r_dot_dot = compute_r_dot_dot(R(prev_itr), angular);
     next_itr->phi_dot = POLAR_PHI_DOT(angular, R(next_itr));
 
-    if (!is_at_interest)
-        return false;
-
-    *is_maximum = !(*is_maximum);
-    if (!(*is_maximum))
-        return true;
-
-    if (*prev_phi != 0) {
-        prev_itr->delta_phi += prev_itr->phi - *prev_phi;
-
-        if (ctx->delta_psi_mode) {
-            RECORD_ITERATION(ctx, prev_itr);
-        }
-
-        next_itr->delta_phi = prev_itr->delta_phi;
-    }
-
-    *prev_r = R(prev_itr);
-    *prev_phi = PHI(prev_itr);
-
-    return true;
+    return is_at_interest;
 }

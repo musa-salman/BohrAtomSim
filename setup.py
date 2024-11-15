@@ -20,6 +20,7 @@ setup(
                 "src/atom/result_recorders.c",
                 "src/simulation_runner/simulation_runner.c",
                 "src/orbital_math.c",
+                "src/result/result.c",
             ],
             include_dirs=[
                 "include",
@@ -28,6 +29,7 @@ setup(
                 "include/utils",
                 "include/simulation_runner",
                 "include/atom",
+                "include/result",
                 numpy.get_include(),
             ],
         )

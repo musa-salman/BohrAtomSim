@@ -1,7 +1,11 @@
 #include <Python.h>
 
+#include <dictobject.h>
 #include <listobject.h>
+#include <pytypedefs.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
@@ -10,66 +14,58 @@
 #include "utils/types.h"
 
 static struct electron_orbit *list2electron_orbits(PyObject *electrons);
-static PyObject *create_result_list(size_t num_orbits);
+static PyObject *create_result_dict(struct atom atom);
+void struct_to_dict(PyObject *dict, const struct result *result);
+void *lookup_record(void *record_in, long key);
 
 static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     PyObject *electrons = NULL;
 
     double revolutions;
 
-    double time_interval;
+    const char *time_interval_str;
+    scalar time_interval;
     enum sim_type sim_type;
     bool delta_psi_mode;
     unsigned short record_interval;
 
-    if (!PyArg_ParseTuple(args, "ddBBHO!", &revolutions, &time_interval,
+    if (!PyArg_ParseTuple(args, "dsBBHO!", &revolutions, &time_interval_str,
                           &sim_type, &delta_psi_mode, &record_interval,
                           &PyList_Type, &electrons)) {
         return NULL;
     }
-
-    PyObject *result = create_result_list(PyList_Size(electrons));
-
-    record_func record_fn;
-    if (sim_type == POLAR || sim_type == SPHERICAL)
-        record_fn = &record2py_list;
-    else
-        record_fn = &record2py_list_rel;
-
-    struct record_handler rh = {
-        .record_in = result,
-        .record = record_fn,
-        .curr_records = 0,
-    };
 
     struct atom atom = {
         .electrons = list2electron_orbits(electrons),
         .electrons_count = (unsigned char)PyList_Size(electrons),
     };
 
-    struct sim_itr curr_itr = {};
-    struct sim_itr next_itr = {};
+    PyObject *result = create_result_dict(atom);
 
-    struct iter_ctx iter_ctx = {
-        .prev_itr = &curr_itr,
-        .next_itr = &next_itr,
-        .orbit_i = 0,
-        .electron_orbit = NULL,
+    record_fn record;
+    record = record2py_list_verbose;
+
+    struct record_handler rh = {
+        .record_in = result,
+        .curr_records = 0,
+        .record = record,
+        .records_lookup = &lookup_record,
     };
 
+    time_interval = strtold(time_interval_str, NULL);
+
     struct sim_ctx ctx = {
-        .atom = &atom,
         .revolutions = (float)revolutions,
         .time_interval = time_interval,
         .record_handler = &rh,
         .delta_psi_mode = delta_psi_mode,
         .record_interval = record_interval,
-        .iter_ctx = &iter_ctx,
+        .active_orbits = atom.electrons_count,
     };
 
     struct simulator sim;
 
-    init_simulation(&sim, &ctx, sim_type);
+    init_simulation(&sim, atom, &ctx, sim_type);
 
     if (sim.simulate_orbit == NULL) {
         free(atom.electrons);
@@ -84,23 +80,64 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     return result;
 }
 
-static PyObject *create_result_list(size_t num_orbits) {
-    PyObject *result = PyList_New(num_orbits);
+void struct_to_dict(PyObject *dict, const struct result *result) {
+    for (size_t i = 0; i < result->count; i++) {
+        PyObject *record_list = PyDict_GetItem(dict, PyLong_FromLong(i));
+        const struct records *records = &result->records[i];
+
+        for (size_t j = 0; j < records->count; j++) {
+            PyObject *record = PyList_New(0);
+
+            PyObject *item = PyFloat_FromDouble(records->records[j].r);
+            PyList_Append(record, item);
+            Py_DECREF(item);
+
+            item = PyFloat_FromDouble(records->records[j].phi);
+            PyList_Append(record, item);
+            Py_DECREF(item);
+
+            if (records->records[j].theta != -1) {
+                item = PyFloat_FromDouble(records->records[j].theta);
+                PyList_Append(record, item);
+                Py_DECREF(item);
+            }
+
+            PyList_Append(record_list, record);
+        }
+    }
+}
+
+long orbit_hash(struct electron_orbit orbit) {
+    return orbit.principal | orbit.angular << 8 | orbit.magnetic << 16;
+}
+
+void *lookup_record(void *record_in, long key) {
+    PyObject *orbit_i = PyLong_FromLong(key);
+    void *r = PyDict_GetItem(record_in, orbit_i);
+    Py_DECREF(orbit_i);
+    return r;
+}
+
+static PyObject *create_result_dict(struct atom atom) {
+    PyObject *result = PyDict_New();
     if (!result) {
-        PyErr_SetString(PyExc_RuntimeError, "Failed to create result list.");
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create result dict.");
         return NULL;
     }
 
-    for (size_t orbit_i = 0; orbit_i < num_orbits; orbit_i++) {
-        PyObject *iteration_list = PyList_New(0);
-        if (!iteration_list) {
+    for (unsigned char orbit_i = 0; orbit_i < atom.electrons_count; orbit_i++) {
+        PyObject *record_list = PyList_New(0);
+        if (!record_list) {
             Py_DECREF(result);
             PyErr_SetString(PyExc_RuntimeError,
-                            "Failed to create iteration list.");
+                            "Failed to create record list.");
             return NULL;
         }
 
-        PyList_SET_ITEM(result, orbit_i, iteration_list); // Owned reference.
+        PyObject *orbit_key =
+            PyLong_FromLong(orbit_hash(atom.electrons[orbit_i]));
+        PyDict_SetItem(result, orbit_key, record_list);
+        Py_DECREF(orbit_key);
     }
 
     return result;

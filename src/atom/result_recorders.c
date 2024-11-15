@@ -5,85 +5,153 @@
 #include <pytypedefs.h>
 
 #include "atom/result_recorders.h"
+#include "object.h"
+#include "utils/iterator.h"
 #include "utils/macros.h"
 
-void record2py_list(void *record_in, const unsigned char orbit_i,
-                    const struct sim_itr *iter) {
-    PyObject *result = PyList_GetItem(record_in, orbit_i);
-    if (!result) {
-        PyErr_SetString(PyExc_RuntimeError, "Failed to retrieve result list.");
-        return;
-    }
-
+void record2py_list(void *record_in, const struct sim_itr *iter) {
     PyObject *record = PyList_New(0);
+
     if (!record) {
-        char msg[100];
-        snprintf(msg, sizeof(msg), "Failed to create record list. orbit_i: %d",
-                 orbit_i);
-        PyErr_SetString(PyExc_RuntimeError, msg);
-        return;
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create record list.");
     }
 
     // Add r value.
     PyObject *item = PyFloat_FromDouble(iter->r);
     if (!item || PyList_Append(record, item) == -1) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to append r value.");
-        Py_XDECREF(item);
-        Py_DECREF(record);
-        return;
     }
-    Py_DECREF(item); // Release reference now that it is in the list
+    Py_DECREF(item);
 
     // Add phi value.
     item = PyFloat_FromDouble(iter->phi);
     if (!item || PyList_Append(record, item) == -1) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to append phi value.");
-        Py_XDECREF(item);
-        Py_DECREF(record);
-        return;
     }
     Py_DECREF(item);
 
     // Conditionally add theta value if 3D.
-    if (THETA(iter) != -1) {
-        item = PyFloat_FromDouble(THETA(iter));
+    if (iter->theta != -1) {
+        item = PyFloat_FromDouble(iter->theta);
         if (!item || PyList_Append(record, item) == -1) {
             PyErr_SetString(PyExc_RuntimeError,
                             "Failed to append theta value.");
-            Py_XDECREF(item);
-            Py_DECREF(record);
-            return;
         }
-        Py_DECREF(item);
     }
 
-    // Append `record` to `result` list at orbit_i.
-    if (PyList_Append(result, record) == -1) {
+    // Conditionally add delta_phi value.
+    if (iter->delta_phi != -1) {
+        item = PyFloat_FromDouble(iter->delta_phi);
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append delta_phi value.");
+        }
+    }
+
+    if (PyList_Append(record_in, record) == -1) {
         PyErr_SetString(PyExc_RuntimeError,
                         "Failed to append record to result.");
-        Py_DECREF(record);
-        return;
     }
-
-    Py_DECREF(record);
 }
 
-void record2py_list_rel(void *record_in, const unsigned char orbit_i,
-                        const struct sim_itr *iter) {
+void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
+    PyObject *record = PyList_New(0);
 
-    PyObject *result = PyList_GetItem(record_in, orbit_i);
-    if (!result) {
-        PyErr_SetString(PyExc_RuntimeError, "Failed to retrieve result list.");
-        return;
+    if (!record) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create record list.");
     }
 
+    // Add r value.
+    PyObject *item = PyFloat_FromDouble(iter->r);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append r value.");
+    }
+    Py_DECREF(item);
+
+    item = PyFloat_FromDouble(iter->r_dot);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append r_dot value.");
+    }
+    Py_DECREF(item);
+
+    // Add phi value.
+    item = PyFloat_FromDouble(iter->phi);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append phi value.");
+    }
+    Py_DECREF(item);
+
+    item = PyFloat_FromDouble(iter->phi_dot);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append phi_dot value.");
+    }
+    Py_DECREF(item);
+
+    // Conditionally add theta value if 3D.
+    if (iter->theta != -1) {
+        item = PyFloat_FromDouble(iter->theta);
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append theta value.");
+        }
+    }
+
+    // Conditionally add theta_dot value if 3D.
+    if (iter->theta_dot != -1) {
+        item = PyFloat_FromDouble(iter->theta_dot);
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append theta_dot value.");
+        }
+    }
+
+    // Conditionally add theta_dot_dot value if 3D.
+    if (iter->theta_dot_dot != -1) {
+        item = PyFloat_FromDouble(iter->theta_dot_dot);
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append theta_dot_dot value.");
+        }
+    }
+
+    // Conditionally add epsilon value if spin.
+    if (iter->epsilon != -1) {
+        item = PyFloat_FromDouble(iter->epsilon);
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append epsilon value.");
+        }
+    }
+
+    // Conditionally add gamma value if rel.
+    if (iter->gamma != -1) {
+        item = PyFloat_FromDouble(iter->gamma);
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append gamma value.");
+        }
+    }
+
+    // Conditionally add delta_phi value if rel.
+    if (iter->delta_phi != -1) {
+        item = PyFloat_FromDouble(iter->delta_phi);
+        if (!item || PyList_Append(record, item) == -1) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Failed to append delta_phi value.");
+        }
+    }
+
+    if (PyList_Append(record_in, record) == -1) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "Failed to append record to result.");
+    }
+}
+
+void record2py_list_rel(void *record_in, const struct sim_itr *iter) {
     PyObject *record = PyList_New(0);
+
     if (!record) {
-        char msg[100];
-        snprintf(msg, sizeof(msg), "Failed to create record list. orbit_i: %d",
-                 orbit_i);
-        PyErr_SetString(PyExc_RuntimeError, msg);
-        return;
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create record list.");
     }
 
     // Add delta_phi value.
@@ -95,10 +163,9 @@ void record2py_list_rel(void *record_in, const unsigned char orbit_i,
         Py_DECREF(record);
         return;
     }
-    Py_DECREF(item); // Release reference now that it is in the list
+    Py_DECREF(item);
 
-    // Append `record` to `result` list at orbit_i.
-    if (PyList_Append(result, record) == -1) {
+    if (PyList_Append(record_in, record) == -1) {
         PyErr_SetString(PyExc_RuntimeError,
                         "Failed to append record to result.");
         Py_DECREF(record);
@@ -108,9 +175,7 @@ void record2py_list_rel(void *record_in, const unsigned char orbit_i,
     Py_DECREF(record);
 }
 
-void record2printf(void *Py_UNUSED(record_in),
-                   const unsigned char Py_UNUSED(orbit_i),
-                   const struct sim_itr *iter) {
+void record2printf(void *Py_UNUSED(record_in), const struct sim_itr *iter) {
 
     print(iter->dt);
 

@@ -19,7 +19,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
                             .phi_dot = 0,
                             // REL
                             .gamma = -1,
-                            .delta_phi = 0,
+                            .delta_phi = -1,
                             // 3D
                             .theta = -1,
                             .theta_dot = -1,
@@ -30,6 +30,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
 
     if (type == REL_POLAR || type == REL_SPHERICAL || type == REL_SPIN) {
         itr->gamma = 0;
+        itr->delta_phi = 0;
     }
 
     if (type == SPHERICAL || type == REL_SPHERICAL || type == SPIN) {

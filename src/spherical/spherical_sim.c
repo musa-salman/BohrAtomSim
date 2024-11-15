@@ -1,7 +1,5 @@
 #include <stddef.h>
-#include <stdlib.h>
 
-#include "_types.h"
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
@@ -11,104 +9,103 @@
 #include "utils/macros.h"
 #include "utils/types.h"
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, scalar *sign,
+static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
                                 bool *theta_flag, scalar n_phi,
-                                struct vector3 **prev_max_vec);
+                                quantum_angular angular,
+                                quantum_magnetic magnetic,
+                                scalar time_interval);
 
-void simulate_spherical_orbit(struct sim_ctx *ctx) {
-    struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
-    struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
+void simulate_spherical_orbit(struct sim_ctx *ctx,
+                              struct electron_orbit orbit) {
+    struct sim_itr prev_itr = {};
+    struct sim_itr next_itr = {};
 
-    start_iteration(ctx->iter_ctx);
+    struct iter_ctx iter_ctx = {.prev_itr = &prev_itr, .next_itr = &next_itr};
 
-    const struct electron_orbit *curr_orbit = ctx->iter_ctx->electron_orbit;
+    start_iteration(&iter_ctx);
 
-    quantum_principle principal = curr_orbit->principal;
-    quantum_angular angular = curr_orbit->angular;
-    quantum_magnetic magnetic = curr_orbit->magnetic;
-
-    struct vector3 *prev_max_vec = NULL;
     struct radial_bounds radial_bounds =
-        compute_radial_limits(principal, angular);
+        compute_radial_limits(orbit.principal, orbit.angular);
 
     scalar sign = 1;
     bool theta_flag = false;
 
-    scalar n_phi = angular - magnetic;
+    scalar n_phi = orbit.angular - orbit.magnetic;
 
-    scalar theta_min = compute_theta_min(n_phi, angular);
+    scalar theta_min = compute_theta_min(n_phi, orbit.angular);
 
-    bool at_max = true;
+    init_iteration(&prev_itr, SPHERICAL);
+    init_iteration(&next_itr, SPHERICAL);
 
-    init_iteration(prev_itr, SPHERICAL);
-    init_iteration(next_itr, SPHERICAL);
+    void *record_in =
+        ORBIT_RECORD_LOCATION(ctx->record_handler, orbit_hash(orbit));
 
-    prev_itr->r = radial_bounds.r_min;
-    prev_itr->theta = theta_min;
+    prev_itr.r = radial_bounds.r_min;
+    prev_itr.theta = theta_min;
 
     scalar revolutions = ctx->revolutions;
 
-    if (magnetic == angular) {
-        next_itr->phi = PI / 2;
-        prev_itr->phi = PI / 2;
-        prev_itr->theta_dot = SPHERICAL_THETA_DOT(angular, R(prev_itr));
-        next_itr->theta_dot = THETA_DOT(prev_itr);
+    if (orbit.magnetic == orbit.angular) {
+        next_itr.phi = HALF_PI;
+        prev_itr.phi = HALF_PI;
+        prev_itr.theta_dot = SPHERICAL_THETA_DOT(orbit.angular, prev_itr.r);
+        next_itr.theta_dot = prev_itr.theta_dot;
 
-        prev_itr->phi_dot = 0;
-        prev_itr->theta_dot_dot = 0;
+        prev_itr.phi_dot = 0;
+        prev_itr.theta_dot_dot = 0;
     } else {
 
-        prev_itr->phi_dot =
-            compute_spherical_phi_dot(n_phi, THETA(prev_itr), R(prev_itr));
-        prev_itr->theta_dot_dot = compute_sphere_theta_dot_dot(
-            R(prev_itr), R_DOT(prev_itr), THETA(prev_itr), THETA_DOT(prev_itr),
-            PHI_DOT(prev_itr));
+        prev_itr.phi_dot =
+            compute_spherical_phi_dot(n_phi, prev_itr.theta, prev_itr.r);
+        prev_itr.theta_dot_dot = compute_sphere_theta_dot_dot(
+            prev_itr.r, prev_itr.r_dot, prev_itr.theta, prev_itr.theta_dot,
+            prev_itr.phi_dot);
     }
-    next_itr->r_dot_dot = compute_r_dot_dot(R(prev_itr), angular);
+    next_itr.r_dot_dot = compute_r_dot_dot(prev_itr.r, orbit.angular);
 
-    RECORD_ITERATION(ctx, prev_itr);
+    RECORD_ITERATION(ctx, record_in, &prev_itr);
+
+    scalar initial_phi = prev_itr.phi;
     size_t it = 0;
     while (revolutions > 0) {
-        const bool is_at_interest = simulate_orbit_step(
-            ctx, &at_max, &sign, &theta_flag, n_phi, &prev_max_vec);
+        simulate_orbit_step(&iter_ctx, &sign, &theta_flag, n_phi, orbit.angular,
+                            orbit.magnetic, ctx->time_interval);
 
         if (it % ctx->record_interval == 0 && !(ctx->delta_psi_mode)) {
-            RECORD_ITERATION(ctx, prev_itr);
+            RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
         }
 
-        if (is_at_interest) {
+        if (PHI(iter_ctx.prev_itr) > TWO_PI - 1e-3 + initial_phi) {
             revolutions -= FLOAT_LITERAL_SUFFIX(0.5);
             if (revolutions <= 0) {
                 break;
             }
         }
 
-        struct sim_itr *tmp = prev_itr;
-        ctx->iter_ctx->prev_itr = next_itr;
-        prev_itr = next_itr;
+        struct sim_itr *tmp = iter_ctx.prev_itr;
+        iter_ctx.prev_itr = iter_ctx.next_itr;
 
-        ctx->iter_ctx->next_itr = tmp;
-        next_itr = tmp;
+        iter_ctx.next_itr = tmp;
         it++;
     }
 
-    RECORD_ITERATION(ctx, prev_itr);
-    end_iteration(ctx->iter_ctx);
+    RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
+    end_iteration(&iter_ctx);
 }
 
-static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, scalar *sign,
+static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
                                 bool *theta_flag, scalar n_phi,
-                                struct vector3 **prev_max_vec) {
-    struct sim_itr *prev_itr = ctx->iter_ctx->prev_itr;
-    struct sim_itr *next_itr = ctx->iter_ctx->next_itr;
+                                quantum_angular angular,
+                                quantum_magnetic magnetic,
+                                scalar time_interval) {
+    struct sim_itr *prev_itr = iter_ctx->prev_itr;
+    struct sim_itr *next_itr = iter_ctx->next_itr;
 
-    bool is_at_interest = iterate(ctx->iter_ctx, ctx->time_interval, SPHERICAL);
+    bool is_at_interest = iterate(iter_ctx, time_interval, SPHERICAL);
 
-    if (ctx->iter_ctx->electron_orbit->magnetic ==
-        ctx->iter_ctx->electron_orbit->angular) {
+    if (magnetic == angular) {
         prev_itr->theta_dot =
-            (*sign) * SPHERICAL_THETA_DOT(
-                          ctx->iter_ctx->electron_orbit->angular, R(prev_itr));
+            (*sign) * SPHERICAL_THETA_DOT(angular, R(prev_itr));
         next_itr->theta_dot = THETA_DOT(prev_itr);
 
         if (THETA(prev_itr) >= PI && !(*theta_flag)) {
@@ -130,32 +127,7 @@ static bool simulate_orbit_step(struct sim_ctx *ctx, bool *at_max, scalar *sign,
             PHI_DOT(prev_itr));
     }
 
-    next_itr->r_dot_dot =
-        compute_r_dot_dot(R(prev_itr), ctx->iter_ctx->electron_orbit->angular);
+    next_itr->r_dot_dot = compute_r_dot_dot(R(prev_itr), angular);
 
-    if (!is_at_interest)
-        return false;
-
-    *at_max = !(*at_max);
-    if (!*at_max)
-        return true;
-
-    struct vector3 *curr_max_vec =
-        spherical_to_cartesian(R(next_itr), THETA(next_itr), PHI(next_itr));
-
-    if (*prev_max_vec != NULL) {
-        prev_itr->delta_phi =
-            compute_angular_distance(curr_max_vec, *prev_max_vec);
-
-        if (ctx->delta_psi_mode)
-            RECORD_ITERATION(ctx, prev_itr);
-
-        next_itr->delta_phi = DELTA_PHI(prev_itr);
-
-        free(*prev_max_vec);
-    }
-
-    *prev_max_vec = curr_max_vec;
-
-    return true;
+    return is_at_interest;
 }

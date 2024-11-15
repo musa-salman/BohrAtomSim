@@ -1,14 +1,19 @@
-#include "simulation_runner/simulation_runner.h"
+// #include <omp.h>
+#include <stdio.h>
+
 #include "atom/atom_bohr_sim.h"
+#include "simulation_runner/simulation_runner.h"
 
 #include "polar/polar_sim.h"
 #include "polar/polar_sim_rel.h"
 #include "spherical/spherical_sim.h"
 #include "spherical/spherical_sim_rel.h"
+#include "utils/iterator.h"
 
-void init_simulation(struct simulator *sim, struct sim_ctx *ctx,
-                     enum sim_type type) {
+void init_simulation(struct simulator *sim, struct atom atom,
+                     struct sim_ctx *ctx, enum sim_type type) {
     sim->ctx = ctx;
+    sim->atom = atom;
 
     switch (type) {
     case POLAR:
@@ -30,15 +35,10 @@ void init_simulation(struct simulator *sim, struct sim_ctx *ctx,
 }
 
 void run_simulation(struct simulator *sim) {
-    struct iter_ctx *iter_ctx = sim->ctx->iter_ctx;
-    struct electron_orbit *electrons = sim->ctx->atom->electrons;
-    const unsigned char electron_count = sim->ctx->atom->electrons_count;
+    const struct electron_orbit *electrons = sim->atom.electrons;
+    const unsigned char electron_count = sim->atom.electrons_count;
 
-    for (ITERATOR_INIT(iter_ctx); ITERATOR_HAS_NEXT(iter_ctx, electron_count);
-         ITERATOR_NEXT(iter_ctx)) {
-
-        iter_ctx->electron_orbit = electrons + iter_ctx->orbit_i;
-
-        sim->simulate_orbit(sim->ctx);
+    for (unsigned char i = 0; i < electron_count; i++) {
+        sim->simulate_orbit(sim->ctx, electrons[i]);
     }
 }
