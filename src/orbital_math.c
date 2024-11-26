@@ -29,22 +29,25 @@ scalar compute_angular_rate(quantum_angular angular, scalar radius) {
     return angular / SQUARE(radius);
 }
 
-scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
-    const scalar term1 =
-        SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
-    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot,
+                     scalar r_max) {
+    const volatile scalar inv_r_prime = (r_max / radius);
+
+    const scalar term1 = angular * INV_SQRT_SPEED_OF_LIGHT / (SQUARE(radius));
+    const scalar term2 = SQUARE(r_dot) * INV_SQRT_SPEED_OF_LIGHT;
 
     const scalar result = sqrt((1 + term1) / (1 - term2));
     return result;
 }
 
 scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
-                             scalar radius, scalar r_dot) {
+                             scalar radius, scalar r_dot, scalar r_max) {
 
-    const scalar term1 = SQUARE(angular) / (gamma * radius);
-    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+    const volatile scalar r_inv = (r_max / radius) / r_max;
+    const scalar term1 = r_inv * SQUARE(angular) / gamma;
+    const scalar term2 = SQUARE(r_dot) * INV_SQRT_SPEED_OF_LIGHT;
 
-    const scalar result = (term1 + term2 - 1) / (gamma * SQUARE(radius));
+    const scalar result = r_inv * r_inv * (term1 + term2 - 1) / gamma;
 
     return result;
 }
@@ -56,6 +59,20 @@ scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {
     const scalar sin_theta = sin(theta);
     const scalar result = n_phi / (SQUARE(radius * sin_theta));
+
+    return result;
+}
+
+scalar compute_sphere_rel_phi_dot(scalar n_phi, scalar theta, scalar radius,
+                                  scalar gamma, scalar r_max) {
+
+    const scalar constant = r_max * r_max;
+
+    const scalar sin_theta = sin(theta);
+    const volatile scalar normalized_result =
+        constant / (radius * radius * sin_theta * sin_theta * gamma);
+
+    const scalar result = normalized_result * n_phi / constant;
 
     return result;
 }
@@ -105,11 +122,14 @@ scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
 
 scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                         scalar theta_dot, scalar phi_dot,
-                                        scalar gamma) {
-
+                                        scalar gamma, scalar r_max) {
     const scalar term1 = sin(theta) * cos(theta) * SQUARE(phi_dot);
-    const scalar term2 = 2 * r_dot * theta_dot / r;
-    const scalar term3 = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
+
+    const volatile scalar r_inv = (r_max / r) / r_max;
+    const scalar term2 = 2 * r_dot * theta_dot * r_inv;
+
+    // Add regularization to prevent issues in term3
+    const scalar term3 = r_inv * (1 / gamma) * INV_SQRT_SPEED_OF_LIGHT;
 
     const scalar result = term1 - term2 * (1 - term3);
 
