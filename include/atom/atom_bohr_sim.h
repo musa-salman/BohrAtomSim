@@ -7,6 +7,8 @@
 #include "utils/types.h"
 #include "result/result.h"
 
+#define DEBUG
+
 #ifdef DEBUG
 #define INFO(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #else

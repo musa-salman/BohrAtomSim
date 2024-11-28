@@ -12,7 +12,7 @@
 *************************************************************************************************************
 */
 
-#define SPEED_OF_LIGHT_SQUARE FLOAT_LITERAL_SUFFIX(18778.86507043055614177) // in a.u. of velocity sqr
+#define SPEED_OF_LIGHT_SQUARE FLOAT_LITERAL_SUFFIX(18778.86507043055614177)
 
 #define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
 #define PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
@@ -129,6 +129,9 @@ scalar compute_theta_min(scalar n_phi, quantum_angular angular);
 
 #define REL_SPHERICAL_PHI_DOT(n_phi, theta, r, gamma)                          \
     compute_spherical_phi_dot(n_phi, theta, r) / gamma
+
+scalar compute_sphere_rel_phi_dot(scalar n_phi, scalar theta, scalar radius,
+                                  scalar gamma);
 
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius);
 

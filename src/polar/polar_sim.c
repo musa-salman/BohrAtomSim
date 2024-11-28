@@ -35,14 +35,16 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
     scalar revolutions = ctx->revolutions;
 
     size_t it = 0;
+    const scalar time_interval = ctx->time_interval;
     while (revolutions > 0) {
-        simulate_orbit_step(&iter_ctx, ctx->time_interval, orbit.angular);
+        const bool is_max =
+            simulate_orbit_step(&iter_ctx, ctx->time_interval, orbit.angular);
 
         if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
             RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
 
-        if (iter_ctx.prev_itr->phi > TWO_PI - 1e-3) {
-            revolutions = revolutions - 1;
+        if (is_max) {
+            revolutions = revolutions - 0.5;
             if (revolutions <= 0)
                 break;
         }
@@ -54,7 +56,6 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
         it++;
     }
 
-    RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
     end_iteration(&iter_ctx);
 }
 

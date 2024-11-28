@@ -1,8 +1,6 @@
-#include <math.h>
 #include <stdbool.h>
 #include <time.h>
 
-#include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 #include "utils/iterator.h"
 #include "utils/macros.h"

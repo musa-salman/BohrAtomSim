@@ -43,10 +43,13 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx,
     bool is_at_maximum = true;
     bool is_at_interest = false;
 
+    size_t it = 0;
     while (revolutions > 0) {
         is_at_interest = simulate_orbit_rel_step(&iter_ctx, ctx->time_interval,
                                                  orbit.angular);
 
+        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
+            RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
         if (is_at_interest) {
             is_at_maximum = !is_at_maximum;
             if (is_at_maximum) {
@@ -69,6 +72,7 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx,
         iter_ctx.prev_itr = iter_ctx.next_itr;
 
         iter_ctx.next_itr = tmp;
+        it++;
     }
 
     end_iteration(&iter_ctx);
