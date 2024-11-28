@@ -3,6 +3,7 @@
 #include <floatobject.h>
 #include <listobject.h>
 #include <pytypedefs.h>
+#include <stdio.h>
 
 #include "atom/result_recorders.h"
 #include "object.h"
@@ -16,8 +17,14 @@ void record2py_list(void *record_in, const struct sim_itr *iter) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to create record list.");
     }
 
+    // Add time value.
+    PyObject *item = PyFloat_FromDouble(iter->dt);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append time value.");
+    }
+
     // Add r value.
-    PyObject *item = PyFloat_FromDouble(iter->r);
+    item = PyFloat_FromDouble(iter->r);
     if (!item || PyList_Append(record, item) == -1) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to append r value.");
     }
@@ -61,8 +68,15 @@ void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to create record list.");
     }
 
+    // Add time value.
+    PyObject *item = PyFloat_FromDouble(iter->dt);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to append time value.");
+    }
+    Py_DECREF(item);
+
     // Add r value.
-    PyObject *item = PyFloat_FromDouble(iter->r);
+    item = PyFloat_FromDouble(iter->r);
     if (!item || PyList_Append(record, item) == -1) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to append r value.");
     }
@@ -71,6 +85,13 @@ void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
     item = PyFloat_FromDouble(iter->r_dot);
     if (!item || PyList_Append(record, item) == -1) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to append r_dot value.");
+    }
+    Py_DECREF(item);
+
+    item = PyFloat_FromDouble(iter->r_dot_dot);
+    if (!item || PyList_Append(record, item) == -1) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "Failed to append r_dot_dot value.");
     }
     Py_DECREF(item);
 
@@ -94,6 +115,7 @@ void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
             PyErr_SetString(PyExc_RuntimeError,
                             "Failed to append theta value.");
         }
+        Py_DECREF(item);
     }
 
     // Conditionally add theta_dot value if 3D.
@@ -103,6 +125,7 @@ void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
             PyErr_SetString(PyExc_RuntimeError,
                             "Failed to append theta_dot value.");
         }
+        Py_DECREF(item);
     }
 
     // Conditionally add theta_dot_dot value if 3D.
@@ -112,6 +135,7 @@ void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
             PyErr_SetString(PyExc_RuntimeError,
                             "Failed to append theta_dot_dot value.");
         }
+        Py_DECREF(item);
     }
 
     // Conditionally add epsilon value if spin.
@@ -121,6 +145,7 @@ void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
             PyErr_SetString(PyExc_RuntimeError,
                             "Failed to append epsilon value.");
         }
+        Py_DECREF(item);
     }
 
     // Conditionally add gamma value if rel.
@@ -130,6 +155,7 @@ void record2py_list_verbose(void *record_in, const struct sim_itr *iter) {
             PyErr_SetString(PyExc_RuntimeError,
                             "Failed to append gamma value.");
         }
+        Py_DECREF(item);
     }
 
     // Conditionally add delta_phi value if rel.
@@ -213,4 +239,26 @@ void record2printf(void *Py_UNUSED(record_in), const struct sim_itr *iter) {
     }
 
     printf("\n\n\n");
+}
+
+void record2csv(void *record_in, const struct sim_itr *iter) {
+    FILE *csv = (FILE *)record_in;
+
+    fprintf(csv, "%.20LE,%.20LE,%.20LE,%.20LE,%.20LE,%.20LE", iter->dt, R(iter),
+            R_DOT(iter), R_DOT_DOT(iter), PHI(iter), PHI_DOT(iter));
+
+    if (THETA(iter) != -1) {
+        fprintf(csv, ",%.20LE,%.20LE,%.20LE", THETA(iter), THETA_DOT(iter),
+                THETA_DOT_DOT(iter));
+    }
+
+    if (EPSILON(iter) != -1) {
+        fprintf(csv, ",%.20LE", EPSILON(iter));
+    }
+
+    if (GAMMA(iter) != -1) {
+        fprintf(csv, ",%.20LE,%.20LE", GAMMA(iter), DELTA_PHI(iter));
+    }
+
+    fprintf(csv, "\n");
 }

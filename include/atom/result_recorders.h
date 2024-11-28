@@ -17,4 +17,6 @@ void record2py_list_rel(void *record_in, const struct sim_itr*  record);
 
 void record2printf(void *record_in, const struct sim_itr *iter);
 
+void record2csv(void *record_in, const struct sim_itr *iter);
+
 #endif
