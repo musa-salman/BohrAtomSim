@@ -67,7 +67,7 @@ scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
 scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
                          scalar radius) {
     return SQUARE(angular) /
-           ((SQUARE(angular) - SQUARE(magnetic)) * SQUARE(radius));
+           (sqrt(SQUARE(angular) - SQUARE(magnetic)) * SQUARE(radius));
 }
 
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {

@@ -56,6 +56,9 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
     } else {
         prev_itr.phi_dot =
             compute_phi_dot_0(orbit.angular, orbit.magnetic, prev_itr.r);
+        prev_itr.phi_dot_dot = compute_sphere_phi_dot_dot(
+            prev_itr.r, prev_itr.r_dot, prev_itr.theta, prev_itr.theta_dot,
+            prev_itr.phi_dot);
         prev_itr.theta_dot_dot = compute_sphere_theta_dot_dot(
             prev_itr.r, prev_itr.r_dot, prev_itr.theta, prev_itr.theta_dot,
             prev_itr.phi_dot);
@@ -116,8 +119,9 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
             next_itr->phi = -PHI(next_itr);
         }
     } else {
-        next_itr->phi_dot =
-            compute_spherical_phi_dot(n_phi, THETA(prev_itr), R(prev_itr));
+        next_itr->phi_dot_dot = compute_sphere_phi_dot_dot(
+            R(prev_itr), R_DOT(prev_itr), THETA(prev_itr), THETA_DOT(prev_itr),
+            PHI_DOT(prev_itr));
         next_itr->theta_dot_dot = compute_sphere_theta_dot_dot(
             R(prev_itr), R_DOT(prev_itr), THETA(prev_itr), THETA_DOT(prev_itr),
             PHI_DOT(prev_itr));
