@@ -32,14 +32,16 @@ struct sim_itr
     scalar r_dot;     // iteration movement speed
     scalar r_dot_dot; // iteration movement acceleration
 
-    scalar phi;       // iteration angle
-    scalar delta_phi; // iteration angle of the perihelion
     scalar initial_phi_dot;
+    scalar phi;       // iteration angle
     scalar phi_dot; // iteration angular speed
+    scalar phi_dot_dot; // iteration angular acceleration
 
     scalar theta;
     scalar theta_dot;
     scalar theta_dot_dot;
+
+    scalar delta_phi; // iteration angle of the perihelion
 
     scalar dt;    // iteration time
     scalar gamma; // iteration rel mass mult

@@ -83,9 +83,6 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
 
     next_itr.r_dot_dot = compute_rel_r_dot_dot(orbit.angular, prev_itr.gamma,
                                                prev_itr.r, prev_itr.r_dot);
-
-    if (!ctx->delta_psi_mode)
-        RECORD_ITERATION(ctx, record_in, iter_ctx.prev_itr);
     size_t it = 0;
 
     scalar time_interval = ctx->time_interval;
@@ -131,17 +128,6 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
             if (revolutions <= 0) {
                 break;
             }
-        }
-
-        const scalar max_radial_error =
-            fabsl(radial_bounds.r_max - iter_ctx.next_itr->r);
-        const scalar min_radial_error =
-            fabsl(radial_bounds.r_min - iter_ctx.next_itr->r);
-
-        if (max_radial_error < 2 || min_radial_error < 2) {
-            ctx->time_interval = 1e-15;
-        } else {
-            ctx->time_interval = time_interval;
         }
 
         struct sim_itr *tmp = iter_ctx.prev_itr;

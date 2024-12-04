@@ -29,6 +29,21 @@ scalar compute_angular_rate(quantum_angular angular, scalar radius) {
     return angular / SQUARE(radius);
 }
 
+// phi_dot_dot = -(1/r) * 2 r_dot * phi_dot - 2 cos(theta) * theta_dot * phi_dot
+// *(1/sin(theta))
+scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
+                                  scalar theta_dot, scalar phi_dot) {
+    const scalar term1 = r_dot * phi_dot / radius;
+    const scalar term2 = cos(theta) * theta_dot * phi_dot / sin(theta);
+    // assume that theta=pi/2 in 3 2 0
+    // TODO: fix this
+    // const scalar term2 = 0;
+
+    const scalar result = -2 * (term1 + term2);
+
+    return result;
+}
+
 scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
     const scalar term1 =
         SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
@@ -49,7 +64,12 @@ scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
 }
 
 scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
-    return asin(n_phi / angular);
+    return acos(n_phi / angular);
+}
+
+scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
+                         scalar radius) {
+    return SQUARE(angular) / ((angular - magnetic) * SQUARE(radius));
 }
 
 scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {
@@ -103,6 +123,7 @@ scalar compute_angular_distance(const struct vector3 *v1,
 scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
                                     scalar theta_dot, scalar phi_dot) {
     const scalar term1 = sin(theta) * cos(theta) * SQUARE(phi_dot);
+    // const scalar term1 = 0;
     const scalar term2 = 2 * r_dot * theta_dot / r;
 
     const scalar result = term1 - term2;

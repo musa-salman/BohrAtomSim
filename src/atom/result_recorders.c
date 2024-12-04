@@ -244,8 +244,9 @@ void record2printf(void *Py_UNUSED(record_in), const struct sim_itr *iter) {
 void record2csv(void *record_in, const struct sim_itr *iter) {
     FILE *csv = (FILE *)record_in;
 
-    fprintf(csv, "%.20LE,%.20LE,%.20LE,%.20LE,%.20LE,%.20LE", iter->dt, R(iter),
-            R_DOT(iter), R_DOT_DOT(iter), PHI(iter), PHI_DOT(iter));
+    fprintf(csv, "%.20LE,%.20LE,%.20LE,%.20LE,%.20LE,%.20LE,%.20LE", iter->dt,
+            R(iter), R_DOT(iter), R_DOT_DOT(iter), PHI(iter), PHI_DOT(iter),
+            iter->phi_dot_dot);
 
     if (THETA(iter) != -1) {
         fprintf(csv, ",%.20LE,%.20LE,%.20LE", THETA(iter), THETA_DOT(iter),

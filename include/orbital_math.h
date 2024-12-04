@@ -76,6 +76,8 @@ struct radial_bounds compute_radial_limits(quantum_principle principal,
 */
 scalar compute_angular_rate(quantum_angular angular, scalar radius);
 
+scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
+                         scalar radius);
 /**
  * @brief Calculates gamma  "change of the mass" of and electron
  *
@@ -159,5 +161,8 @@ scalar compute_sphere_theta_dot_dot(scalar radius, scalar r_dot, scalar theta,
 scalar compute_sphere_rel_theta_dot_dot(scalar radius, scalar r_dot,
                                         scalar theta, scalar theta_dot,
                                         scalar phi_dot, scalar gamma);
+
+scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
+                                  scalar theta_dot, scalar phi_dot);
 
 #endif // ORBITAL_MATH_H

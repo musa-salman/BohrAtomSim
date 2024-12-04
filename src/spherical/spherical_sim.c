@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stddef.h>
 
 #include "atom/atom_bohr_sim.h"
@@ -33,7 +32,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
 
     scalar n_phi = orbit.angular - orbit.magnetic;
 
-    scalar theta_min = compute_theta_min(n_phi, orbit.angular);
+    scalar theta_min = compute_theta_min(orbit.magnetic, orbit.angular);
 
     init_iteration(&prev_itr, SPHERICAL);
     init_iteration(&next_itr, SPHERICAL);
@@ -55,19 +54,15 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
         prev_itr.phi_dot = 0;
         prev_itr.theta_dot_dot = 0;
     } else {
-
         prev_itr.phi_dot =
-            compute_spherical_phi_dot(n_phi, prev_itr.theta, prev_itr.r);
+            compute_phi_dot_0(orbit.angular, orbit.magnetic, prev_itr.r);
         prev_itr.theta_dot_dot = compute_sphere_theta_dot_dot(
             prev_itr.r, prev_itr.r_dot, prev_itr.theta, prev_itr.theta_dot,
             prev_itr.phi_dot);
     }
     next_itr.r_dot_dot = compute_r_dot_dot(prev_itr.r, orbit.angular);
 
-    RECORD_ITERATION(ctx, record_in, &prev_itr);
-
     size_t it = 0;
-    const scalar time_interval = ctx->time_interval;
     while (revolutions > 0) {
         const bool is_max = simulate_orbit_step(
             &iter_ctx, &sign, &theta_flag, n_phi, orbit.angular, orbit.magnetic,
@@ -84,18 +79,6 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
             }
         }
 
-        // adaptive time step near the turning points
-        const scalar max_radial_error =
-            fabsl(radial_bounds.r_max - iter_ctx.next_itr->r);
-        const scalar min_radial_error =
-            fabsl(radial_bounds.r_min - iter_ctx.next_itr->r);
-
-        if (max_radial_error < 1e-5 || min_radial_error < 1e-5) {
-            ctx->time_interval = 1e-9;
-        } else {
-            ctx->time_interval = time_interval;
-        }
-
         struct sim_itr *tmp = iter_ctx.prev_itr;
         iter_ctx.prev_itr = iter_ctx.next_itr;
 
@@ -103,7 +86,6 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
         it++;
     }
 
-    RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
     end_iteration(&iter_ctx);
 }
 
