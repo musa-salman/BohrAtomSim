@@ -121,21 +121,22 @@ scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
 /**
  * @brief Calculates the starting point for theta
  *
- *          THETA_MIN = arcsin( n_phi/K )
+ *          THETA_MIN = arcsin(m/k)
  *
- * @param n_phi
- * @param k
+ * @param magnetic
+ * @param angular
  * @return scalar
  */
-scalar compute_theta_min(scalar n_phi, quantum_angular angular);
+scalar compute_theta_min(quantum_magnetic magnetic, quantum_angular angular);
 
 #define REL_SPHERICAL_PHI_DOT(n_phi, theta, r, gamma)                          \
     compute_spherical_phi_dot(n_phi, theta, r) / gamma
 
-scalar compute_sphere_rel_phi_dot(scalar n_phi, scalar theta, scalar radius,
-                                  scalar gamma);
+scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
+                                  scalar radius, scalar gamma);
 
-scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius);
+scalar compute_spherical_phi_dot(quantum_magnetic magnetic, scalar theta,
+                                 scalar radius);
 
 struct vector3 *spherical_to_cartesian(scalar radius, scalar theta, scalar phi);
 

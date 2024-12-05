@@ -14,8 +14,8 @@
 #include "utils/types.h"
 
 static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
-                                bool *theta_flag, scalar n_phi,
-                                struct electron_orbit *orbit,
+                                bool *theta_flag,
+                                const struct electron_orbit *orbit,
                                 scalar time_interval);
 
 void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
@@ -44,13 +44,11 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
     scalar sign = 1;
     bool theta_flag = false;
 
-    scalar n_phi = orbit.angular - orbit.magnetic;
-
     init_iteration(&prev_itr, REL_SPHERICAL);
     init_iteration(&next_itr, REL_SPHERICAL);
 
     prev_itr.r = radial_bounds.r_min;
-    prev_itr.theta = compute_theta_min(n_phi, orbit.angular);
+    prev_itr.theta = compute_theta_min(orbit.magnetic, orbit.angular);
 
     scalar revolutions = ctx->revolutions;
 
@@ -89,7 +87,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
 
     while (revolutions > 0) {
         const bool is_at_interest = simulate_orbit_step(
-            &iter_ctx, &sign, &theta_flag, n_phi, &orbit, time_interval);
+            &iter_ctx, &sign, &theta_flag, &orbit, time_interval);
 
         iter_ctx.next_itr->gamma = compute_gamma(
             orbit.angular, R(iter_ctx.prev_itr), R_DOT(iter_ctx.prev_itr));
@@ -146,8 +144,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
 }
 
 static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
-                                bool *theta_flag, scalar n_phi,
-                                struct electron_orbit *orbit,
+                                bool *theta_flag,
+                                const struct electron_orbit *orbit,
                                 scalar time_interval) {
     struct sim_itr *prev_itr = iter_ctx->prev_itr;
     struct sim_itr *next_itr = iter_ctx->next_itr;
@@ -176,7 +174,7 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
         }
     } else {
         next_itr->phi_dot = compute_sphere_rel_phi_dot(
-            n_phi, THETA(prev_itr), R(prev_itr), GAMMA(prev_itr));
+            orbit->magnetic, THETA(prev_itr), R(prev_itr), GAMMA(prev_itr));
 
         next_itr->theta_dot_dot = compute_sphere_rel_theta_dot_dot(
             R(prev_itr), R_DOT(prev_itr), THETA(prev_itr), THETA_DOT(prev_itr),

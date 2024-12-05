@@ -60,27 +60,33 @@ scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
     return result;
 }
 
-scalar compute_theta_min(scalar n_phi, quantum_angular angular) {
-    return acos(n_phi / angular);
+scalar compute_theta_min(quantum_magnetic magnetic, quantum_angular angular) {
+    return asin((scalar)magnetic / angular);
 }
 
 scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
                          scalar radius) {
-    return SQUARE(angular) /
-           (sqrt(SQUARE(angular) - SQUARE(magnetic)) * SQUARE(radius));
+    return SQUARE(angular) / (SQUARE(radius) * magnetic);
 }
 
-scalar compute_spherical_phi_dot(scalar n_phi, scalar theta, scalar radius) {
+scalar compute_spherical_phi_dot(quantum_magnetic magnetic, scalar theta,
+                                 scalar radius) {
     const scalar sin_theta = sin(theta);
-    const scalar result = n_phi / (SQUARE(radius * sin_theta));
+    const scalar result = (scalar)magnetic / (SQUARE(radius * sin_theta));
 
     return result;
 }
 
-scalar compute_sphere_rel_phi_dot(scalar n_phi, scalar theta, scalar radius,
-                                  scalar gamma) {
+scalar compute_sphere_rel_phi_dot_0(scalar n_phi, scalar radius, scalar gamma) {
+    const scalar result = n_phi / (SQUARE(radius));
+
+    return result / gamma;
+}
+
+scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
+                                  scalar radius, scalar gamma) {
     const scalar sin_theta = sin(theta);
-    const scalar result = n_phi / (SQUARE(radius * sin_theta));
+    const scalar result = magnetic / (SQUARE(radius * sin_theta));
 
     return result / gamma;
 }
