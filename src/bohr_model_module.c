@@ -43,7 +43,7 @@ static PyObject *simulate(PyObject *Py_UNUSED(self), PyObject *args) {
     PyObject *result = create_result_dict(atom);
 
     record_fn record;
-    record = record2py_list_verbose;
+    record = NULL;
 
     struct record_handler rh = {
         .record_in = result,

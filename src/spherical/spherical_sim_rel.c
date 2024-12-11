@@ -1,4 +1,3 @@
-#include <complex.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -60,7 +59,6 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
         next_itr.phi = HALF_PI;
         prev_itr.phi = HALF_PI;
         prev_itr.theta_dot =
-            sign *
             SPHERICAL_THETA_DOT_REL(orbit.angular, prev_itr.r, prev_itr.gamma);
 
         if (prev_itr.theta >= PI && !theta_flag)

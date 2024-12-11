@@ -1,14 +1,13 @@
 #ifndef ITERATOR_H
 #define ITERATOR_H
 
-#include <time.h>
 #include <stdbool.h>
+#include <time.h>
+
 
 #include "types.h"
 
-
-enum sim_type: unsigned char
-{
+enum sim_type : unsigned char {
     POLAR,
     REL_POLAR,
     SPHERICAL,
@@ -26,15 +25,14 @@ struct iter_ctx {
 };
 
 // simulation iteration to hold the current and next iteration values
-struct sim_itr
-{
+struct sim_itr {
+    scalar dt;        // iteration time
     scalar r;         // iteration distance
     scalar r_dot;     // iteration movement speed
     scalar r_dot_dot; // iteration movement acceleration
 
-    scalar initial_phi_dot;
-    scalar phi;       // iteration angle
-    scalar phi_dot; // iteration angular speed
+    scalar phi;         // iteration angle
+    scalar phi_dot;     // iteration angular speed
     scalar phi_dot_dot; // iteration angular acceleration
 
     scalar theta;
@@ -43,18 +41,15 @@ struct sim_itr
 
     scalar delta_phi; // iteration angle of the perihelion
 
-    scalar dt;    // iteration time
     scalar gamma; // iteration rel mass mult
     scalar epsilon;
 };
-
 
 void start_iteration(struct iter_ctx *ctx);
 
 void end_iteration(struct iter_ctx *ctx);
 
-bool iterate(struct iter_ctx *ctx, scalar time_interval,
-             enum sim_type type);
+bool iterate(struct iter_ctx *ctx, scalar time_interval, enum sim_type type);
 
 void init_iteration(struct sim_itr *itr, enum sim_type type);
 

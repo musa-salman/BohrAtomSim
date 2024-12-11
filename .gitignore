@@ -8,10 +8,9 @@ bin/
 lib/
 
 build/
-.venv/
 
 __pycache__/
-test.py
+test.*
 
 *.tmp
 *.log

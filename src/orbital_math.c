@@ -29,8 +29,6 @@ scalar compute_angular_rate(quantum_angular angular, scalar radius) {
     return angular / SQUARE(radius);
 }
 
-// phi_dot_dot = -(1/r) * 2 r_dot * phi_dot - 2 cos(theta) * theta_dot * phi_dot
-// *(1/sin(theta))
 scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                   scalar theta_dot, scalar phi_dot) {
     const scalar term1 = r_dot * phi_dot / radius;

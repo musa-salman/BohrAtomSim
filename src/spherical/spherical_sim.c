@@ -1,5 +1,3 @@
-#include <stddef.h>
-
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
@@ -42,19 +40,17 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
 
     scalar revolutions = ctx->revolutions;
 
-    if (orbit.magnetic == orbit.angular) {
+    if (orbit.magnetic == 0) {
         next_itr.phi = HALF_PI;
         prev_itr.phi = HALF_PI;
         prev_itr.theta_dot = SPHERICAL_THETA_DOT(orbit.angular, prev_itr.r);
-        next_itr.theta_dot = prev_itr.theta_dot;
 
         prev_itr.phi_dot = 0;
+        prev_itr.phi_dot_dot = 0;
         prev_itr.theta_dot_dot = 0;
     } else {
         prev_itr.phi_dot =
             compute_phi_dot_0(orbit.angular, orbit.magnetic, prev_itr.r);
-        prev_itr.phi_dot = compute_spherical_phi_dot(
-            orbit.magnetic, prev_itr.theta, prev_itr.r);
 
         prev_itr.theta_dot_dot = compute_sphere_theta_dot_dot(
             prev_itr.r, prev_itr.r_dot, prev_itr.theta, prev_itr.theta_dot,
@@ -73,7 +69,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
         }
 
         if (is_max) {
-            revolutions -= FLOAT_LITERAL_SUFFIX(0.5);
+            revolutions -= 0.5;
             if (revolutions <= 0) {
                 break;
             }
@@ -98,21 +94,27 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
 
     bool is_at_interest = iterate(iter_ctx, time_interval, SPHERICAL);
 
-    if (magnetic == angular) {
+    if (magnetic == 0) {
         prev_itr->theta_dot =
             (*sign) * SPHERICAL_THETA_DOT(angular, R(prev_itr));
         next_itr->theta_dot = THETA_DOT(prev_itr);
 
         if (THETA(prev_itr) >= PI && !(*theta_flag)) {
+            next_itr->theta = 2 * PI - THETA(next_itr);
+
+            next_itr->phi = -HALF_PI;
+            prev_itr->phi = -HALF_PI;
+
             *theta_flag = true;
             *sign = -1;
-            prev_itr->phi = -PHI(prev_itr);
-            next_itr->phi = -PHI(next_itr);
         } else if (THETA(prev_itr) <= 0 && *theta_flag) {
+            next_itr->theta = -THETA(next_itr);
+
+            next_itr->phi = HALF_PI;
+            prev_itr->phi = HALF_PI;
+
             *theta_flag = false;
             *sign = 1;
-            prev_itr->phi = -PHI(prev_itr);
-            next_itr->phi = -PHI(next_itr);
         }
     } else {
         next_itr->phi_dot =

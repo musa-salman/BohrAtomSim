@@ -29,6 +29,12 @@ struct vector3 {
     scalar z;
 };
 
+#ifdef __cplusplus
+#define GENERIC_MATH_FUNC(func, x)                                             \
+    (sizeof(x) == sizeof(float)    ? func##f(x)                                \
+     : sizeof(x) == sizeof(double) ? func(x)                                   \
+                                   : func##l(x))
+#else
 #define sin(x) _Generic((x), float: sinf, default: sin, long double: sinl)(x)
 #define cos(x) _Generic((x), float: cosf, default: cos, long double: cosl)(x)
 #define asin(x)                                                                \
@@ -39,6 +45,7 @@ struct vector3 {
     _Generic((y), float: atan2f, default: atan2, long double: atan2l)(y, x)
 #define sqrt(x)                                                                \
     _Generic((x), float: sqrtf, default: sqrt, long double: sqrtl)(x)
+#endif
 
 #define SQUARE(x) ((x) * (x))
 

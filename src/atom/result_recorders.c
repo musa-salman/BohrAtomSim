@@ -201,46 +201,6 @@ void record2py_list_rel(void *record_in, const struct sim_itr *iter) {
     Py_DECREF(record);
 }
 
-void record2printf(void *Py_UNUSED(record_in), const struct sim_itr *iter) {
-
-    print(iter->dt);
-
-    print(R(iter));
-    print(R_DOT(iter));
-    print(R_DOT_DOT(iter));
-    print(PHI(iter));
-
-    if (PHI_DOT_0(iter) != -1) {
-        print(PHI_DOT_0(iter));
-    }
-
-    if (THETA(iter) != -1) {
-        print(THETA(iter));
-    }
-
-    if (THETA_DOT(iter) != -1) {
-        print(THETA_DOT(iter));
-    }
-
-    if (THETA_DOT_DOT(iter) != -1) {
-        print(THETA_DOT_DOT(iter));
-    }
-
-    if (EPSILON(iter) != -1) {
-        print(EPSILON(iter));
-    }
-
-    if (GAMMA(iter) != -1) {
-        print(GAMMA(iter));
-    }
-
-    if (DELTA_PHI(iter) != -1) {
-        print(DELTA_PHI(iter));
-    }
-
-    printf("\n\n\n");
-}
-
 void record2csv(void *record_in, const struct sim_itr *iter) {
     FILE *csv = (FILE *)record_in;
 

@@ -38,6 +38,7 @@ void run_simulation(struct simulator *sim) {
     const struct electron_orbit *electrons = sim->atom.electrons;
     const unsigned char electron_count = sim->atom.electrons_count;
 
+#pragma omp parallel for schedule(dynamic)
     for (unsigned char i = 0; i < electron_count; i++) {
         sim->simulate_orbit(sim->ctx, electrons[i]);
     }
