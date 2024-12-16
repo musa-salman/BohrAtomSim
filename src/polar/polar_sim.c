@@ -35,7 +35,6 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
     scalar revolutions = ctx->revolutions;
 
     size_t it = 0;
-    const scalar time_interval = ctx->time_interval;
     while (revolutions > 0) {
         const bool is_max =
             simulate_orbit_step(&iter_ctx, ctx->time_interval, orbit.angular);

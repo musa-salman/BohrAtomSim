@@ -107,6 +107,7 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
             prev_itr->phi = -PHI(prev_itr);
             next_itr->phi = -PHI(next_itr);
         } else if (THETA(prev_itr) <= 0 && *theta_flag) {
+            prev_itr->theta = -THETA(prev_itr);
             *theta_flag = false;
             *sign = 1;
             prev_itr->phi = -PHI(prev_itr);

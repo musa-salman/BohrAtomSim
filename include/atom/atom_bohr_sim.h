@@ -1,11 +1,15 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ATOM_BOHR_SIM_H
 #define ATOM_BOHR_SIM_H
 
 #include <stdbool.h>
 
+#include "result/result.h"
 #include "utils/iterator.h"
 #include "utils/types.h"
-#include "result/result.h"
 
 #define DEBUG
 
@@ -15,14 +19,12 @@
 #define INFO(fmt, ...)
 #endif
 
-typedef void (*record_fn)(void *record_in, const struct sim_itr* record);
-typedef void *(*records_lookup_fn)(void *records_map, long key);
+typedef void (*record_fn)(const struct sim_itr *record);
 
 struct record_handler {
     void *record_in;
     record_fn record;
-    records_lookup_fn records_lookup;
-    unsigned char curr_records;
+    size_t id;
 };
 
 #define RECORD_ITERATION(sim_ctx, record_in, curr_itr)                         \
@@ -57,7 +59,10 @@ struct electron_orbit {
     quantum_spin spin;
 };
 
-long orbit_hash(struct electron_orbit orbit);
+static inline long orbit_hash(struct electron_orbit orbit) {
+    return orbit.principal | orbit.angular << 8 | orbit.magnetic << 16 |
+           orbit.spin << 24;
+}
 
 struct atom {
     struct electron_orbit *electrons;
@@ -83,6 +88,8 @@ struct sim_ctx {
     unsigned char active_orbits;
 };
 
-void reader_function(struct sim_ctx *ctx);
-
 #endif // ATOM_BOHR_SIM_H
+
+#ifdef __cplusplus
+}
+#endif
