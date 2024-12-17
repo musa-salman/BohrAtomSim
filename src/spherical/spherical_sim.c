@@ -34,9 +34,6 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
     init_iteration(&prev_itr, SPHERICAL);
     init_iteration(&next_itr, SPHERICAL);
 
-    void *record_in =
-        ORBIT_RECORD_LOCATION(ctx->record_handler, orbit_hash(orbit));
-
     prev_itr.r = radial_bounds.r_min;
     prev_itr.theta = theta_min;
 
@@ -67,7 +64,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
                                 orbit.magnetic, ctx->time_interval);
 
         if (it % ctx->record_interval == 0 && !(ctx->delta_psi_mode)) {
-            RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
+            RECORD_ITERATION(ctx, iter_ctx.next_itr);
         }
 
         if (is_max) {

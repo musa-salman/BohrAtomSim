@@ -34,9 +34,6 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
 
     start_iteration(&iter_ctx);
 
-    void *record_in =
-        ORBIT_RECORD_LOCATION(ctx->record_handler, orbit_hash(orbit));
-
     struct radial_bounds radial_bounds =
         compute_radial_limits(orbit.principal, orbit.angular);
 
@@ -91,7 +88,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
             orbit.angular, R(iter_ctx.prev_itr), R_DOT(iter_ctx.prev_itr));
 
         if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
-            RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
+            RECORD_ITERATION(ctx, iter_ctx.prev_itr);
+
         if (is_at_interest) {
             // is_at_maximum = !is_at_maximum;
             if (fabsl(iter_ctx.prev_itr->r - radial_bounds.r_max) < 1e-1) {
@@ -104,7 +102,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
                     iter_ctx.prev_itr->delta_phi +=
                         compute_angular_distance(curr_max_vec, prev_max_vec);
 
-                    RECORD_ITERATION(ctx, record_in, iter_ctx.prev_itr);
+                    RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
                     INFO("prev_max_vec: (%LE %LE %LE), curr_max_vec: (%LE %LE "
                          "%LE), delta_phi: %LE",

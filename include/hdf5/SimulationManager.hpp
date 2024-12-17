@@ -1,17 +1,12 @@
 #ifndef SIMULATION_MANAGER_HPP
 #define SIMULATION_MANAGER_HPP
 
-#include <functional>
 #include <string>
 #include <unordered_map>
 
 #include "SimulationBuffer.hpp"
 #include "SimulationHDF5.hpp"
 #include "utils/iterator.h"
-
-struct record_handler {
-    std::function<void(const sim_itr *)> record;
-};
 
 class SimulationManager {
   private:

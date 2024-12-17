@@ -23,9 +23,6 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx,
 
     scalar prev_max_vec = 0;
 
-    void *record_in =
-        ORBIT_RECORD_LOCATION(ctx->record_handler, orbit_hash(orbit));
-
     init_iteration(&prev_itr, REL_POLAR);
     init_iteration(&next_itr, REL_POLAR);
 
@@ -49,13 +46,14 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx,
                                                  orbit.angular);
 
         if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
-            RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
+            RECORD_ITERATION(ctx, iter_ctx.prev_itr);
+
         if (is_at_interest) {
             is_at_maximum = !is_at_maximum;
             if (is_at_maximum) {
                 iter_ctx.prev_itr->delta_phi +=
                     PHI(iter_ctx.prev_itr) - prev_max_vec;
-                RECORD_ITERATION(ctx, record_in, iter_ctx.prev_itr);
+                RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
                 iter_ctx.next_itr->delta_phi = DELTA_PHI(iter_ctx.prev_itr);
 

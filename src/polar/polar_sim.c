@@ -19,9 +19,6 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
 
     start_iteration(&iter_ctx);
 
-    void *record_in =
-        ORBIT_RECORD_LOCATION(ctx->record_handler, orbit_hash(orbit));
-
     struct radial_bounds radial_bounds =
         compute_radial_limits(orbit.principal, orbit.angular);
 
@@ -40,7 +37,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
             simulate_orbit_step(&iter_ctx, ctx->time_interval, orbit.angular);
 
         if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
-            RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
+            RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
         if (is_max) {
             revolutions = revolutions - 0.5;

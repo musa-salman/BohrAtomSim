@@ -7,7 +7,6 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "result/result.h"
 #include "utils/iterator.h"
 #include "utils/types.h"
 
@@ -19,11 +18,17 @@ extern "C" {
 #define INFO(fmt, ...)
 #endif
 
-#define RECORD_ITERATION(sim_ctx, record_in, curr_itr)                         \
-    (sim_ctx)->record_handler->record((record_in), (curr_itr))
+#define RECORD_ITERATION(sim_ctx, curr_itr)                                    \
+    (sim_ctx)->record_handler->record((sim_ctx)->record_handler->record_in,    \
+                                      (curr_itr))
 
 #define ORBIT_RECORD_LOCATION(record_handler, key)                             \
     (record_handler)->records_lookup((record_handler)->record_in, (key))
+
+struct record_handler {
+    void *record_in;
+    void (*record)(void *, struct sim_itr *);
+};
 
 struct electron_orbit {
     /**
@@ -74,10 +79,6 @@ struct sim_ctx {
 
     // TODO: move to recorder handler
     unsigned short record_interval;
-
-    struct result *result;
-    // parallelism
-    unsigned char active_orbits;
 };
 
 #endif // ATOM_BOHR_SIM_H
