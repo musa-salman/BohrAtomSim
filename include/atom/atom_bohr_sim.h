@@ -19,14 +19,6 @@ extern "C" {
 #define INFO(fmt, ...)
 #endif
 
-typedef void (*record_fn)(const struct sim_itr *record);
-
-struct record_handler {
-    void *record_in;
-    record_fn record;
-    size_t id;
-};
-
 #define RECORD_ITERATION(sim_ctx, record_in, curr_itr)                         \
     (sim_ctx)->record_handler->record((record_in), (curr_itr))
 
