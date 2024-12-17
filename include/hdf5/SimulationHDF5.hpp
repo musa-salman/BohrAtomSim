@@ -9,7 +9,7 @@
 
 #include "utils/types.h"
 
-const std::string BASE_GROUP = "/simulations/";
+const std::string BASE_GROUP = "/simulations";
 
 class SimulationDataWriter {
   private:

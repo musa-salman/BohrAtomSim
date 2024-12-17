@@ -1,5 +1,6 @@
 #include <H5Cpp.h>
 #include <array>
+#include <filesystem>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -7,15 +8,28 @@
 
 #include "hdf5/SimulationHDF5.hpp"
 
-SimulationDataWriter::SimulationDataWriter(const std::string &filename)
-    : file(filename, H5F_ACC_TRUNC) {}
+SimulationDataWriter::SimulationDataWriter(const std::string &filename) {
+    if (std::filesystem::exists(filename)) {
+        file = H5::H5File(filename, H5F_ACC_RDWR);
+    } else {
+        file = H5::H5File(filename, H5F_ACC_TRUNC);
+    }
+
+    if (!file.getId()) {
+        throw std::ios_base::failure("Failed to open file: " + filename);
+    }
+
+    if (!file.attrExists(BASE_GROUP)) {
+        file.createGroup(BASE_GROUP);
+    }
+}
 
 SimulationDataWriter::~SimulationDataWriter() { file.close(); }
 
 void SimulationDataWriter::createSimulationGroup(
     const std::string &group_name,
     const std::unordered_map<std::string, std::string> &meta_data) {
-    H5::Group group = file.createGroup(BASE_GROUP + group_name);
+    H5::Group group = file.createGroup(BASE_GROUP + "/" + group_name);
 
     std::scoped_lock lock(hdf5_mutex);
 
@@ -30,7 +44,7 @@ void SimulationDataWriter::createSimulationGroup(
 void SimulationDataWriter::storeSimulationRecords(
     const std::string &group_name,
     const std::unordered_map<std::string, std::vector<scalar>> &records) {
-    H5::Group group = file.openGroup(BASE_GROUP + group_name);
+    H5::Group group = file.openGroup(BASE_GROUP + "/" + group_name);
 
     std::scoped_lock lock(hdf5_mutex);
 
@@ -38,8 +52,8 @@ void SimulationDataWriter::storeSimulationRecords(
         std::array<hsize_t, 1> dims = {value.size()};
         H5::DataSpace dataspace(1, dims.data());
         H5::DataSet dataset =
-            group.createDataSet(key, H5::PredType::NATIVE_DOUBLE, dataspace);
-        dataset.write(value.data(), H5::PredType::NATIVE_DOUBLE);
+            group.createDataSet(key, H5::PredType::NATIVE_LDOUBLE, dataspace);
+        dataset.write(value.data(), H5::PredType::NATIVE_LDOUBLE);
 
         dataset.close();
     }
@@ -50,7 +64,7 @@ void SimulationDataWriter::storeSimulationRecords(
 std::unordered_map<std::string, std::string>
 SimulationDataWriter::queryMetadata(const std::string &group_name) {
     std::unordered_map<std::string, std::string> metadata;
-    H5::Group group = file.openGroup(BASE_GROUP + group_name);
+    H5::Group group = file.openGroup(BASE_GROUP + "/" + group_name);
 
     std::scoped_lock lock(hdf5_mutex);
 
