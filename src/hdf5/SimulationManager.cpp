@@ -1,8 +1,6 @@
-
 #include <stdexcept>
 #include <unordered_map>
 
-#include "hdf5/SimulationBuffer.hpp"
 #include "hdf5/SimulationFields.hpp"
 #include "hdf5/SimulationManager.hpp"
 
@@ -31,7 +29,7 @@ void SimulationManager::addSimulation(const std::string &simulation_name,
         throw std::invalid_argument("Invalid simulation type");
     }
 
-    simulation_buffers[simulation_name] = SimulationBuffer(*fields);
+    simulation_buffers.try_emplace(simulation_name, *fields);
 }
 
 void SimulationManager::appendData(
@@ -41,7 +39,7 @@ void SimulationManager::appendData(
         throw std::invalid_argument("Simulation not found");
     }
 
-    simulation_buffers[simulation_name].appendData(data);
+    simulation_buffers.at(simulation_name).appendData(data);
 }
 
 void SimulationManager::flushSimulation(
@@ -54,6 +52,6 @@ void SimulationManager::flushSimulation(
 
     data_writer.createSimulationGroup(simulation_name, meta_data);
     data_writer.storeSimulationRecords(
-        simulation_name, simulation_buffers[simulation_name].getAllData());
-    simulation_buffers[simulation_name].clearData();
+        simulation_name, simulation_buffers.at(simulation_name).getAllData());
+    simulation_buffers.at(simulation_name).clearData();
 }

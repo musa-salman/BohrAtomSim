@@ -12,6 +12,8 @@ class SimulationBuffer {
     std::unordered_map<std::string, std::vector<scalar>> field_data;
 
   public:
+    SimulationBuffer() = delete;
+
     explicit SimulationBuffer(const std::vector<std::string> &fields);
 
     void appendData(const std::unordered_map<std::string, scalar> &data);

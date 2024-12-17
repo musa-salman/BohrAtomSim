@@ -14,7 +14,8 @@ class SimulationManager {
     std::unordered_map<std::string, SimulationBuffer> simulation_buffers;
 
   public:
-    SimulationManager(SimulationDataWriter &writer);
+    SimulationManager() = delete;
+    explicit SimulationManager(SimulationDataWriter &writer);
 
     void addSimulation(const std::string &simulation_name, sim_type type);
 

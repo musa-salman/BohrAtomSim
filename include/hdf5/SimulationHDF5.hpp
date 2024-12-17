@@ -17,6 +17,8 @@ class SimulationDataWriter {
     std::mutex hdf5_mutex;
 
   public:
+    SimulationDataWriter() = delete;
+
     explicit SimulationDataWriter(const std::string &filename);
 
     ~SimulationDataWriter();
