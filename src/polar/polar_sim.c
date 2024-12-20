@@ -17,6 +17,8 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
     struct sim_itr next_itr = {};
     struct iter_ctx iter_ctx = {.prev_itr = &prev_itr, .next_itr = &next_itr};
 
+    const struct record_handler *rh = ctx->record_handler;
+
     start_iteration(&iter_ctx);
 
     struct radial_bounds radial_bounds =
@@ -36,7 +38,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
         const bool is_max =
             simulate_orbit_step(&iter_ctx, ctx->time_interval, orbit.angular);
 
-        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
+        if (it % rh->record_interval == 0 && !rh->delta_psi_mode)
             RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
         if (is_max) {

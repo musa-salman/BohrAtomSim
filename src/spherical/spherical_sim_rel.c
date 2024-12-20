@@ -32,6 +32,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
         .next_itr = &next_itr,
     };
 
+    const struct record_handler *rh = ctx->record_handler;
+
     start_iteration(&iter_ctx);
 
     struct radial_bounds radial_bounds =
@@ -87,11 +89,10 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
         iter_ctx.next_itr->gamma = compute_gamma(
             orbit.angular, R(iter_ctx.prev_itr), R_DOT(iter_ctx.prev_itr));
 
-        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
+        if (it % rh->record_interval == 0 && !rh->delta_psi_mode)
             RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
         if (is_at_interest) {
-            // is_at_maximum = !is_at_maximum;
             if (fabsl(iter_ctx.prev_itr->r - radial_bounds.r_max) < 1e-1) {
                 struct vector3 *curr_max_vec = spherical_to_cartesian(
                     R(iter_ctx.next_itr), THETA(iter_ctx.next_itr),

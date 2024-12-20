@@ -28,6 +28,9 @@ extern "C" {
 struct record_handler {
     void *record_in;
     void (*record)(void *, struct sim_itr *);
+
+    unsigned short record_interval;
+    bool delta_psi_mode;
 };
 
 struct electron_orbit {
@@ -72,13 +75,7 @@ struct sim_ctx {
     // Simulation control
     float revolutions;
 
-    // TODO: move to recorder handler
-    bool delta_psi_mode;
-
     scalar time_interval;
-
-    // TODO: move to recorder handler
-    unsigned short record_interval;
 };
 
 #endif // ATOM_BOHR_SIM_H

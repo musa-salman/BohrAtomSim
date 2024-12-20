@@ -18,6 +18,8 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx,
     struct sim_itr next_itr = {};
     struct iter_ctx iter_ctx = {.prev_itr = &prev_itr, .next_itr = &next_itr};
 
+    const struct record_handler *rh = ctx->record_handler;
+
     struct radial_bounds radial_bounds =
         compute_radial_limits(orbit.principal, orbit.angular);
 
@@ -45,7 +47,7 @@ void simulate_polar_orbit_rel(struct sim_ctx *ctx,
         is_at_interest = simulate_orbit_rel_step(&iter_ctx, ctx->time_interval,
                                                  orbit.angular);
 
-        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
+        if (it % rh->record_interval == 0 && !rh->delta_psi_mode)
             RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
         if (is_at_interest) {
