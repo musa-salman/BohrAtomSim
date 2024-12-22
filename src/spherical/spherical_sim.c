@@ -20,7 +20,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
     struct sim_itr next_itr = {};
 
     struct iter_ctx iter_ctx = {.prev_itr = &prev_itr, .next_itr = &next_itr};
-    const struct record_handler *rh = ctx->record_handler;
+    const struct record_handler rh = ctx->record_handler;
     start_iteration(&iter_ctx);
 
     struct radial_bounds radial_bounds =
@@ -63,7 +63,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
             simulate_orbit_step(&iter_ctx, &sign, &theta_flag, orbit.angular,
                                 orbit.magnetic, ctx->time_interval);
 
-        if (it % rh->record_interval == 0 && !(rh->delta_psi_mode)) {
+        if (it % rh.record_interval == 0 && !(rh.delta_psi_mode)) {
             RECORD_ITERATION(ctx, iter_ctx.next_itr);
         }
 

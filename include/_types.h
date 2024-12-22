@@ -1,7 +1,7 @@
 #ifndef _TYPES_H
 #define _TYPES_H
 
-#define LONG_DOUBLE_SCALAR
+#define DOUBLE_SCALAR
 
 #ifdef FLOAT_SCALAR
 typedef float __scalar; // not recommended
@@ -18,6 +18,5 @@ typedef double __scalar;
 #else
 #define FLOAT_LITERAL_SUFFIX(x) x
 #endif
-
 
 #endif // _TYPES_H

@@ -19,15 +19,15 @@ extern "C" {
 #endif
 
 #define RECORD_ITERATION(sim_ctx, curr_itr)                                    \
-    (sim_ctx)->record_handler->record((sim_ctx)->record_handler->record_in,    \
-                                      (curr_itr))
-
-#define ORBIT_RECORD_LOCATION(record_handler, key)                             \
-    (record_handler)->records_lookup((record_handler)->record_in, (key))
+    (sim_ctx)->record_handler.record((sim_ctx)->record_handler.record_in,      \
+                                     (sim_ctx)->record_handler.name,           \
+                                     (curr_itr))
 
 struct record_handler {
+    const char *name;
     void *record_in;
-    void (*record)(void *, struct sim_itr *);
+    void (*record)(void *record_in, const char *name,
+                   const struct sim_itr *sim_itr);
 
     unsigned short record_interval;
     bool delta_psi_mode;
@@ -59,18 +59,13 @@ struct electron_orbit {
     quantum_spin spin;
 };
 
-static inline long orbit_hash(struct electron_orbit orbit) {
-    return orbit.principal | orbit.angular << 8 | orbit.magnetic << 16 |
-           orbit.spin << 24;
-}
-
 struct atom {
     struct electron_orbit *electrons;
     unsigned char electrons_count;
 };
 
 struct sim_ctx {
-    struct record_handler *record_handler;
+    struct record_handler record_handler;
 
     // Simulation control
     float revolutions;

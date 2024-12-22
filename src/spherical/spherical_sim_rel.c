@@ -23,8 +23,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
     struct sim_itr next_itr = {};
 
     INFO("simulate_spherical_rel_orbit");
-    INFO("Revolutions: %LE", (scalar)ctx->revolutions);
-    INFO("Time interval: %LE", ctx->time_interval);
+    INFO("Revolutions: %E", (scalar)ctx->revolutions);
+    INFO("Time interval: %E", ctx->time_interval);
     INFO("Orbit: %d %d %d %d", orbit.principal, orbit.angular, orbit.magnetic,
          orbit.spin);
     struct iter_ctx iter_ctx = {
@@ -32,7 +32,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
         .next_itr = &next_itr,
     };
 
-    const struct record_handler *rh = ctx->record_handler;
+    const struct record_handler rh = ctx->record_handler;
 
     start_iteration(&iter_ctx);
 
@@ -89,7 +89,7 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
         iter_ctx.next_itr->gamma = compute_gamma(
             orbit.angular, R(iter_ctx.prev_itr), R_DOT(iter_ctx.prev_itr));
 
-        if (it % rh->record_interval == 0 && !rh->delta_psi_mode)
+        if (it % rh.record_interval == 0 && !rh.delta_psi_mode)
             RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
         if (is_at_interest) {
@@ -105,8 +105,8 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
 
                     RECORD_ITERATION(ctx, iter_ctx.prev_itr);
 
-                    INFO("prev_max_vec: (%LE %LE %LE), curr_max_vec: (%LE %LE "
-                         "%LE), delta_phi: %LE",
+                    INFO("prev_max_vec: (%E %E %E), curr_max_vec: (%E %E "
+                         "%E), delta_phi: %E",
                          prev_max_vec->x, prev_max_vec->y, prev_max_vec->z,
                          curr_max_vec->x, curr_max_vec->y, curr_max_vec->z,
                          DELTA_PHI(iter_ctx.prev_itr));
