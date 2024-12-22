@@ -1,6 +1,7 @@
 #include <H5Cpp.h>
 #include <array>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -43,12 +44,13 @@ void SimulationDataWriter::createSimulationGroup(
 
 void SimulationDataWriter::storeSimulationRecords(
     const std::string &group_name,
-    const std::unordered_map<std::string, std::vector<scalar>> &records) {
+    const std::shared_ptr<std::unordered_map<std::string, std::vector<scalar>>>
+        &records) {
     H5::Group group = file.openGroup(BASE_GROUP + "/" + group_name);
 
     std::scoped_lock lock(hdf5_mutex);
 
-    for (const auto &[key, value] : records) {
+    for (const auto &[key, value] : *records) {
         std::array<hsize_t, 1> dims = {value.size()};
         H5::DataSpace dataspace(1, dims.data());
         H5::DataSet dataset =

@@ -1,10 +1,13 @@
+#include <memory>
 #include <stdexcept>
 #include <unordered_map>
+#include <vector>
 
 #include "hdf5/SimulationFields.hpp"
 #include "hdf5/SimulationManager.hpp"
 
 #include "utils/iterator.h"
+#include "view/Simulation.hpp"
 
 SimulationManager::SimulationManager(SimulationDataWriter &writer)
     : data_writer(writer) {}
@@ -29,29 +32,36 @@ void SimulationManager::addSimulation(const std::string &simulation_name,
         throw std::invalid_argument("Invalid simulation type");
     }
 
-    simulation_buffers.try_emplace(simulation_name, *fields);
+    auto simulation =
+        std::make_shared<Simulation>(simulation_name, type, *fields);
+    simulations.try_emplace(simulation_name, simulation);
 }
 
 void SimulationManager::appendData(
     const std::string &simulation_name,
-    std::unordered_map<std::string, scalar> data) {
-    if (!simulation_buffers.contains(simulation_name)) {
+    const std::unordered_map<std::string, scalar> &data) {
+    if (!simulations.contains(simulation_name)) {
         throw std::invalid_argument("Simulation not found");
     }
 
-    simulation_buffers.at(simulation_name).appendData(data);
+    simulations.at(simulation_name)->appendData(data);
 }
 
 void SimulationManager::flushSimulation(
     const std::string &simulation_name,
     const std::unordered_map<std::string, std::string> &meta_data) {
 
-    if (!simulation_buffers.contains(simulation_name)) {
+    if (!simulations.contains(simulation_name)) {
         throw std::invalid_argument("Simulation not found");
     }
 
     data_writer.createSimulationGroup(simulation_name, meta_data);
     data_writer.storeSimulationRecords(
-        simulation_name, simulation_buffers.at(simulation_name).getAllData());
-    simulation_buffers.at(simulation_name).clearData();
+        simulation_name, simulations.at(simulation_name)->getData());
+    simulations.at(simulation_name);
+}
+
+const std::unordered_map<std::string, std::shared_ptr<Simulation>> &
+SimulationManager::getSimulations() const {
+    return simulations;
 }

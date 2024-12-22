@@ -2,6 +2,7 @@
 #define SIMULATIONHDF5_H
 
 #include <H5Cpp.h>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -29,7 +30,8 @@ class SimulationDataWriter {
 
     void storeSimulationRecords(
         const std::string &group_name,
-        const std::unordered_map<std::string, std::vector<scalar>> &records);
+        const std::shared_ptr<
+            std::unordered_map<std::string, std::vector<scalar>>> &records);
 
     std::unordered_map<std::string, std::string>
     queryMetadata(const std::string &group_name);
