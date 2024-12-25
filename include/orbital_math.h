@@ -139,6 +139,10 @@ scalar compute_theta_min(quantum_magnetic magnetic, quantum_angular angular);
 #define REL_SPHERICAL_PHI_DOT(n_phi, theta, r, gamma)                          \
     compute_spherical_phi_dot(n_phi, theta, r) / gamma
 
+scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
+                                    quantum_magnetic magnetic, scalar radius,
+                                    scalar gamma);
+
 scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
                                   scalar radius, scalar gamma);
 

@@ -75,8 +75,10 @@ scalar compute_spherical_phi_dot(quantum_magnetic magnetic, scalar theta,
     return result;
 }
 
-scalar compute_sphere_rel_phi_dot_0(scalar n_phi, scalar radius, scalar gamma) {
-    const scalar result = n_phi / (SQUARE(radius));
+scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
+                                    quantum_magnetic magnetic, scalar radius,
+                                    scalar gamma) {
+    const scalar result = SQUARE(angular) / (SQUARE(radius) * magnetic);
 
     return result / gamma;
 }
