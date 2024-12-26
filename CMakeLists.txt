@@ -6,6 +6,9 @@ set(CMAKE_C_STANDARD 23)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_C_FLAGS "-Wall -Wextra -fPIC") # -fPIC required for shared libraries on many platforms
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pg")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+
 find_package(OpenMP REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
