@@ -1,6 +1,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
+#include <sleef.h>
 
 #include "orbital_math.h"
 #include "utils/types.h"
@@ -39,24 +40,6 @@ scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
     return result;
 }
 
-scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
-    const scalar term1 =
-        SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
-    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
-
-    const scalar result = sqrt((1 + term1) / (1 - term2));
-    return result;
-}
-
-scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
-                             scalar radius, scalar r_dot) {
-    const scalar term1 = SQUARE(angular) / (gamma * radius);
-    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
-
-    const scalar result = (term1 + term2 - 1) / (gamma * SQUARE(radius));
-
-    return result;
-}
 
 scalar compute_theta_min(quantum_magnetic magnetic, quantum_angular angular) {
     return asin((scalar)magnetic / angular);
@@ -79,14 +62,6 @@ scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
                                     quantum_magnetic magnetic, scalar radius,
                                     scalar gamma) {
     const scalar result = SQUARE(angular) / (SQUARE(radius) * magnetic);
-
-    return result / gamma;
-}
-
-scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
-                                  scalar radius, scalar gamma) {
-    const scalar sin_theta = sin(theta);
-    const scalar result = magnetic / (SQUARE(radius * sin_theta));
 
     return result / gamma;
 }
