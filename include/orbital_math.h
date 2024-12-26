@@ -2,6 +2,7 @@
 #define ORBITAL_MATH_H
 
 #include <math.h>
+#include <sleef.h>
 
 #include "utils/types.h"
 
@@ -29,25 +30,31 @@ struct vector3 {
     scalar z;
 };
 
-#ifdef __cplusplus
+#define sin(x)                                                                 \
+    _Generic((x),                                                              \
+             float: Sleef_sinf_u10,                                            \
+             double: Sleef_sin_u10,                                            \
+             long double: (long double (*)(long double))Sleef_sin_u10)(x)
+
+#define cos(x)                                                                 \
+    _Generic((x),                                                              \
+             float: Sleef_cosf_u10,                                            \
+             double: Sleef_cos_u10,                                         \
+             long double: (long double (*)(long double))Sleef_cos_u10)(x)
+
+#define sqrt(x)                                                                \
+    _Generic((x),                                                              \
+             float: Sleef_sqrt,                                           \
+             double: Sleef_sqrt,                                      \
+             long double: (long double (*)(long double))Sleef_sqrt)(x)
+
+#define SQUARE(x) ((x) * (x))
+
 #define GENERIC_MATH_FUNC(func, x)                                             \
     (sizeof(x) == sizeof(float)    ? func##f(x)                                \
      : sizeof(x) == sizeof(double) ? func(x)                                   \
                                    : func##l(x))
-#else
-#define sin(x) _Generic((x), float: sinf, default: sin, long double: sinl)(x)
-#define cos(x) _Generic((x), float: cosf, default: cos, long double: cosl)(x)
-#define asin(x)                                                                \
-    _Generic((x), float: asinf, default: asin, long double: asinl)(x)
-#define acos(x)                                                                \
-    _Generic((x), float: acosf, default: acos, long double: acosl)(x)
-#define atan2(y, x)                                                            \
-    _Generic((y), float: atan2f, default: atan2, long double: atan2l)(y, x)
-#define sqrt(x)                                                                \
-    _Generic((x), float: sqrtf, default: sqrt, long double: sqrtl)(x)
-#endif
 
-#define SQUARE(x) ((x) * (x))
 
 /**
     Calculates r_dot_dot "acceleration" of and electron
@@ -94,7 +101,14 @@ scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
  * @param r_dot
  * @return double
  */
-scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot);
+static inline scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
+    const scalar term1 =
+        SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
+    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+
+    const scalar result = sqrt((1 + term1) / (1 - term2));
+    return result;
+}
 
 /**
     Calculates the angular change rate in relevistic
@@ -122,8 +136,15 @@ scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot);
  * @param r_dot
  * @return double
  */
-scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
-                             scalar radius, scalar r_dot);
+static inline scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
+                             scalar radius, scalar r_dot) {
+    const scalar term1 = SQUARE(angular) / (gamma * radius);
+    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+
+    const scalar result = (term1 + term2 - 1) / (gamma * SQUARE(radius));
+
+    return result;
+}
 
 /**
  * @brief Calculates the starting point for theta
@@ -143,8 +164,13 @@ scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
                                     quantum_magnetic magnetic, scalar radius,
                                     scalar gamma);
 
-scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
-                                  scalar radius, scalar gamma);
+static inline scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
+                                  scalar radius, scalar gamma) {
+    const scalar sin_theta = sin(theta);
+    const scalar result = magnetic / (SQUARE(radius * sin_theta));
+
+    return result / gamma;
+}
 
 scalar compute_spherical_phi_dot(quantum_magnetic magnetic, scalar theta,
                                  scalar radius);
@@ -170,11 +196,21 @@ scalar compute_angular_distance(const struct vector3 *v1,
 scalar compute_sphere_theta_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                     scalar theta_dot, scalar phi_dot);
 
-scalar compute_sphere_rel_theta_dot_dot(scalar radius, scalar r_dot,
-                                        scalar theta, scalar theta_dot,
-                                        scalar phi_dot, scalar gamma);
+static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
+                                        scalar theta_dot, scalar phi_dot,
+                                        scalar gamma) {
+
+    const scalar term1 = sin(theta) * cos(theta) * SQUARE(phi_dot);
+    const scalar term2 = 2 * r_dot * theta_dot / r;
+    const scalar term3 = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
+
+    const scalar result = term1 - term2 * (1 - term3);
+
+    return result;
+}
 
 scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                   scalar theta_dot, scalar phi_dot);
+
 
 #endif // ORBITAL_MATH_H
