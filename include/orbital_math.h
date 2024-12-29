@@ -32,29 +32,23 @@ struct vector3 {
 
 #define sin(x)                                                                 \
     _Generic((x),                                                              \
-             float: Sleef_sinf_u10,                                            \
-             double: Sleef_sin_u10,                                            \
-             long double: (long double (*)(long double))Sleef_sin_u10)(x)
+        float: Sleef_sinf1_u35purecfma,                                        \
+        double: Sleef_finz_sind1_u35purecfma,                                  \
+        long double: sinl)(x)
 
 #define cos(x)                                                                 \
     _Generic((x),                                                              \
-             float: Sleef_cosf_u10,                                            \
-             double: Sleef_cos_u10,                                         \
-             long double: (long double (*)(long double))Sleef_cos_u10)(x)
+        float: Sleef_cosf1_u35purecfma,                                        \
+        double: Sleef_cosd1_u35purecfma,                                       \
+        long double: cosl)(x)
 
 #define sqrt(x)                                                                \
     _Generic((x),                                                              \
-             float: Sleef_sqrt,                                           \
-             double: Sleef_sqrt,                                      \
-             long double: (long double (*)(long double))Sleef_sqrt)(x)
+        float: Sleef_sqrtf1_u35purecfma,                                       \
+        double: Sleef_finz_sqrtd1_u35purecfma,                                 \
+        long double: sqrtl)(x)
 
 #define SQUARE(x) ((x) * (x))
-
-#define GENERIC_MATH_FUNC(func, x)                                             \
-    (sizeof(x) == sizeof(float)    ? func##f(x)                                \
-     : sizeof(x) == sizeof(double) ? func(x)                                   \
-                                   : func##l(x))
-
 
 /**
     Calculates r_dot_dot "acceleration" of and electron
