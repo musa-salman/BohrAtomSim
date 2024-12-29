@@ -23,14 +23,24 @@ void optimized_3d_rel_sim() {
 
     scalar r_dot = 0;
 
-    scalar gamma = compute_gamma(ANGULAR, r, r_dot);
-    scalar r_dot_dot = compute_rel_r_dot_dot(ANGULAR, gamma, r, r_dot);
+    /*
+        compute_gamma it returns the gamma value
+        for now in inv_gamma stored gamma value
+        so it can be used for the other functions that require gamma
+    */
+    scalar inv_gamma = compute_gamma(ANGULAR, r, r_dot);
+    scalar r_dot_dot = compute_rel_r_dot_dot(ANGULAR, inv_gamma, r, r_dot);
 
-    scalar phi_dot = compute_sphere_rel_phi_dot(MAGNETIC, theta, r, gamma);
+    scalar phi_dot = compute_sphere_rel_phi_dot(MAGNETIC, theta, r, inv_gamma);
 
     scalar theta_dot = 0;
     scalar theta_dot_dot = compute_sphere_rel_theta_dot_dot(
-        r, r_dot, theta, theta_dot, phi_dot, gamma);
+        r, r_dot, theta, theta_dot, phi_dot, inv_gamma);
+
+    /*
+        Precompute reused inverse gamma
+    */
+    inv_gamma = 1 / inv_gamma;
 
     scalar prev_r_dot = r_dot;
 
@@ -64,9 +74,7 @@ void optimized_3d_rel_sim() {
             inv_r_squared * SQUARE(ANGULAR) * INV_SPEED_OF_LIGHT_SQUARED;
         const scalar term2_gamma = SQUARE(r_dot) * INV_SPEED_OF_LIGHT_SQUARED;
 
-        gamma = sqrt((1 + term1_gamma) / (1 - term2_gamma));
-
-        const scalar inv_gamma = 1 / gamma;
+        inv_gamma = sqrt((1 - term2_gamma) / (1 + term1_gamma));
 
         /*
             compute phi_dot
