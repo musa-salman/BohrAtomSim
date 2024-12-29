@@ -54,15 +54,19 @@ void optimized_3d_rel_sim() {
         /*
             Compute the new values:
         */
+        const scalar inv_r = 1 / r;
+        const scalar inv_r_squared = inv_r * inv_r;
 
         /*
             compute gamma
         */
         const scalar term1_gamma =
-            SQUARE(ANGULAR) / (SPEED_OF_LIGHT_SQUARE * SQUARE(r));
-        const scalar term2_gamma = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+            inv_r_squared * SQUARE(ANGULAR) * INV_SPEED_OF_LIGHT_SQUARED;
+        const scalar term2_gamma = SQUARE(r_dot) * INV_SPEED_OF_LIGHT_SQUARED;
 
         gamma = sqrt((1 + term1_gamma) / (1 - term2_gamma));
+
+        const scalar inv_gamma = 1 / gamma;
 
         /*
             compute phi_dot
@@ -73,12 +77,11 @@ void optimized_3d_rel_sim() {
         /*
             compute r_dot_dot
         */
-        const scalar term1_r_ddot = SQUARE(ANGULAR) / (gamma * r);
-        const scalar term2_r_ddot = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+        const scalar term1_r_ddot = inv_gamma * inv_r * SQUARE(ANGULAR);
+        const scalar term2_r_ddot = SQUARE(r_dot) * INV_SPEED_OF_LIGHT_SQUARED;
 
         // Precompute reused terms
-        const scalar radius_squared = r * r;
-        const scalar reciprocal = 1.0 / (gamma * radius_squared);
+        const scalar reciprocal = inv_gamma * inv_r;
 
         // Perform computation
         const scalar intermediate = term1_r_ddot + term2_r_ddot - 1.0;
@@ -88,8 +91,9 @@ void optimized_3d_rel_sim() {
             compute theta_dot_dot
         */
         const scalar term1_theta_ddot = 0.5 * sin(2 * theta) * SQUARE(phi_dot);
-        const scalar term2_theta_ddot = 2 * r_dot * theta_dot / r;
-        const scalar term3_theta_ddot = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
+        const scalar term2_theta_ddot = 2 * r_dot * theta_dot * inv_r;
+        const scalar term3_theta_ddot =
+            inv_gamma * inv_r * INV_SPEED_OF_LIGHT_SQUARED;
 
         theta_dot_dot =
             term1_theta_ddot - term2_theta_ddot * (1 - term3_theta_ddot);
