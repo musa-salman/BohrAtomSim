@@ -1,7 +1,6 @@
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
-#include <sleef.h>
 
 #include "orbital_math.h"
 #include "utils/types.h"
@@ -39,7 +38,6 @@ scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
 
     return result;
 }
-
 
 scalar compute_theta_min(quantum_magnetic magnetic, quantum_angular angular) {
     return asin((scalar)magnetic / angular);

@@ -95,7 +95,8 @@ scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
  * @param r_dot
  * @return double
  */
-static inline scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
+static inline scalar compute_gamma(quantum_angular angular, scalar radius,
+                                   scalar r_dot) {
     const scalar term1 =
         SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
     const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
@@ -118,8 +119,8 @@ static inline scalar compute_gamma(quantum_angular angular, scalar radius, scala
     REL_ANGULAR_RATE(angular, radius, gamma)
 
 /**
- * @brief Calculates R_dot_dot  with relativity incorporated "acceleration" of
- * and electron
+ * @brief Calculates R_dot_dot  with relativity incorporated
+ * "acceleration" of and electron
  *
  *                      gamma*m*r_dot_dot = (l^2)/(gamma*m*(r^3)) -
  * (e^2)/(r^2)(1-(r_dot/c)^2)
@@ -130,12 +131,19 @@ static inline scalar compute_gamma(quantum_angular angular, scalar radius, scala
  * @param r_dot
  * @return double
  */
-static inline scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
-                             scalar radius, scalar r_dot) {
+static inline scalar compute_rel_r_dot_dot(quantum_angular angular,
+                                           scalar gamma, scalar radius,
+                                           scalar r_dot) {
     const scalar term1 = SQUARE(angular) / (gamma * radius);
     const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
 
-    const scalar result = (term1 + term2 - 1) / (gamma * SQUARE(radius));
+    // Precompute reused terms
+    const scalar radius_squared = radius * radius;
+    const scalar reciprocal = 1.0 / (gamma * radius_squared);
+
+    // Perform computation
+    const scalar intermediate = term1 + term2 - 1.0;
+    const scalar result = intermediate * reciprocal;
 
     return result;
 }
@@ -158,8 +166,9 @@ scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
                                     quantum_magnetic magnetic, scalar radius,
                                     scalar gamma);
 
-static inline scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
-                                  scalar radius, scalar gamma) {
+static inline scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic,
+                                                scalar theta, scalar radius,
+                                                scalar gamma) {
     const scalar sin_theta = sin(theta);
     const scalar result = magnetic / (SQUARE(radius * sin_theta));
 
@@ -177,7 +186,8 @@ scalar compute_angular_distance(const struct vector3 *v1,
  * @brief Calculates the angular acceleration of the electron
  * where
  *
- *        THETA_DOT_DOT =  (sin(theta) * cos(theta) * phi_dot^2 )-( (r_dot / r)
+ *        THETA_DOT_DOT =  (sin(theta) * cos(theta) * phi_dot^2 )-(
+ * (r_dot / r)
  * * 2* theta_dot )
  *
  * @param r electrons distance from the center of rotation
@@ -190,11 +200,13 @@ scalar compute_angular_distance(const struct vector3 *v1,
 scalar compute_sphere_theta_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                     scalar theta_dot, scalar phi_dot);
 
-static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
-                                        scalar theta_dot, scalar phi_dot,
+static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot,
+                                                      scalar theta,
+                                                      scalar theta_dot,
+                                                      scalar phi_dot,
                                         scalar gamma) {
 
-    const scalar term1 = sin(theta) * cos(theta) * SQUARE(phi_dot);
+    const scalar term1 = 0.5 * sin(2 * theta) * SQUARE(phi_dot);
     const scalar term2 = 2 * r_dot * theta_dot / r;
     const scalar term3 = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
 
