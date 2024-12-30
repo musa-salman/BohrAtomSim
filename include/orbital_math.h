@@ -14,7 +14,9 @@
 */
 
 #define SPEED_OF_LIGHT_SQUARE FLOAT_LITERAL_SUFFIX(18778.86507043055614177)
-
+#define INV_SPEED_OF_LIGHT_SQUARED                                             \
+    FLOAT_LITERAL_SUFFIX(                                                      \
+        0.00005325135444817764497014759719843327058544153594730151938573075309765889417268364826189597794887347264)
 #define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
 #define PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
 #define TWO_PI FLOAT_LITERAL_SUFFIX(6.28318530717958647692)
@@ -204,7 +206,7 @@ static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot,
                                                       scalar theta,
                                                       scalar theta_dot,
                                                       scalar phi_dot,
-                                        scalar gamma) {
+                                                      scalar gamma) {
 
     const scalar term1 = 0.5 * sin(2 * theta) * SQUARE(phi_dot);
     const scalar term2 = 2 * r_dot * theta_dot / r;
@@ -217,6 +219,5 @@ static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot,
 
 scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                   scalar theta_dot, scalar phi_dot);
-
 
 #endif // ORBITAL_MATH_H
