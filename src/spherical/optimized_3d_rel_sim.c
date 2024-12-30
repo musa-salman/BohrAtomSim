@@ -70,44 +70,55 @@ void optimized_3d_rel_sim() {
         /*
             compute gamma
         */
-        const scalar term1_gamma =
-            inv_r_squared * SQUARE(ANGULAR) * INV_SPEED_OF_LIGHT_SQUARED;
+        {
 
-        /**
-            Taylor expansion of 1 / (1 - r_dot^2/c^2)
-         */
-        const scalar term2_gamma = 1 + 5.32513544481776e-5 * r_dot * r_dot;
+            const scalar term1_gamma =
+                inv_r_squared * SQUARE(ANGULAR) * INV_SPEED_OF_LIGHT_SQUARED;
 
-        inv_gamma = 2 - sqrt((1 + term1_gamma) * term2_gamma);
+            /**
+                Taylor expansion of 1 / (1 - r_dot^2/c^2)
+             */
+            const scalar term2_gamma = 1 + 5.32513544481776e-5 * r_dot * r_dot;
+
+            inv_gamma = 2 - sqrt((1 + term1_gamma) * term2_gamma);
+        }
 
         /*
             compute phi_dot
         */
-        const scalar sin_theta = sin(theta);
-        phi_dot = inv_gamma * MAGNETIC / (sin_theta * sin_theta);
+        {
+            const scalar sin_theta = sin(theta);
+            phi_dot = inv_gamma * MAGNETIC / (sin_theta * sin_theta);
+        }
 
         /*
             compute r_dot_dot
         */
-        const scalar term1_r_ddot = inv_gamma * inv_r * SQUARE(ANGULAR);
-        const scalar term2_r_ddot = SQUARE(r_dot) * INV_SPEED_OF_LIGHT_SQUARED;
+        {
+            const scalar term1_r_ddot = inv_gamma * inv_r * SQUARE(ANGULAR);
+            const scalar term2_r_ddot =
+                SQUARE(r_dot) * INV_SPEED_OF_LIGHT_SQUARED;
 
-        // Precompute reused terms
-        const scalar reciprocal = inv_gamma * inv_r;
+            // Precompute reused terms
+            const scalar reciprocal = inv_gamma * inv_r;
 
-        // Perform computation
-        const scalar intermediate = term1_r_ddot + term2_r_ddot - 1.0;
-        r_dot_dot = intermediate * reciprocal;
+            // Perform computation
+            const scalar intermediate = term1_r_ddot + term2_r_ddot - 1.0;
+            r_dot_dot = intermediate * reciprocal;
+        }
 
         /*
             compute theta_dot_dot
         */
-        const scalar term1_theta_ddot = 0.5 * sin(2 * theta) * SQUARE(phi_dot);
-        const scalar term2_theta_ddot = 2 * r_dot * theta_dot * inv_r;
-        const scalar term3_theta_ddot =
-            inv_gamma * inv_r * INV_SPEED_OF_LIGHT_SQUARED;
+        {
+            const scalar term1_theta_ddot =
+                0.5 * sin(2 * theta) * SQUARE(phi_dot);
+            const scalar term2_theta_ddot = 2 * r_dot * theta_dot * inv_r;
+            const scalar term3_theta_ddot =
+                inv_gamma * inv_r * INV_SPEED_OF_LIGHT_SQUARED;
 
-        theta_dot_dot =
-            term1_theta_ddot - term2_theta_ddot * (1 - term3_theta_ddot);
+            theta_dot_dot =
+                term1_theta_ddot - term2_theta_ddot * (1 - term3_theta_ddot);
+        }
     }
 }
