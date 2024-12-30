@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
 #include "simulation_runner/simulation_runner.h"
+#include "spherical/optimized_3d_rel_sim.h"
 #include "utils/iterator.h"
 #include "utils/types.h"
 
@@ -43,9 +45,22 @@ FILE *create_record_file(const char *filename, enum sim_type sim_type) {
 }
 
 int main(void) {
-    const float revolutions = 10;
-    const scalar time_interval = 1e-7;
-    const enum sim_type sim_type = REL_POLAR;
+    printf("simulate_spherical_rel_orbit optimized\n");
+    printf("Revolutions: 0.5\n");
+    printf("Time interval: 1e-7\n");
+    printf("Orbit: 3, 2, 1\n");
+
+    const clock_t begin = clock();
+    optimized_3d_rel_sim();
+    const clock_t end = clock();
+    const double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("Time spent: %f\n", time_spent);
+}
+
+int main_unoptimized(void) {
+    const float revolutions = 1;
+    const scalar time_interval = 1e-6;
+    const enum sim_type sim_type = REL_SPHERICAL;
     const bool delta_psi_mode = false;
     const unsigned short record_interval = 30000;
 
