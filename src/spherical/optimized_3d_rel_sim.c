@@ -72,15 +72,19 @@ void optimized_3d_rel_sim() {
         */
         const scalar term1_gamma =
             inv_r_squared * SQUARE(ANGULAR) * INV_SPEED_OF_LIGHT_SQUARED;
-        const scalar term2_gamma = SQUARE(r_dot) * INV_SPEED_OF_LIGHT_SQUARED;
 
-        inv_gamma = sqrt((1 - term2_gamma) / (1 + term1_gamma));
+        /**
+            Taylor expansion of 1 / (1 - r_dot^2/c^2)
+         */
+        const scalar term2_gamma = 1 + 5.32513544481776e-5 * r_dot * r_dot;
+
+        inv_gamma = 2 - sqrt((1 + term1_gamma) * term2_gamma);
 
         /*
             compute phi_dot
         */
         const scalar sin_theta = sin(theta);
-        phi_dot = MAGNETIC / (sin_theta * sin_theta);
+        phi_dot = inv_gamma * MAGNETIC / (sin_theta * sin_theta);
 
         /*
             compute r_dot_dot
