@@ -8,6 +8,7 @@
 #include "polar/polar_sim_rel.h"
 #include "spherical/spherical_sim.h"
 #include "spherical/spherical_sim_rel.h"
+#include "spin/spin_sim.h"
 #include "utils/iterator.h"
 
 void init_simulation(struct simulator *sim, struct atom atom,
@@ -27,6 +28,9 @@ void init_simulation(struct simulator *sim, struct atom atom,
         break;
     case REL_SPHERICAL:
         sim->simulate_orbit = simulate_spherical_rel_orbit;
+        break;
+    case SPIN:
+        sim->simulate_orbit = simulate_spin_orbit;
         break;
     default:
         sim->simulate_orbit = NULL;
