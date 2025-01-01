@@ -13,6 +13,12 @@
 */
 
 #define SPEED_OF_LIGHT_SQUARE FLOAT_LITERAL_SUFFIX(18778.86507043055614177)
+#define INV_SPEED_OF_LIGHT_SQUARED                                             \
+    FLOAT_LITERAL_SUFFIX(                                                      \
+        0.00005325135444817764497014759719843327058544153594730151938573075309765889417268364826189597794887347264)
+
+#define G_FACTOR FLOAT_LITERAL_SUFFIX(2)
+#define S_Z_FACTOR FLOAT_LITERAL_SUFFIX(0.5)
 
 #define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
 #define PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
@@ -176,5 +182,16 @@ scalar compute_sphere_rel_theta_dot_dot(scalar radius, scalar r_dot,
 
 scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                   scalar theta_dot, scalar phi_dot);
+
+scalar compute_spin_phi_dot_0(quantum_angular angular,
+                              quantum_magnetic magnetic, scalar radius);
+
+scalar compute_spin_phi_dot(quantum_magnetic magnetic, scalar theta,
+                            scalar radius);
+
+scalar compute_spin_theta_ddot(scalar radius, scalar theta, scalar phi_dot);
+
+scalar compute_spin_r_ddot(scalar radius, scalar theta, scalar theta_dot,
+                           scalar phi_dot);
 
 #endif // ORBITAL_MATH_H
