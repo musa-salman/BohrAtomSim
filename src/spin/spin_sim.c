@@ -46,12 +46,15 @@ void simulate_spin_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
     next_itr.r_dot_dot = compute_spin_r_ddot(
         prev_itr.r, prev_itr.theta, prev_itr.theta_dot, prev_itr.phi_dot);
 
+    scalar time = 0;
     size_t it = 0;
     while (revolutions > 0) {
         const bool is_max =
             simulate_orbit_step(&iter_ctx, orbit.magnetic, ctx->time_interval);
 
+        time += ctx->time_interval;
         if (it % ctx->record_interval == 0 && !(ctx->delta_psi_mode)) {
+            iter_ctx.next_itr->dt = time;
             RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
         }
 

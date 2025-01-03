@@ -16,3 +16,9 @@ test.*
 *.log
 *.egg-info
 *.so
+*.ipynb
+*.csv
+*.out
+*.data
+*.old
+analysis_*.txt
