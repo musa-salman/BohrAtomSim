@@ -30,7 +30,8 @@ FILE *create_record_file(const char *filename, enum sim_type sim_type) {
     FILE *record_file = fopen(filename, "w");
     fprintf(record_file, "t,r,r_dot,r_dot_dot,phi,phi_dot,phi_dot_dot");
 
-    if (sim_type == SPHERICAL || sim_type == REL_SPHERICAL) {
+    if (sim_type == SPHERICAL || sim_type == REL_SPHERICAL ||
+        sim_type == SPIN) {
         fprintf(record_file, ",theta,theta_dot,theta_dot_dot");
     }
 
@@ -43,14 +44,14 @@ FILE *create_record_file(const char *filename, enum sim_type sim_type) {
 }
 
 int main(void) {
-    const float revolutions = 0.5;
-    const scalar time_interval = 1e-10;
-    const enum sim_type sim_type = REL_SPHERICAL;
+    const float revolutions = 10;
+    const scalar time_interval = 1e-6;
+    const enum sim_type sim_type = SPIN;
     const bool delta_psi_mode = false;
     const unsigned short record_interval = 1000;
 
     struct electron_orbit electrons[] = {
-        {3, 2, 1, 0},
+        {2, 1, 1, 0},
     };
 
     struct file_record orbit_files[ORBIT_COUNT];
@@ -69,7 +70,7 @@ int main(void) {
 
     for (int i = 0; i < atom.electrons_count; i++) {
         char filename[100];
-        sprintf(filename, "3d_rel_%d_%d_%d_d47.csv",
+        sprintf(filename, "debug/d80/spin_%d_%d_%d_d80.csv",
                 atom.electrons[i].principal, atom.electrons[i].angular,
                 atom.electrons[i].magnetic);
 
