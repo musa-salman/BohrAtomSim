@@ -16,10 +16,6 @@ void record2csv(void *record_in, const struct sim_itr *iter) {
                 THETA_DOT_DOT(iter));
     }
 
-    if (EPSILON(iter) != -1) {
-        fprintf(csv, ",%.20LE", EPSILON(iter));
-    }
-
     if (GAMMA(iter) != -1) {
         fprintf(csv, ",%.20LE,%.20LE", GAMMA(iter), DELTA_PHI(iter));
     }
