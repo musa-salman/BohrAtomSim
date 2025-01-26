@@ -59,7 +59,6 @@ void SimulationCard::draw() {
     for (const auto &[name, values] : *simulation->data) {
         std::cout << "Plotting " << name << std::endl;
         if (ImPlot::BeginPlot(name.c_str())) {
-
             ImPlot::PlotLine(name.c_str(), values.data(),
                              static_cast<int>(values.size()));
             ImPlot::EndPlot();

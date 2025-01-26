@@ -3,7 +3,7 @@
 #include "view/AddSimulationDialog.hpp"
 
 AddSimulationDialog::AddSimulationDialog(
-    const std::function<void(Simulation)> &on_submit)
+    const std::function<void(const Simulation &)> &on_submit)
     : on_submit(on_submit) {}
 
 void AddSimulationDialog::draw() {
