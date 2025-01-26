@@ -1,10 +1,10 @@
 #include <boost/asio.hpp>
+#include <memory>
 #include <thread>
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
 #include "simulator_runner/Simulator.hpp"
-#include "spherical/spherical_sim.h"
 
 Simulator::Simulator()
     : ioContext(1), workGuard(boost::asio::make_work_guard(ioContext)) {
@@ -29,8 +29,8 @@ Simulator::~Simulator() {
 }
 
 void Simulator::simulateOrbit(
-    sim_ctx *ctx, const electron_orbit &orbit,
-    const std::function<void(sim_ctx *, const electron_orbit &)>
+    std::shared_ptr<sim_ctx> ctx, const electron_orbit &orbit,
+    const std::function<void(std::shared_ptr<sim_ctx>, const electron_orbit &)>
         &simulateFunction) {
     boost::asio::post(ioContext, [ctx, orbit, simulateFunction]() {
         simulateFunction(ctx, orbit);

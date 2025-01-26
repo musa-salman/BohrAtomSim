@@ -2,8 +2,6 @@
 #include <thread>
 
 #include "atom/atom_bohr_sim.h"
-#include "atom/result_recorders.h"
-#include "spherical/spherical_sim.h"
 
 class Simulator {
   public:
@@ -12,10 +10,10 @@ class Simulator {
 
     ~Simulator();
 
-    void
-    simulateOrbit(sim_ctx *ctx, const electron_orbit &orbit,
-                  const std::function<void(sim_ctx *, const electron_orbit &)>
-                      &simulateFunction);
+    void simulateOrbit(
+        std::shared_ptr<sim_ctx> ctx, const electron_orbit &orbit,
+        const std::function<void(std::shared_ptr<sim_ctx>,
+                                 const electron_orbit &)> &simulateFunction);
 
   private:
     boost::asio::io_context ioContext;
