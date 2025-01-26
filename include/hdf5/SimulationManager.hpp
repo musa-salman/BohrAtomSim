@@ -4,11 +4,9 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include "SimulationBuffer.hpp"
 #include "SimulationHDF5.hpp"
-#include "utils/iterator.h"
 #include "view/Simulation.hpp"
 
 class SimulationManager {
@@ -20,7 +18,7 @@ class SimulationManager {
     SimulationManager() = delete;
     explicit SimulationManager(SimulationDataWriter &writer);
 
-    void addSimulation(const std::string &simulation_name, sim_type type);
+    void addSimulation(const Simulation &simulation);
 
     void appendData(const std::string &simulation_name,
                     const std::unordered_map<std::string, scalar> &data);

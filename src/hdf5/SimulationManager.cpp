@@ -12,10 +12,9 @@
 SimulationManager::SimulationManager(SimulationDataWriter &writer)
     : data_writer(writer) {}
 
-void SimulationManager::addSimulation(const std::string &simulation_name,
-                                      sim_type type) {
+void SimulationManager::addSimulation(const Simulation &simulation) {
     const std::vector<std::string> *fields = nullptr;
-    switch (type) {
+    switch (simulation.type) {
     case POLAR:
         fields = &SIMULATION_2D_NON_REL;
         break;
@@ -32,9 +31,14 @@ void SimulationManager::addSimulation(const std::string &simulation_name,
         throw std::invalid_argument("Invalid simulation type");
     }
 
-    auto simulation =
-        std::make_shared<Simulation>(simulation_name, type, *fields);
-    simulations.try_emplace(simulation_name, simulation);
+    auto _simulation = std::make_shared<Simulation>(simulation);
+    _simulation->data = std::make_shared<
+        std::unordered_map<std::string, std::vector<scalar>>>();
+
+    for (const auto &field : *fields) {
+        _simulation->data->emplace(field, std::vector<scalar>());
+    }
+    simulations.try_emplace(simulation.name, _simulation);
 }
 
 void SimulationManager::appendData(
