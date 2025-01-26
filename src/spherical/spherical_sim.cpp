@@ -1,20 +1,26 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stddef.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
-#include "spherical/spherical_sim.h"
-
 #include "utils/iterator.h"
 #include "utils/macros.h"
 #include "utils/types.h"
+#ifdef __cplusplus
+}
+#endif
+
+#include "spherical/spherical_sim.hpp"
 
 static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
                                 bool *theta_flag, quantum_angular angular,
                                 quantum_magnetic magnetic,
                                 scalar time_interval);
 
-void simulate_spherical_orbit(struct sim_ctx *ctx,
+void simulate_spherical_orbit(std::shared_ptr<sim_ctx> ctx,
                               struct electron_orbit orbit) {
     struct sim_itr prev_itr = {};
     struct sim_itr next_itr = {};
