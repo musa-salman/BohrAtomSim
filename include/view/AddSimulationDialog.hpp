@@ -11,12 +11,12 @@
 class AddSimulationDialog : public Component {
   public:
     explicit AddSimulationDialog(
-        const std::function<void(Simulation)> &on_submit);
+        const std::function<void(const Simulation &)> &on_submit);
 
     void draw() override;
 
   private:
-    const std::function<void(Simulation)> on_submit;
+    const std::function<void(const Simulation &)> on_submit;
 
     Simulation simulation = Simulation("", POLAR, SIMULATION_2D_NON_REL);
 };

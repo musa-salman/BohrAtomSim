@@ -12,6 +12,8 @@ struct Simulation {
     Simulation(const std::string &name, int type,
                const std::vector<std::string> &fields);
 
+    Simulation &operator=(const Simulation &other);
+
     void appendData(const std::unordered_map<std::string, scalar> &data) const;
 
     std::shared_ptr<std::unordered_map<std::string, std::vector<scalar>>>
