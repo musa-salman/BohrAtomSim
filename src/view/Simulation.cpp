@@ -15,6 +15,18 @@ Simulation::Simulation(const std::string &name, int type,
     strncpy(this->name, name.c_str(), sizeof(this->name));
 }
 
+Simulation &Simulation::operator=(const Simulation &other) {
+    this->type = other.type;
+    strncpy(this->name, other.name, sizeof(this->name));
+    this->orbit = other.orbit;
+    this->delta_psi_mode = other.delta_psi_mode;
+    this->revolutions = other.revolutions;
+    this->time_interval = other.time_interval;
+    this->record_interval = other.record_interval;
+
+    return *this;
+}
+
 void Simulation::appendData(
     const std::unordered_map<std::string, scalar> &data) const {
     for (const auto &[key, value] : data) {
