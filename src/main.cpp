@@ -1,9 +1,6 @@
-#include <array>
 #include <boost/asio.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
-#include <cstddef>
-#include <future>
 #include <iostream>
 
 #include "imgui.h"
@@ -13,15 +10,15 @@
 #include <implot.h>
 
 #include <IconsFontAwesome4.h>
+#include <memory>
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
 #include "hdf5/SimulationHDF5.hpp"
 #include "hdf5/SimulationManager.hpp"
 #include "simulator_runner/Simulator.hpp"
-#include "spherical/spherical_sim.h"
+#include "spherical/spherical_sim.hpp"
 #include "utils/iterator.h"
-#include "utils/types.h"
 #include "view/AddSimulationDialog.hpp"
 #include "view/Component.hpp"
 #include "view/Simulation.hpp"
@@ -111,13 +108,15 @@ int main() {
                              .record_interval = simulation->record_interval,
                              .delta_psi_mode = simulation->delta_psi_mode};
 
-        sim_ctx ctx = {
+        auto ctx = std::make_shared<sim_ctx>();
+
+        *ctx = {
             .record_handler = rh,
             .revolutions = simulation->revolutions,
             .time_interval = simulation->time_interval,
         };
 
-        simulator.simulateOrbit(&ctx, simulation->orbit,
+        simulator.simulateOrbit(ctx, simulation->orbit,
                                 simulate_spherical_orbit);
     });
 
@@ -131,7 +130,7 @@ int main() {
 
     AddSimulationDialog add_simulation_interface(
         [&manager](const Simulation &simulation) {
-            manager.addSimulation(simulation.name, (sim_type)simulation.type);
+            manager.addSimulation(simulation);
         });
 
     components.push_back(&add_simulation_interface);
