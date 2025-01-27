@@ -28,7 +28,7 @@ void *lookup(void *record_in, long key) {
 
 FILE *create_record_file(const char *filename, enum sim_type sim_type) {
     FILE *record_file = fopen(filename, "w");
-    fprintf(record_file, "t,r,r_dot,r_dot_dot,phi,phi_dot,phi_dot_dot");
+    fprintf(record_file, "t,r,r_dot,r_dot_dot,phi,phi_dot");
 
     if (sim_type == SPHERICAL || sim_type == REL_SPHERICAL) {
         fprintf(record_file, ",theta,theta_dot,theta_dot_dot");
@@ -47,10 +47,10 @@ int main(void) {
     const scalar time_interval = 1e-7;
     const enum sim_type sim_type = REL_POLAR;
     const bool delta_psi_mode = false;
-    const unsigned short record_interval = 50000;
+    const unsigned short record_interval = 30000;
 
     struct electron_orbit electrons[] = {
-        {3, 2, 1, 0},
+        {3, 1, 0, 0}
     };
 
     struct file_record orbit_files[ORBIT_COUNT];
@@ -69,9 +69,9 @@ int main(void) {
 
     for (int i = 0; i < atom.electrons_count; i++) {
         char filename[100];
-        sprintf(filename, "debug/d90/2d_rel_%d_%d_%d_d47.csv",
+        sprintf(filename, "debug/d100/2d_rel_%d_%d_%d_d10%d.csv",
                 atom.electrons[i].principal, atom.electrons[i].angular,
-                atom.electrons[i].magnetic);
+                atom.electrons[i].magnetic, i);
 
         long key = orbit_hash(atom.electrons[i]);
         orbit_files[i].key = key;
