@@ -62,7 +62,7 @@ int main_unoptimized(void) {
     const scalar time_interval = 1e-6;
     const enum sim_type sim_type = REL_SPHERICAL;
     const bool delta_psi_mode = false;
-    const unsigned short record_interval = 1000;
+    const unsigned short record_interval = 50000;
 
     struct electron_orbit electrons[] = {
         {3, 1, 0, 0}
@@ -84,7 +84,7 @@ int main_unoptimized(void) {
 
     for (int i = 0; i < atom.electrons_count; i++) {
         char filename[100];
-        sprintf(filename, "3d_rel_%d_%d_%d_d47.csv",
+        sprintf(filename, "debug/d90/2d_rel_%d_%d_%d_d47.csv",
                 atom.electrons[i].principal, atom.electrons[i].angular,
                 atom.electrons[i].magnetic, i);
 
