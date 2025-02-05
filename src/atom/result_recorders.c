@@ -7,7 +7,7 @@
 void record2csv(void *record_in, const struct sim_itr *iter) {
     FILE *csv = (FILE *)record_in;
 
-    fprintf(csv, "%.20LE,%.20LE,%.20LE,%.20LE,%.20LE,%.20LE", iter->dt,
+    fprintf(csv, "%.20E,%.20E,%.20E,%.20E,%.20E,%.20E", iter->dt,
             R(iter), R_DOT(iter), R_DOT_DOT(iter), PHI(iter), PHI_DOT(iter));
 
     if (THETA(iter) != -1) {
