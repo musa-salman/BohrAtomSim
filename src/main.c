@@ -86,7 +86,7 @@ int main_unoptimized(void) {
         char filename[100];
         sprintf(filename, "debug/d90/2d_rel_%d_%d_%d_d47.csv",
                 atom.electrons[i].principal, atom.electrons[i].angular,
-                atom.electrons[i].magnetic, i);
+                atom.electrons[i].magnetic);
 
         long key = orbit_hash(atom.electrons[i]);
         orbit_files[i].key = key;
