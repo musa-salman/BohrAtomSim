@@ -2,6 +2,7 @@
 #define ORBITAL_MATH_H
 
 #include <math.h>
+#include <sleef.h>
 
 #include "utils/types.h"
 
@@ -13,7 +14,9 @@
 */
 
 #define SPEED_OF_LIGHT_SQUARE FLOAT_LITERAL_SUFFIX(18778.86507043055614177)
-
+#define INV_SPEED_OF_LIGHT_SQUARED                                             \
+    FLOAT_LITERAL_SUFFIX(                                                      \
+        0.00005325135444817764497014759719843327058544153594730151938573075309765889417268364826189597794887347264)
 #define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
 #define PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
 #define TWO_PI FLOAT_LITERAL_SUFFIX(6.28318530717958647692)
@@ -29,23 +32,23 @@ struct vector3 {
     scalar z;
 };
 
-#ifdef __cplusplus
-#define GENERIC_MATH_FUNC(func, x)                                             \
-    (sizeof(x) == sizeof(float)    ? func##f(x)                                \
-     : sizeof(x) == sizeof(double) ? func(x)                                   \
-                                   : func##l(x))
-#else
-#define sin(x) _Generic((x), float: sinf, default: sin, long double: sinl)(x)
-#define cos(x) _Generic((x), float: cosf, default: cos, long double: cosl)(x)
-#define asin(x)                                                                \
-    _Generic((x), float: asinf, default: asin, long double: asinl)(x)
-#define acos(x)                                                                \
-    _Generic((x), float: acosf, default: acos, long double: acosl)(x)
-#define atan2(y, x)                                                            \
-    _Generic((y), float: atan2f, default: atan2, long double: atan2l)(y, x)
+#define sin(x)                                                                 \
+    _Generic((x),                                                              \
+        float: Sleef_sinf1_u35purecfma,                                        \
+        double: Sleef_finz_sind1_u35purecfma,                                  \
+        long double: sinl)(x)
+
+#define cos(x)                                                                 \
+    _Generic((x),                                                              \
+        float: Sleef_cosf1_u35purecfma,                                        \
+        double: Sleef_cosd1_u35purecfma,                                       \
+        long double: cosl)(x)
+
 #define sqrt(x)                                                                \
-    _Generic((x), float: sqrtf, default: sqrt, long double: sqrtl)(x)
-#endif
+    _Generic((x),                                                              \
+        float: Sleef_sqrtf1_u35purecfma,                                       \
+        double: Sleef_finz_sqrtd1_u35purecfma,                                 \
+        long double: sqrtl)(x)
 
 #define SQUARE(x) ((x) * (x))
 
@@ -94,7 +97,15 @@ scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
  * @param r_dot
  * @return double
  */
-scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot);
+static inline scalar compute_gamma(quantum_angular angular, scalar radius,
+                                   scalar r_dot) {
+    const scalar term1 =
+        SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
+    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+
+    const scalar result = sqrt((1 + term1) / (1 - term2));
+    return result;
+}
 
 /**
     Calculates the angular change rate in relevistic
@@ -110,8 +121,8 @@ scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot);
     REL_ANGULAR_RATE(angular, radius, gamma)
 
 /**
- * @brief Calculates R_dot_dot  with relativity incorporated "acceleration" of
- * and electron
+ * @brief Calculates R_dot_dot  with relativity incorporated
+ * "acceleration" of and electron
  *
  *                      gamma*m*r_dot_dot = (l^2)/(gamma*m*(r^3)) -
  * (e^2)/(r^2)(1-(r_dot/c)^2)
@@ -122,8 +133,22 @@ scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot);
  * @param r_dot
  * @return double
  */
-scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
-                             scalar radius, scalar r_dot);
+static inline scalar compute_rel_r_dot_dot(quantum_angular angular,
+                                           scalar gamma, scalar radius,
+                                           scalar r_dot) {
+    const scalar term1 = SQUARE(angular) / (gamma * radius);
+    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
+
+    // Precompute reused terms
+    const scalar radius_squared = radius * radius;
+    const scalar reciprocal = 1.0 / (gamma * radius_squared);
+
+    // Perform computation
+    const scalar intermediate = term1 + term2 - 1.0;
+    const scalar result = intermediate * reciprocal;
+
+    return result;
+}
 
 /**
  * @brief Calculates the starting point for theta
@@ -139,8 +164,18 @@ scalar compute_theta_min(quantum_magnetic magnetic, quantum_angular angular);
 #define REL_SPHERICAL_PHI_DOT(n_phi, theta, r, gamma)                          \
     compute_spherical_phi_dot(n_phi, theta, r) / gamma
 
-scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
-                                  scalar radius, scalar gamma);
+scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
+                                    quantum_magnetic magnetic, scalar radius,
+                                    scalar gamma);
+
+static inline scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic,
+                                                scalar theta, scalar radius,
+                                                scalar gamma) {
+    const scalar sin_theta = sin(theta);
+    const scalar result = magnetic / (SQUARE(radius * sin_theta));
+
+    return result / gamma;
+}
 
 scalar compute_spherical_phi_dot(quantum_magnetic magnetic, scalar theta,
                                  scalar radius);
@@ -153,7 +188,8 @@ scalar compute_angular_distance(const struct vector3 *v1,
  * @brief Calculates the angular acceleration of the electron
  * where
  *
- *        THETA_DOT_DOT =  (sin(theta) * cos(theta) * phi_dot^2 )-( (r_dot / r)
+ *        THETA_DOT_DOT =  (sin(theta) * cos(theta) * phi_dot^2 )-(
+ * (r_dot / r)
  * * 2* theta_dot )
  *
  * @param r electrons distance from the center of rotation
@@ -166,9 +202,20 @@ scalar compute_angular_distance(const struct vector3 *v1,
 scalar compute_sphere_theta_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                     scalar theta_dot, scalar phi_dot);
 
-scalar compute_sphere_rel_theta_dot_dot(scalar radius, scalar r_dot,
-                                        scalar theta, scalar theta_dot,
-                                        scalar phi_dot, scalar gamma);
+static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot,
+                                                      scalar theta,
+                                                      scalar theta_dot,
+                                                      scalar phi_dot,
+                                                      scalar gamma) {
+
+    const scalar term1 = 0.5 * sin(2 * theta) * SQUARE(phi_dot);
+    const scalar term2 = 2 * r_dot * theta_dot / r;
+    const scalar term3 = 0.5 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
+
+    const scalar result = term1 - term2 * (1 - term3);
+
+    return result;
+}
 
 scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                   scalar theta_dot, scalar phi_dot);

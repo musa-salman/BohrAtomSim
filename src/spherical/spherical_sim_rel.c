@@ -54,22 +54,17 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
 
     struct vector3 *prev_max_vec = NULL;
 
-    if (orbit.magnetic == orbit.angular) {
+    if (orbit.magnetic == 0) {
         next_itr.phi = HALF_PI;
         prev_itr.phi = HALF_PI;
         prev_itr.theta_dot =
             SPHERICAL_THETA_DOT_REL(orbit.angular, prev_itr.r, prev_itr.gamma);
 
-        if (prev_itr.theta >= PI && !theta_flag)
-            sign = -1;
-        else if (prev_itr.theta <= 0 && theta_flag)
-            sign = 1;
-
         prev_itr.phi_dot = 0;
         prev_itr.theta_dot_dot = 0;
     } else {
-        prev_itr.phi_dot =
-            POLAR_PHI_DOT_REL(orbit.angular, prev_itr.r, prev_itr.gamma);
+        prev_itr.phi_dot = compute_sphere_rel_phi_dot_0(
+            orbit.angular, orbit.magnetic, prev_itr.r, prev_itr.gamma);
 
         prev_itr.theta_dot_dot = compute_sphere_rel_theta_dot_dot(
             prev_itr.r, prev_itr.r_dot, prev_itr.theta, prev_itr.theta_dot,
@@ -149,25 +144,22 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
 
     bool is_at_interest = iterate(iter_ctx, time_interval, REL_SPHERICAL);
 
-    if (orbit->magnetic == orbit->angular) {
+    if (orbit->magnetic == 0) {
         prev_itr->theta_dot =
             (*sign) * SPHERICAL_THETA_DOT_REL(orbit->angular, R(prev_itr),
                                               GAMMA(prev_itr));
         next_itr->theta_dot = THETA_DOT(prev_itr);
 
         if (THETA(prev_itr) >= PI && !(*theta_flag)) {
-            scalar overflow_angle = (THETA(next_itr) - PI);
-            next_itr->theta = PI - overflow_angle;
-
             *theta_flag = true;
             *sign = -1;
             next_itr->phi = -PHI(next_itr);
+            prev_itr->phi = -PHI(prev_itr);
         } else if (THETA(prev_itr) <= 0 && *theta_flag) {
-            next_itr->theta = -THETA(next_itr);
-
             *theta_flag = false;
             *sign = 1;
             next_itr->phi = -PHI(next_itr);
+            prev_itr->phi = -PHI(prev_itr);
         }
     } else {
         next_itr->phi_dot = compute_sphere_rel_phi_dot(

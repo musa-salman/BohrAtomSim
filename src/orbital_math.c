@@ -39,25 +39,6 @@ scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
     return result;
 }
 
-scalar compute_gamma(quantum_angular angular, scalar radius, scalar r_dot) {
-    const scalar term1 =
-        SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
-    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
-
-    const scalar result = sqrt((1 + term1) / (1 - term2));
-    return result;
-}
-
-scalar compute_rel_r_dot_dot(quantum_angular angular, scalar gamma,
-                             scalar radius, scalar r_dot) {
-    const scalar term1 = SQUARE(angular) / (gamma * radius);
-    const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
-
-    const scalar result = (term1 + term2 - 1) / (gamma * SQUARE(radius));
-
-    return result;
-}
-
 scalar compute_theta_min(quantum_magnetic magnetic, quantum_angular angular) {
     return asin((scalar)magnetic / angular);
 }
@@ -75,16 +56,10 @@ scalar compute_spherical_phi_dot(quantum_magnetic magnetic, scalar theta,
     return result;
 }
 
-scalar compute_sphere_rel_phi_dot_0(scalar n_phi, scalar radius, scalar gamma) {
-    const scalar result = n_phi / (SQUARE(radius));
-
-    return result / gamma;
-}
-
-scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic, scalar theta,
-                                  scalar radius, scalar gamma) {
-    const scalar sin_theta = sin(theta);
-    const scalar result = magnetic / (SQUARE(radius * sin_theta));
+scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
+                                    quantum_magnetic magnetic, scalar radius,
+                                    scalar gamma) {
+    const scalar result = SQUARE(angular) / (SQUARE(radius) * magnetic);
 
     return result / gamma;
 }
@@ -128,19 +103,6 @@ scalar compute_sphere_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
     const scalar term2 = 2 * r_dot * theta_dot / r;
 
     const scalar result = term1 - term2;
-
-    return result;
-}
-
-scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot, scalar theta,
-                                        scalar theta_dot, scalar phi_dot,
-                                        scalar gamma) {
-
-    const scalar term1 = sin(theta) * cos(theta) * SQUARE(phi_dot);
-    const scalar term2 = 2 * r_dot * theta_dot / r;
-    const scalar term3 = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
-
-    const scalar result = term1 - term2 * (1 - term3);
 
     return result;
 }
