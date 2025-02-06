@@ -210,7 +210,7 @@ static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot,
 
     const scalar term1 = 0.5 * sin(2 * theta) * SQUARE(phi_dot);
     const scalar term2 = 2 * r_dot * theta_dot / r;
-    const scalar term3 = 1 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
+    const scalar term3 = 0.5 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
 
     const scalar result = term1 - term2 * (1 - term3);
 
