@@ -75,7 +75,6 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
     next_itr.r_dot_dot = compute_rel_r_dot_dot(orbit.angular, prev_itr.gamma,
                                                prev_itr.r, prev_itr.r_dot);
     size_t it = 0;
-    unsigned int recorded_event_count = 0;
 
     scalar time_interval = ctx->time_interval;
 
@@ -86,17 +85,9 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
         iter_ctx.next_itr->gamma = compute_gamma(
             orbit.angular, R(iter_ctx.prev_itr), R_DOT(iter_ctx.prev_itr));
 
-        int condition = (recorded_event_count == ctx->record_interval) &
-                        (!ctx->delta_psi_mode);
-
-        recorded_event_count = (1 - condition) * recorded_event_count;
-        condition = (is_at_interest << 1) | condition;
-        switch (condition) {
-        case 1:
+        if (it % ctx->record_interval == 0 && !ctx->delta_psi_mode)
             RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
-            break;
-        case 2:
-        case 3:
+        if (is_at_interest) {
             if (fabsl(iter_ctx.prev_itr->r - radial_bounds.r_max) < 1e-1) {
                 struct vector3 *curr_max_vec = spherical_to_cartesian(
                     R(iter_ctx.next_itr), THETA(iter_ctx.next_itr),
@@ -124,21 +115,17 @@ void simulate_spherical_rel_orbit(struct sim_ctx *ctx,
             }
 
             revolutions -= 0.5f;
-
-            if (revolutions < 0.1)
-                goto end;
-            break;
+            if (revolutions <= 0) {
+                break;
+            }
         }
 
         struct sim_itr *tmp = iter_ctx.prev_itr;
         iter_ctx.prev_itr = iter_ctx.next_itr;
 
         iter_ctx.next_itr = tmp;
-        ++it;
-        ++recorded_event_count;
+        it++;
     }
-
-end:
     INFO("iter: %zu\n", it);
 
     if (prev_max_vec != NULL) {
@@ -155,10 +142,9 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
     struct sim_itr *prev_itr = iter_ctx->prev_itr;
     struct sim_itr *next_itr = iter_ctx->next_itr;
 
-    const bool is_at_interest = iterate(iter_ctx, time_interval, REL_SPHERICAL);
+    bool is_at_interest = iterate(iter_ctx, time_interval, REL_SPHERICAL);
 
-    switch (orbit->magnetic) {
-    case 0:
+    if (orbit->magnetic == 0) {
         prev_itr->theta_dot =
             (*sign) * SPHERICAL_THETA_DOT_REL(orbit->angular, R(prev_itr),
                                               GAMMA(prev_itr));
@@ -175,8 +161,7 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
             next_itr->phi = -PHI(next_itr);
             prev_itr->phi = -PHI(prev_itr);
         }
-        break;
-    default:
+    } else {
         next_itr->phi_dot = compute_sphere_rel_phi_dot(
             orbit->magnetic, THETA(prev_itr), R(prev_itr), GAMMA(prev_itr));
 
