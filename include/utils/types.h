@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef TYPES_H
 #define TYPES_H
 
@@ -19,3 +23,7 @@ typedef unsigned char quantum_magnetic;
 typedef signed char quantum_spin;
 
 #endif // TYPES_H
+
+#ifdef __cplusplus
+}
+#endif
