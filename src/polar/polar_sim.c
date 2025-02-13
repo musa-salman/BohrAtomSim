@@ -1,23 +1,32 @@
-#include <stddef.h>
+#include <string.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
 
 #include "polar/polar_sim.h"
 
+#include "atom/result_recorders.h"
 #include "utils/iterator.h"
 #include "utils/macros.h"
 #include "utils/types.h"
+#include "utils/utils.h"
 
 static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar time_interval,
                                 quantum_angular angular);
 
-void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
+void simulate_polar_orbit(const struct sim_ctx ctx) {
     struct sim_itr prev_itr = {};
     struct sim_itr next_itr = {};
     struct iter_ctx iter_ctx = {.prev_itr = &prev_itr, .next_itr = &next_itr};
+    struct electron_orbit orbit = ctx.orbit;
 
-    const struct record_handler rh = ctx->record_handler;
+    char file_name[FILE_PATH_SIZE];
+    format_output_filename(ctx.id, file_name);
+
+    FILE *file_bin = fopen(file_name, "wb");
+    if (file_bin == NULL) {
+        return;
+    }
 
     start_iteration(&iter_ctx);
 
@@ -31,16 +40,15 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
     prev_itr.r_dot_dot = compute_r_dot_dot(prev_itr.r, orbit.angular);
     prev_itr.phi_dot = POLAR_PHI_DOT(orbit.angular, prev_itr.r);
 
-    scalar revolutions = ctx->revolutions;
+    scalar revolutions = ctx.revolutions;
 
     size_t it = 0;
     while (revolutions > 0) {
         const bool is_max =
-            simulate_orbit_step(&iter_ctx, ctx->time_interval, orbit.angular);
+            simulate_orbit_step(&iter_ctx, ctx.time_interval, orbit.angular);
 
-        if (it % rh.record_interval == 0 && !rh.delta_psi_mode)
-            RECORD_ITERATION(ctx, iter_ctx.prev_itr);
-
+        if (it % ctx.record_interval == 0)
+            record2bin(file_bin, &prev_itr);
         if (is_max) {
             revolutions = revolutions - 0.5;
             if (revolutions <= 0)
@@ -54,6 +62,7 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
         it++;
     }
 
+    fclose(file_bin);
     end_iteration(&iter_ctx);
 }
 
@@ -64,8 +73,8 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar time_interval,
 
     const bool is_at_interest = iterate(iter_ctx, time_interval, POLAR);
 
-    next_itr->r_dot_dot = compute_r_dot_dot(R(prev_itr), angular);
-    next_itr->phi_dot = POLAR_PHI_DOT(angular, R(next_itr));
+    next_itr->r_dot_dot = compute_r_dot_dot(RHO(prev_itr), angular);
+    next_itr->phi_dot = POLAR_PHI_DOT(angular, RHO(next_itr));
 
     return is_at_interest;
 }
