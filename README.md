@@ -67,3 +67,11 @@ BohrAtomSim/
 └── CMakeLists.txt # CMake configuration
 ```
 
+## Photos
+![image](https://github.com/user-attachments/assets/d2fcb1ea-901e-4ee4-b072-d6bfea78d299)
+
+
+![image](https://github.com/user-attachments/assets/347b914b-1c31-4ae5-af84-214c27c0e18a)
+
+![image](https://github.com/user-attachments/assets/9dffd0bb-8c60-4154-90b3-f8b20fec8d72)
+
