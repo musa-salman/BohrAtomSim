@@ -4,9 +4,8 @@
 #include <stdbool.h>
 #include <time.h>
 
-
-#include "types.h"
 #include "orbital_math.h"
+#include "types.h"
 #include "utils/macros.h"
 
 enum sim_type : unsigned char {
@@ -33,9 +32,8 @@ struct sim_itr {
     scalar r_dot;     // iteration movement speed
     scalar r_dot_dot; // iteration movement acceleration
 
-    scalar phi;         // iteration angle
-    scalar phi_dot;     // iteration angular speed
-    scalar phi_dot_dot; // iteration angular acceleration
+    scalar phi;     // iteration angle
+    scalar phi_dot; // iteration angular speed
 
     scalar theta;
     scalar theta_dot;
@@ -44,21 +42,21 @@ struct sim_itr {
     scalar delta_phi; // iteration angle of the perihelion
 
     scalar gamma; // iteration rel mass mult
-    scalar epsilon;
 };
 
 void start_iteration(struct iter_ctx *ctx);
 
 void end_iteration(struct iter_ctx *ctx);
 
-static inline bool iterate(struct iter_ctx *ctx, scalar time_interval, enum sim_type type) {
+static inline bool iterate(struct iter_ctx *ctx, scalar time_interval,
+                           enum sim_type type) {
     const struct sim_itr *curr_itr = ctx->prev_itr;
     struct sim_itr *next_itr = ctx->next_itr;
 
     next_itr->dt += time_interval;
 
     next_itr->r_dot = R_DOT(curr_itr) + R_DOT_DOT(curr_itr) * time_interval;
-    next_itr->r = R(curr_itr) + R_DOT(curr_itr) * time_interval;
+    next_itr->r = RHO(curr_itr) + R_DOT(curr_itr) * time_interval;
 
     next_itr->phi = PHI(curr_itr) + PHI_DOT(curr_itr) * time_interval;
 
