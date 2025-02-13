@@ -1,10 +1,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-#include "orbital_math.h"
 #include "utils/iterator.h"
-#include "utils/macros.h"
-#include "utils/types.h"
 
 void start_iteration(struct iter_ctx *ctx) { ctx->start_time = clock(); }
 
@@ -19,7 +16,6 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
 
         .phi = 0,
         .phi_dot = 0,
-        .phi_dot_dot = 0,
 
         // 3D
         .theta = -1,
@@ -30,7 +26,6 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
         .delta_phi = -1,
         // spin
         .gamma = -1,
-        .epsilon = -1,
     };
 
     if (type == REL_POLAR || type == REL_SPHERICAL || type == REL_SPIN) {
@@ -42,9 +37,5 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
         itr->theta = 0;
         itr->theta_dot = 0;
         itr->theta_dot_dot = 0;
-    }
-
-    if (type == SPIN || type == REL_SPIN) {
-        itr->epsilon = 0;
     }
 }
