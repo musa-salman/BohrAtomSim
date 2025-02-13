@@ -1,10 +1,15 @@
 #include <boost/asio.hpp>
-#include <memory>
 #include <thread>
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
 #include "simulator_runner/Simulator.hpp"
+#include "utils/iterator.h"
+
+#include "polar/polar_sim.h"
+#include "polar/polar_sim_rel.h"
+#include "spherical/spherical_sim.h"
+#include "spherical/spherical_sim_rel.h"
 
 Simulator::Simulator()
     : ioContext(1), workGuard(boost::asio::make_work_guard(ioContext)) {
@@ -29,10 +34,19 @@ Simulator::~Simulator() {
 }
 
 void Simulator::simulateOrbit(
-    std::shared_ptr<sim_ctx> ctx, const electron_orbit &orbit,
-    const std::function<void(std::shared_ptr<sim_ctx>, const electron_orbit &)>
-        &simulateFunction) {
-    boost::asio::post(ioContext, [ctx, orbit, simulateFunction]() {
-        simulateFunction(ctx, orbit);
+    const sim_ctx ctx, int type,                // NOSONAR
+    const std::function<void()> onCompletion) { // NOSONAR
+    boost::asio::post(ioContext, [ctx, type, onCompletion]() {
+        if (type == POLAR) {
+            simulate_polar_orbit(ctx);
+        } else if (type == REL_POLAR) {
+            simulate_polar_orbit_rel(ctx);
+        } else if (type == SPHERICAL) {
+            simulate_spherical_orbit(ctx);
+        } else if (type == REL_SPHERICAL) {
+            simulate_spherical_rel_orbit(ctx);
+        }
+
+        onCompletion();
     });
 }
