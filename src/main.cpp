@@ -13,7 +13,6 @@
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
-#include "plotter/SimulationVisualizer.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/NotebookRepository.hpp"
 #include "simulator_runner/Simulator.hpp"

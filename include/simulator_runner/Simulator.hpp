@@ -1,3 +1,6 @@
+#ifndef SIMULATOR_HPP
+#define SIMULATOR_HPP
+
 #include <boost/asio.hpp>
 #include <thread>
 
@@ -10,10 +13,8 @@ class Simulator {
 
     ~Simulator();
 
-    void simulateOrbit(
-        std::shared_ptr<sim_ctx> ctx, const electron_orbit &orbit,
-        const std::function<void(std::shared_ptr<sim_ctx>,
-                                 const electron_orbit &)> &simulateFunction);
+    void simulateOrbit(const sim_ctx ctx, int type,
+                       std::function<void()> onCompletion);
 
   private:
     boost::asio::io_context ioContext;
@@ -21,3 +22,5 @@ class Simulator {
         workGuard;
     std::vector<std::jthread> workers;
 };
+
+#endif // SIMULATOR_HPP
