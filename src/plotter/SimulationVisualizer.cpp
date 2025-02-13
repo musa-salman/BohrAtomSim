@@ -230,11 +230,21 @@ void SimulationVisualizer::showPlotPopupWindow() {
                                   filename);
 
             showPlotResults = false;
+            description[0] = '\0';
+            title[0] = '\0';
+            plotter.clearPlots();
+            assignedFunctions.clear();
+            selectedSimulations.clear();
         }
 
         ImGui::SameLine();
         if (ImGui::Button("Close")) {
             showPlotResults = false;
+            description[0] = '\0';
+            title[0] = '\0';
+            plotter.clearPlots();
+            assignedFunctions.clear();
+            selectedSimulations.clear();
         }
 
         ImGui::End();

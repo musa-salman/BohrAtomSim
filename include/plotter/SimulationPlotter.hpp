@@ -17,6 +17,8 @@ class SimulationPlotter {
 
     void createCombinedPlot(const std::string &outputFilePath);
 
+    void clearPlots();
+
   private:
     ArchivedSimulationManager &archivedSimulationHandler;
     std::unordered_map<size_t, std::vector<std::shared_ptr<IPlotFunction>>>

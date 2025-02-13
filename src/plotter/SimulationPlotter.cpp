@@ -69,3 +69,5 @@ void SimulationPlotter::createCombinedPlot(const std::string &outputFilePath) {
 
     matplot::save(outputFilePath);
 }
+
+void SimulationPlotter::clearPlots() { plotRequests.clear(); }
