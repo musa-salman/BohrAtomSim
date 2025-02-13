@@ -4,19 +4,19 @@
 #include <functional>
 
 #include "Component.hpp"
-#include "Simulation.hpp"
+#include "simulator_runner/Simulation.hpp"
 
 class SimulationCard : public Component {
   public:
-    explicit SimulationCard(
-        const std::function<void(const Simulation *)> &on_simulation_run);
-
     void draw() override;
+
+    void setOnSimulate(
+        const std::function<void(const Simulation *)> &on_simulation_run);
 
     void setSimulation(Simulation &simulation);
 
   private:
-    const std::function<void(const Simulation *)> &on_simulation_run;
+    std::function<void(const Simulation *)> on_simulation_run;
 
     bool is_simulation_running = false;
     Simulation *simulation = nullptr;
