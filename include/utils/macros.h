@@ -3,7 +3,7 @@
 
 // sim_itr macros
 #define DT(itr) (itr)->dt
-#define R(itr) (itr)->r
+#define RHO(itr) (itr)->r
 #define R_DOT(itr) (itr)->r_dot
 #define R_DOT_DOT(itr) (itr)->r_dot_dot
 #define PHI(itr) (itr)->phi

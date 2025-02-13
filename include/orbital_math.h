@@ -18,7 +18,7 @@
     FLOAT_LITERAL_SUFFIX(                                                      \
         0.00005325135444817764497014759719843327058544153594730151938573075309765889417268364826189597794887347264)
 #define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
-#define PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
+#define SIM_PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
 #define TWO_PI FLOAT_LITERAL_SUFFIX(6.28318530717958647692)
 
 struct radial_bounds {
@@ -32,19 +32,19 @@ struct vector3 {
     scalar z;
 };
 
-#define sin(x)                                                                 \
+#define sim_sin(x)                                                             \
     _Generic((x),                                                              \
         float: Sleef_sinf1_u35purecfma,                                        \
         double: Sleef_finz_sind1_u35purecfma,                                  \
         long double: sinl)(x)
 
-#define cos(x)                                                                 \
+#define sim_cos(x)                                                             \
     _Generic((x),                                                              \
         float: Sleef_cosf1_u35purecfma,                                        \
         double: Sleef_cosd1_u35purecfma,                                       \
         long double: cosl)(x)
 
-#define sqrt(x)                                                                \
+#define sim_sqrt(x)                                                            \
     _Generic((x),                                                              \
         float: Sleef_sqrtf1_u35purecfma,                                       \
         double: Sleef_finz_sqrtd1_u35purecfma,                                 \
@@ -103,7 +103,7 @@ static inline scalar compute_gamma(quantum_angular angular, scalar radius,
         SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
     const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
 
-    const scalar result = sqrt((1 + term1) / (1 - term2));
+    const scalar result = sim_sqrt((1 + term1) / (1 - term2));
     return result;
 }
 
@@ -171,7 +171,7 @@ scalar compute_sphere_rel_phi_dot_0(quantum_angular angular,
 static inline scalar compute_sphere_rel_phi_dot(quantum_magnetic magnetic,
                                                 scalar theta, scalar radius,
                                                 scalar gamma) {
-    const scalar sin_theta = sin(theta);
+    const scalar sin_theta = sim_sin(theta);
     const scalar result = magnetic / (SQUARE(radius * sin_theta));
 
     return result / gamma;
@@ -208,7 +208,7 @@ static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot,
                                                       scalar phi_dot,
                                                       scalar gamma) {
 
-    const scalar term1 = 0.5 * sin(2 * theta) * SQUARE(phi_dot);
+    const scalar term1 = 0.5 * sim_sin(2 * theta) * SQUARE(phi_dot);
     const scalar term2 = 2 * r_dot * theta_dot / r;
     const scalar term3 = 0.5 / (gamma * SPEED_OF_LIGHT_SQUARE * r);
 
