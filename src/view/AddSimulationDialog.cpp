@@ -1,20 +1,28 @@
 #include <imgui.h>
+#include <sys/stat.h>
 
+#include "simulator_runner/Simulation.hpp"
 #include "view/AddSimulationDialog.hpp"
 
-AddSimulationDialog::AddSimulationDialog(
-    const std::function<void(const Simulation &)> &on_submit)
-    : on_submit(on_submit) {}
+AddSimulationDialog::AddSimulationDialog() { simulation = Simulation(); }
+
+void AddSimulationDialog::setOnSubmit(
+    const std::function<void(const Simulation &)> &_on_submit) {
+    this->on_submit = _on_submit;
+}
 
 void AddSimulationDialog::draw() {
+    static bool is_open = false;
     if (ImGui::Button("Add Simulation")) {
+        is_open = true;
         ImGui::OpenPopup("Add Simulation");
     }
 
-    if (ImGui::Begin("Add Simulation")) {
-
+    if (is_open && ImGui::Begin("Add Simulation")) {
+        static char name[20]; // NOSONAR
         // Simulation name
-        ImGui::InputText("Name", simulation.name, sizeof(simulation.name));
+        ImGui::InputText("Name", name, IM_ARRAYSIZE(name));
+        simulation.name = std::string(name);
         ImGui::Separator();
 
         // Simulation type
@@ -46,6 +54,7 @@ void AddSimulationDialog::draw() {
         if (ImGui::Button("Submit")) {
             on_submit(simulation);
 
+            is_open = false;
             ImGui::CloseCurrentPopup();
         }
 
@@ -53,6 +62,7 @@ void AddSimulationDialog::draw() {
 
         // Cancel button
         if (ImGui::Button("Cancel")) {
+            is_open = false;
             ImGui::CloseCurrentPopup();
         }
 

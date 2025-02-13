@@ -4,21 +4,21 @@
 #include <functional>
 
 #include "Component.hpp"
-#include "Simulation.hpp"
 #include "atom/atom_bohr_sim.h"
-#include "hdf5/SimulationFields.hpp"
+#include "simulator_runner/Simulation.hpp"
 
 class AddSimulationDialog : public Component {
   public:
-    explicit AddSimulationDialog(
-        const std::function<void(const Simulation &)> &on_submit);
+    explicit AddSimulationDialog();
+
+    void setOnSubmit(const std::function<void(const Simulation &)> &on_submit);
 
     void draw() override;
 
   private:
-    const std::function<void(const Simulation &)> on_submit;
+    std::function<void(const Simulation &)> on_submit;
 
-    Simulation simulation = Simulation("", POLAR, SIMULATION_2D_NON_REL);
+    Simulation simulation;
 };
 
 #endif
