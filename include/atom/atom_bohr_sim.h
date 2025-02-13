@@ -6,8 +6,8 @@ extern "C" {
 #define ATOM_BOHR_SIM_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
-#include "utils/iterator.h"
 #include "utils/types.h"
 
 #define DEBUG
@@ -17,21 +17,6 @@ extern "C" {
 #else
 #define INFO(fmt, ...)
 #endif
-
-#define RECORD_ITERATION(sim_ctx, curr_itr)                                    \
-    (sim_ctx)->record_handler.record((sim_ctx)->record_handler.record_in,      \
-                                     (sim_ctx)->record_handler.name,           \
-                                     (curr_itr))
-
-struct record_handler {
-    const char *name;
-    void *record_in;
-    void (*record)(void *record_in, const char *name,
-                   const struct sim_itr *sim_itr);
-
-    unsigned short record_interval;
-    bool delta_psi_mode;
-};
 
 struct electron_orbit {
     /**
@@ -59,18 +44,16 @@ struct electron_orbit {
     quantum_spin spin;
 };
 
-struct atom {
-    struct electron_orbit *electrons;
-    unsigned char electrons_count;
-};
-
 struct sim_ctx {
-    struct record_handler record_handler;
+    size_t id;
 
+    unsigned short record_interval;
     // Simulation control
     float revolutions;
 
     scalar time_interval;
+
+    struct electron_orbit orbit;
 };
 
 #endif // ATOM_BOHR_SIM_H
