@@ -5,11 +5,13 @@ extern "C" {
 #ifndef RESULT_RECORDER_H
 #define RESULT_RECORDER_H
 
+#include <stdio.h>
+
 #include "utils/iterator.h"
 
-void record2csv(void *record_in, const struct sim_itr *iter);
+void record2bin(FILE *bin_file, const struct sim_itr *iter);
 
-#endif
+#endif // RESULT_RECORDER_H
 
 #ifdef __cplusplus
 }
