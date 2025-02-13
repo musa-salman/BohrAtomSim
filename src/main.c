@@ -46,12 +46,12 @@ FILE *create_record_file(const char *filename, enum sim_type sim_type) {
 int main(void) {
     const float revolutions = 10;
     const scalar time_interval = 1e-6;
-    const enum sim_type sim_type = SPIN;
+    const enum sim_type sim_type = SPHERICAL;
     const bool delta_psi_mode = false;
     const unsigned short record_interval = 1000;
 
     struct electron_orbit electrons[] = {
-        {2, 1, 1, 0},
+        {3, 2, 2, 0},
     };
 
     struct file_record orbit_files[ORBIT_COUNT];
@@ -70,7 +70,7 @@ int main(void) {
 
     for (int i = 0; i < atom.electrons_count; i++) {
         char filename[100];
-        sprintf(filename, "debug/d80/spin_%d_%d_%d_d80.csv",
+        sprintf(filename, "debug/d100/3d_%d_%d_%d_d101.csv",
                 atom.electrons[i].principal, atom.electrons[i].angular,
                 atom.electrons[i].magnetic);
 

@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
@@ -60,6 +61,7 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
     }
     next_itr.r_dot_dot = compute_r_dot_dot(prev_itr.r, orbit.angular);
 
+    struct vector3 *prev_max_vec = NULL;
     size_t it = 0;
     while (revolutions > 0) {
         const bool is_max =
@@ -71,7 +73,33 @@ void simulate_spherical_orbit(struct sim_ctx *ctx,
         }
 
         if (is_max) {
-            revolutions -= FLOAT_LITERAL_SUFFIX(0.5);
+            if (fabsl(iter_ctx.prev_itr->r - radial_bounds.r_max) < 1e-1) {
+                struct vector3 *curr_max_vec = spherical_to_cartesian(
+                    R(iter_ctx.next_itr), THETA(iter_ctx.next_itr),
+                    PHI(iter_ctx.next_itr));
+
+                if (prev_max_vec != NULL) {
+
+                    iter_ctx.prev_itr->delta_phi +=
+                        compute_angular_distance(curr_max_vec, prev_max_vec);
+
+                    RECORD_ITERATION(ctx, record_in, iter_ctx.prev_itr);
+
+                    INFO("prev_max_vec: (%LE %LE %LE), curr_max_vec: (%LE %LE "
+                         "%LE), delta_phi: %LE",
+                         prev_max_vec->x, prev_max_vec->y, prev_max_vec->z,
+                         curr_max_vec->x, curr_max_vec->y, curr_max_vec->z,
+                         DELTA_PHI(iter_ctx.prev_itr));
+
+                    iter_ctx.next_itr->delta_phi = DELTA_PHI(iter_ctx.prev_itr);
+
+                    free(prev_max_vec);
+                }
+
+                prev_max_vec = curr_max_vec;
+            }
+
+            revolutions -= 0.5f;
             if (revolutions <= 0) {
                 break;
             }

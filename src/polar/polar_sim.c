@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 
 #include "atom/atom_bohr_sim.h"
 #include "orbital_math.h"
@@ -33,7 +34,8 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
     prev_itr.phi_dot = POLAR_PHI_DOT(orbit.angular, prev_itr.r);
 
     scalar revolutions = ctx->revolutions;
-
+    scalar prev_max_vec = 0;
+    bool is_at_maximum = true;
     size_t it = 0;
     while (revolutions > 0) {
         const bool is_max =
@@ -43,6 +45,24 @@ void simulate_polar_orbit(struct sim_ctx *ctx, struct electron_orbit orbit) {
             RECORD_ITERATION(ctx, record_in, iter_ctx.next_itr);
 
         if (is_max) {
+            is_at_maximum = !is_at_maximum;
+            if (is_at_maximum) {
+
+                if (prev_max_vec != 0) {
+                    iter_ctx.prev_itr->delta_phi +=
+                        PHI(iter_ctx.prev_itr) - prev_max_vec;
+                    iter_ctx.next_itr->delta_phi = DELTA_PHI(iter_ctx.prev_itr);
+
+                    RECORD_ITERATION(ctx, record_in, iter_ctx.prev_itr);
+
+                    INFO("prev_max_vec: %LE, curr_max_vec: %LE, delta_phi: %LE",
+                         prev_max_vec, PHI(iter_ctx.prev_itr),
+                         DELTA_PHI(iter_ctx.prev_itr));
+                }
+
+                prev_max_vec = PHI(iter_ctx.prev_itr);
+            }
+
             revolutions = revolutions - 0.5;
             if (revolutions <= 0)
                 break;

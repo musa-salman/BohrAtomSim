@@ -27,7 +27,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
         .theta_dot_dot = -1,
 
         // REL
-        .delta_phi = -1,
+        .delta_phi = 0,
         // spin
         .gamma = -1,
         .epsilon = -1,
