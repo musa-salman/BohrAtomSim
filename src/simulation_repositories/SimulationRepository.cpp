@@ -14,10 +14,13 @@ SimulationRepository::SimulationRepository() {
     std::string sql = "CREATE TABLE IF NOT EXISTS Simulations ("
                       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                       "name TEXT NOT NULL, "
-                      "type INTEGER, "
-                      "record_interval INTEGER, "
-                      "revolutions REAL, "
-                      "time_interval REAL, "
+                      "type INTEGER NOT NULL, "
+                      "record_interval INTEGER NOT NULL, "
+                      "principal INTEGER NOT NULL, "
+                      "angular INTEGER NOT NULL, "
+                      "magnetic INTEGER NOT NULL, "
+                      "revolutions REAL NOT NULL, "
+                      "time_interval REAL NOT NULL, "
                       "status TEXT NOT NULL, "
                       "timestamp TEXT NOT NULL);";
 
@@ -40,12 +43,16 @@ SimulationRepository::~SimulationRepository() {
 
 // Create a new simulation entry in the database
 size_t SimulationRepository::createSimulation(const Simulation &simulation) {
-    std::string sql = std::format(
-        "INSERT INTO Simulations (name, type, record_interval, revolutions, "
-        "time_interval, status, timestamp) "
-        "VALUES ('{}', {}, {}, {}, {}, 'running', datetime('now'));",
-        simulation.name, simulation.type, simulation.record_interval,
-        simulation.revolutions, simulation.time_interval);
+    std::string sql =
+        std::format("INSERT INTO Simulations (name, type, record_interval,"
+                    "principal INTEGER, angular INTEGER, magnetic INTEGER, "
+                    "revolutions, time_interval, status, timestamp) "
+                    "VALUES ('{}', {}, {}, {}, {}, {}, {}, {}, 'running', "
+                    "datetime('now'));",
+                    simulation.name, simulation.type,
+                    simulation.record_interval, simulation.orbit.principal,
+                    simulation.orbit.angular, simulation.orbit.magnetic,
+                    simulation.revolutions, simulation.time_interval);
 
     char *error_message;
     if (int exit =
@@ -101,8 +108,11 @@ int SimulationRepository::callback(void *data, [[maybe_unused]] int argc,
     sim->type = argv[2] ? std::stoi(argv[2]) : 0;
     sim->record_interval =
         argv[3] ? static_cast<unsigned short>(std::stoi(argv[3])) : 0;
-    sim->revolutions = argv[4] ? std::stof(argv[4]) : 0.0f;
-    sim->time_interval = argv[5] ? std::stod(argv[5]) : 0.0;
+    sim->orbit.principal = argv[4] ? std::stoi(argv[4]) : 0;
+    sim->orbit.angular = argv[5] ? std::stoi(argv[5]) : 0;
+    sim->orbit.magnetic = argv[6] ? std::stoi(argv[6]) : 0;
+    sim->revolutions = argv[7] ? std::stof(argv[7]) : 0.0f;
+    sim->time_interval = argv[8] ? std::stod(argv[8]) : 0.0;
 
     simulations->push_back(sim);
     return 0;
@@ -120,8 +130,9 @@ SimulationRepository::getSimulations(bool cached) {
 
     simulations.clear();
 
-    std::string sql = "SELECT id, name, type, record_interval, revolutions, "
-                      "time_interval FROM Simulations;";
+    std::string sql = "SELECT id, name, type, record_interval, "
+                      "principal, angular, magnetic, "
+                      "revolutions, time_interval FROM Simulations;";
     char *error_message;
 
     if (int exit = sqlite3_exec(db, sql.c_str(), callback, &simulations,
