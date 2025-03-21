@@ -46,7 +46,7 @@ SimulationExplorer::SimulationExplorer(
     }
 }
 
-void SimulationExplorer::draw() {
+void SimulationExplorer::render() {
     ImGui::Begin("Simulation Runner", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar);
 
@@ -58,7 +58,7 @@ void SimulationExplorer::draw() {
     ImGui::Begin("Simulation Manager", nullptr, ImGuiWindowFlags_NoCollapse);
     {
         ImGui::Text("Simulations");
-        add_simulation_interface.draw();
+        add_simulation_interface.render();
 
         for (auto const &[id, simulation] : simulations) {
             if (ImGui::Selectable(simulation->name.c_str(),
@@ -80,7 +80,7 @@ void SimulationExplorer::draw() {
                 monitor = opt_monitor.value();
             }
             auto datasets = monitor->getDatasets();
-            simulation_card.draw();
+            simulation_card.render();
 
             if (!datasets.contains("t") || datasets["t"].empty()) {
                 ImGui::Text("No data available for plotting.");

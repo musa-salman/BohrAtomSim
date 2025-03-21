@@ -80,7 +80,7 @@ SimulationVisualizer::SimulationVisualizer(
     plotFunctions3DR.push_back(fun_delta_psi);
 }
 
-void SimulationVisualizer::draw() {
+void SimulationVisualizer::render() {
     if (ImGui::Begin("Simulation Visualizer")) {
         displaySimulationSelector();
         manageSelectedSimulations();

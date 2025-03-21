@@ -27,7 +27,7 @@ void NotebookUI::loadNotebooks() {
     notebooks = notebookRepository.getNotebooks();
 }
 
-void NotebookUI::draw() {
+void NotebookUI::render() {
     if (ImGui::Begin("Notebook Explorer", nullptr,
                      ImGuiWindowFlags_NoCollapse)) {
         ImGuiID dockspace_id = ImGui::GetID("NotebookDockSpace");
@@ -35,7 +35,7 @@ void NotebookUI::draw() {
         ImGui::End();
     }
 
-    deleteNotebookDialog.draw();
+    deleteNotebookDialog.render();
 
     if (ImGui::Begin("Notebook Manager", nullptr,
                      ImGuiWindowFlags_NoCollapse)) {
@@ -74,7 +74,7 @@ void NotebookUI::draw() {
             ImGui::Text("Select a notebook to view contents.");
         } else {
             ImGui::Text("Notebook Content");
-            plotUI.draw();
+            plotUI.render();
         }
         ImGui::End();
     }

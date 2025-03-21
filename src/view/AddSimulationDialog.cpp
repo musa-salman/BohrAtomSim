@@ -11,7 +11,7 @@ void AddSimulationDialog::setOnSubmit(
     this->on_submit = _on_submit;
 }
 
-void AddSimulationDialog::draw() {
+void AddSimulationDialog::render() {
     static bool is_open = false;
     if (ImGui::Button("Add Simulation")) {
         is_open = true;

@@ -10,7 +10,7 @@ void ConfirmationDialog::open(const std::function<void()> &onConfirm) {
     isOpen = true;
 }
 
-void ConfirmationDialog::draw() {
+void ConfirmationDialog::render() {
     if (isOpen) {
         ImGui::OpenPopup("Confirmation");
     }

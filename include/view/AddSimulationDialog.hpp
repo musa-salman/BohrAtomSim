@@ -13,7 +13,7 @@ class AddSimulationDialog : public Component {
 
     void setOnSubmit(const std::function<void(const Simulation &)> &on_submit);
 
-    void draw() override;
+    void render() override;
 
   private:
     std::function<void(const Simulation &)> on_submit;

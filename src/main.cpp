@@ -105,9 +105,7 @@ int main() {
         ImGui::End();
         ImGui::PopStyleVar();
 
-        explorer.draw();
-
-        notebookUI.draw();
+        explorer.render();
 
         // Render GUI
         ImGui::Render();

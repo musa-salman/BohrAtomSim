@@ -22,7 +22,7 @@ class SimulationVisualizer : public Component {
 
     void setSelectedNotebook(size_t notebookId);
 
-    void draw() override;
+    void render() override;
 
   private:
     SimulationRepository &simulationRepository;

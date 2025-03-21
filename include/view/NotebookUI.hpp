@@ -29,7 +29,7 @@ class NotebookUI : public Component {
     explicit NotebookUI(NotebookRepository &repo,
                         SimulationRepository &simulationRepository,
                         ArchivedSimulationManager &archivedManager);
-    void draw() override;
+    void render() override;
     void loadNotebooks();
     size_t getSelectedNotebookID();
 };

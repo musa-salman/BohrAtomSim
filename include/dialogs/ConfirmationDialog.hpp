@@ -11,7 +11,7 @@ class ConfirmationDialog : public Component {
     explicit ConfirmationDialog(const std::string &message);
 
     void open(const std::function<void()> &onConfirm);
-    void draw() override;
+    void render() override;
 
   private:
     std::string message;

@@ -34,7 +34,7 @@ void PlotUI::loadPlots(size_t notebookID) {
     isPlotLoading = false;
 }
 
-void PlotUI::draw() {
+void PlotUI::render() {
     if (isPlotLoading) {
         ImGui::Text("Loading plots...");
         return;
@@ -45,7 +45,7 @@ void PlotUI::draw() {
         return;
     }
 
-    deletePlotDialog.draw();
+    deletePlotDialog.render();
 
     ImGui::Separator();
     ImGui::Text("Manage Plots");
@@ -88,7 +88,7 @@ void PlotUI::draw() {
 
     if (showPlotPopup && ImGui::Begin("Create New Plot", &showPlotPopup,
                                       ImGuiWindowFlags_AlwaysAutoResize)) {
-        visualizer.draw();
+        visualizer.render();
         ImGui::End();
     }
 

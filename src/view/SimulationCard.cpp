@@ -4,7 +4,7 @@
 #include "simulator_runner/Simulation.hpp"
 #include "view/SimulationCard.hpp"
 
-void SimulationCard::draw() {
+void SimulationCard::render() {
     // Check if there's no simulation to display
     if (!simulation) {
         ImGui::Text("No simulation selected");

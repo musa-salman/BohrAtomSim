@@ -8,7 +8,7 @@
 
 class SimulationCard : public Component {
   public:
-    void draw() override;
+    void render() override;
 
     void setOnSimulate(
         const std::function<void(const Simulation *)> &on_simulation_run);

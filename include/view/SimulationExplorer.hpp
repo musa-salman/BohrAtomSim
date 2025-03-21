@@ -15,7 +15,7 @@ class SimulationExplorer : public Component {
     explicit SimulationExplorer(OngoingSimulationManager &simulation_manager,
                                 Simulator &simulator);
 
-    void draw() override;
+    void render() override;
 
   private:
     AddSimulationDialog add_simulation_interface;

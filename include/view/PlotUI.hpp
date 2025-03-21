@@ -30,7 +30,7 @@ class PlotUI : public Component {
 
   public:
     explicit PlotUI(NotebookRepository &repo, SimulationVisualizer &visualizer);
-    void draw() override;
+    void render() override;
     void setSelectedNotebook(size_t notebookID);
 };
 
