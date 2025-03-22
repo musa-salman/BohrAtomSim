@@ -58,10 +58,9 @@ int main() {
     }
 
     ImPlot::CreateContext();
-    ImGuiWindowFlags window_flags =
-        ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
-        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
+    const ImGuiWindowFlags window_flags =
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
         ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
 
     // Initialize Simulation
@@ -93,8 +92,7 @@ int main() {
         ImGui::SetNextWindowSize(ImVec2(1920, 1080), ImGuiCond_FirstUseEver);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
 
-        ImGui::Begin("Atom Simulator", nullptr,
-                     ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse);
+        ImGui::Begin("Atom Simulator", nullptr, window_flags);
 
         // Create DockSpace
         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -105,10 +103,8 @@ int main() {
 
         sidebar.render();
         if (sidebar.getActiveSection() ==
-            Sidebar::Section::SIMULATION_MANAGER) {
+            Sidebar::Section::RUNNING_SIMULATIONS) {
             explorer.render();
-        } else if (sidebar.getActiveSection() == Sidebar::Section::SETTINGS) {
-            notebookUI.render();
         }
 
         // Render GUI
