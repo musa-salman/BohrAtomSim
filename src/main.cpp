@@ -17,6 +17,7 @@
 #include "simulation_repositories/NotebookRepository.hpp"
 #include "simulator_runner/Simulator.hpp"
 #include "view/NotebookUI.hpp"
+#include "view/SideBar.hpp"
 #include "view/SimulationExplorer.hpp"
 
 using namespace boost::interprocess;
@@ -57,6 +58,11 @@ int main() {
     }
 
     ImPlot::CreateContext();
+    ImGuiWindowFlags window_flags =
+        ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
+        ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
 
     // Initialize Simulation
     SimulationRepository simulationRepository;
@@ -71,6 +77,8 @@ int main() {
 
     NotebookUI notebookUI(notebookRepository, simulationRepository,
                           archivedManager);
+
+    Sidebar sidebar;
 
     // Main Loop
     while (!glfwWindowShouldClose(window)) {
@@ -92,20 +100,16 @@ int main() {
         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0, 0), ImGuiDockNodeFlags_None);
 
-        // Menu Bar
-        if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("Exit")) {
-                    glfwSetWindowShouldClose(window, true);
-                }
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
-        }
         ImGui::End();
         ImGui::PopStyleVar();
 
-        explorer.render();
+        sidebar.render();
+        if (sidebar.getActiveSection() ==
+            Sidebar::Section::SIMULATION_MANAGER) {
+            explorer.render();
+        } else if (sidebar.getActiveSection() == Sidebar::Section::SETTINGS) {
+            notebookUI.render();
+        }
 
         // Render GUI
         ImGui::Render();

@@ -14,10 +14,11 @@ class Sidebar : public Component {
     };
 
   private:
-    bool isCollapsed = false;
-    Section activeSection = CURRENT_SIMULATIONS;
+    bool isCollapsed;
+    Section activeSection;
 
   public:
+    Sidebar();
     void render() override;
     Section getActiveSection();
 
