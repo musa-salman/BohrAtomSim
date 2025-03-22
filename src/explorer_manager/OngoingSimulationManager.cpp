@@ -13,6 +13,10 @@
 void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
     const std::vector<std::string> fields = getColumnNames(simulation.type);
     size_t id = this->simulation_repository.createSimulation(simulation);
+    if (id == 0) {
+        throw std::runtime_error("Failed to create simulation");
+    }
+
     auto _simulation = std::make_shared<Simulation>(
         simulation.name, id, simulation.orbit, simulation.type,
         simulation.record_interval, simulation.revolutions,

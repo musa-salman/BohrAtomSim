@@ -45,7 +45,7 @@ SimulationRepository::~SimulationRepository() {
 size_t SimulationRepository::createSimulation(const Simulation &simulation) {
     std::string sql =
         std::format("INSERT INTO Simulations (name, type, record_interval,"
-                    "principal INTEGER, angular INTEGER, magnetic INTEGER, "
+                    "principal, angular, magnetic, "
                     "revolutions, time_interval, status, timestamp) "
                     "VALUES ('{}', {}, {}, {}, {}, {}, {}, {}, 'running', "
                     "datetime('now'));",
@@ -61,7 +61,7 @@ size_t SimulationRepository::createSimulation(const Simulation &simulation) {
         std::cerr << "Error inserting simulation: " << error_message
                   << std::endl;
         sqlite3_free(error_message);
-        return -1; // Indicate error
+        return 0; // Indicate error
     }
 
     return sqlite3_last_insert_rowid(db);

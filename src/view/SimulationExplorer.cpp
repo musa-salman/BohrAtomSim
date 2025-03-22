@@ -1,6 +1,7 @@
 #include <IconsFontAwesome4.h>
 #include <imgui.h>
 #include <implot.h>
+#include <iostream>
 #include <sys/stat.h>
 
 #include "view/AddSimulationDialog.hpp"
@@ -11,7 +12,11 @@ SimulationExplorer::SimulationExplorer(
     : simulation_manager(_simulation_manager), simulator(_simulator),
       simulations(simulation_manager.getSimulations()) {
     add_simulation_interface.setOnSubmit([this](const Simulation &simulation) {
-        simulation_manager.addSimulation(simulation);
+        try {
+            simulation_manager.addSimulation(simulation);
+        } catch (const std::exception &e) {
+            std::cerr << "Error adding simulation: " << e.what() << std::endl;
+        }
     });
 
     simulation_card.setOnSimulate([this](const Simulation *simulation) {
