@@ -51,6 +51,21 @@ struct Simulation {
     Simulation()
         : name(""), orbit({3, 2, 1, 1}), type(POLAR), record_interval(1000),
           revolutions(10), time_interval(1e-6) {}
+
+    inline const char *getType() const {
+        switch (type) {
+        case POLAR:
+            return "2DNR";
+        case SPHERICAL:
+            return "3DNR";
+        case REL_POLAR:
+            return "2DR";
+        case REL_SPHERICAL:
+            return "3DR";
+        default:
+            return "Unknown";
+        }
+    }
 };
 
 #endif // SIMULATION_HPP
