@@ -1,14 +1,14 @@
 #include "view/SideBar.hpp"
 #include "imgui.h"
 
-Sidebar::Sidebar() : activeSection(RUNNING_SIMULATIONS) {}
+Sidebar::Sidebar() : activeSection(ONGOING_SIMULATIONS) {}
 
 void Sidebar::render() {
     ImGui::Begin("Sidebar", nullptr,
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 
     if (ImGui::Button("Simulator"))
-        activeSection = RUNNING_SIMULATIONS;
+        activeSection = ONGOING_SIMULATIONS;
     if (ImGui::Button("Simulation Manager"))
         activeSection = SIMULATION_MANAGER;
 

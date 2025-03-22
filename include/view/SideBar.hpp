@@ -5,7 +5,7 @@
 
 class Sidebar : public Component {
   public:
-    enum Section { RUNNING_SIMULATIONS, SIMULATION_MANAGER, NONE };
+    enum Section { ONGOING_SIMULATIONS, SIMULATION_MANAGER, NOTEBOOK, NONE };
 
   private:
     Section activeSection;
