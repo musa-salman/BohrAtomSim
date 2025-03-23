@@ -19,6 +19,7 @@
 #include "view/NotebookUI.hpp"
 #include "view/SideBar.hpp"
 #include "view/SimulationExplorer.hpp"
+#include "view/SimulationTableUI.hpp"
 
 using namespace boost::interprocess;
 
@@ -74,6 +75,8 @@ int main() {
     // Initialize UI Components
     SimulationExplorer explorer(manager, simulator);
 
+    SimulationTableUI simulationTableUI(simulationRepository);
+
     NotebookUI notebookUI(notebookRepository, simulationRepository,
                           archivedManager);
 
@@ -103,8 +106,13 @@ int main() {
 
         sidebar.render();
         if (sidebar.getActiveSection() ==
-            Sidebar::Section::RUNNING_SIMULATIONS) {
+            Sidebar::Section::ONGOING_SIMULATIONS) {
             explorer.render();
+        } else if (sidebar.getActiveSection() ==
+                   Sidebar::Section::SIMULATION_MANAGER) {
+            simulationTableUI.render();
+        } else if (sidebar.getActiveSection() == Sidebar::Section::NOTEBOOK) {
+            notebookUI.render();
         }
 
         // Render GUI

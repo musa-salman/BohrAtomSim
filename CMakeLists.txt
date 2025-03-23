@@ -92,8 +92,8 @@ target_link_libraries(bohr_simulation PRIVATE)
 
 # Main C++ executable
 add_executable(bohr_main src/main.cpp ${C_SOURCES} ${CPP_SOURCES} ${HEADERS} ${IMGUI_SOURCES} ${IMPLOT_SOURCES})
-target_compile_options(bohr_main PRIVATE) # -g)
-target_link_libraries(bohr_main PRIVATE bohr_simulation glfw OpenGL::GL Matplot++::matplot
+target_compile_options(bohr_main PRIVATE -g)
+target_link_libraries(bohr_main PRIVATE bohr_simulation glfw OpenGL::GL Matplot++::matplot 
  ${Boost_LIBRARIES} ${IMPLOT_HEADERS} ${SLEEF_LIBRARIES} ${SQLite3_LIBRARIES})
 
 # Set output directories
