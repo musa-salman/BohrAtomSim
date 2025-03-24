@@ -3,11 +3,12 @@
 #include <fstream>
 #include <iostream>
 
+#include "orbital_math.h"
 #include "simulation_repositories/SimulationResultLoader.hpp"
 
 void SimulationResultLoader::loadSimulation(
     const std::string &filepath, const std::vector<std::string> &column_names,
-    std::unordered_map<std::string, std::vector<double>> &datasets) {
+    std::unordered_map<std::string, std::vector<scalar>> &datasets) {
     std::ifstream file(filepath, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Error opening file: " << filepath << "\n";
@@ -27,13 +28,13 @@ void SimulationResultLoader::loadSimulation(
     size_t file_size = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    if (file_size % sizeof(double) != 0) {
+    if (file_size % sizeof(scalar) != 0) {
         std::cerr
             << "Error: Binary file size is not a multiple of sizeof(double).\n";
         return;
     }
 
-    size_t num_elements = file_size / sizeof(double);
+    size_t num_elements = file_size / sizeof(scalar);
     file.close();
 
     if (num_elements == 0) {

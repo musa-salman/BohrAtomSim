@@ -17,7 +17,7 @@ SimulationResultMonitor::SimulationResultMonitor(const std::string &filepath,
 
 SimulationResultMonitor::~SimulationResultMonitor() { stopMonitoring(); }
 
-const std::unordered_map<std::string, std::vector<double>> &
+const std::unordered_map<std::string, std::vector<scalar>> &
 SimulationResultMonitor::getDatasets() const {
     return datasets;
 }
