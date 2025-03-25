@@ -2,16 +2,17 @@
 #define SIMULATION_RESULT_LOADER_HPP
 
 #include "orbital_math.h"
+#include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 class SimulationResultLoader {
   public:
-    static void loadSimulation(
+    static size_t loadSimulation(
         const std::string &filepath,
-        const std::vector<std::string> &column_names,
-        std::unordered_map<std::string, std::vector<scalar>> &datasets);
+        std::unordered_map<std::string, std::vector<scalar>> &datasets,
+        size_t start_row = 0, size_t rows_per_chunk = 1000);
 };
 
 #endif // SIMULATION_RESULT_LOADER_HPP
