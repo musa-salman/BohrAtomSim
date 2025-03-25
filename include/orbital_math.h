@@ -228,16 +228,16 @@ static inline scalar compute_spin_gamma(scalar radius, scalar r_dot,
                                         quantum_angular angular) {
     const scalar sin_theta = sim_sin(theta);
 
-    const scalar term1 = -4 * SQUARE(SPEED_OF_LIGHT_SQUARE * angular * radius);
+    const scalar term1 = 4 * SQUARE(SPEED_OF_LIGHT_SQUARE * radius);
+    const scalar term2 =
+        SPEED_OF_LIGHT_SQUARE * SQUARE(sin_theta * radius) + SQUARE(angular);
+    const scalar term3 = term1 * term2;
 
-    const scalar term2 = 4 * SPEED_OF_LIGHT_SQUARE * radius * SQUARE(sin_theta);
-    const scalar term3 = SQUARE(SPEED_OF_LIGHT_SQUARE * radius) * radius +
-                         G_FACTOR * S_Z_FACTOR * angular;
-    const scalar term4 = term2 * term3;
-
-    const scalar term5 =
-        SQUARE(G_FACTOR * S_Z_FACTOR) * SQUARE(SQUARE(sin_theta));
-    const scalar term6 = term1 + term4 + term5;
+    const scalar term4 =
+        4 * SQUARE(G_FACTOR * S_Z_FACTOR) * SQUARE(SQUARE(sin_theta));
+    const scalar term5 = 4 * SPEED_OF_LIGHT_SQUARE * G_FACTOR * S_Z_FACTOR *
+                         radius * SQUARE(sin_theta) * angular;
+    const scalar term6 = -term3 + term4 - term5;
 
     const scalar term7 =
         SQUARE(theta_dot * radius) + SQUARE(r_dot) - SPEED_OF_LIGHT_SQUARE;
