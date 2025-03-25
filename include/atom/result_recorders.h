@@ -36,11 +36,11 @@ static inline uint8_t detect_scalar_type() {
 
 static inline void
 init_file_header(FILE *bin_file, const uint8_t (*field_names)[MAX_FIELD_NAME],
-                 size_t field_count) {
+                 uint8_t field_count) {
     struct file_header header = {
         .magic = {'A', 'T', 'O', 'M', 0x89},
         .version = 1,
-        .field_count = 6,
+        .field_count = field_count,
         .endianness = detect_endianness(),
         .scalar_type = detect_scalar_type(),
     };
