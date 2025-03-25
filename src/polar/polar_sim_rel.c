@@ -33,6 +33,13 @@ void simulate_polar_orbit_rel(const struct sim_ctx ctx) {
 
     scalar prev_max_vec = 0;
 
+    {
+        const uint8_t field_names_2DR[][MAX_FIELD_NAME] = {
+            "t", "r", "r_dot", "r_ddot", "phi", "phi_dot", "gamma", "delta_psi",
+        };
+
+        init_file_header(file_bin, field_names_2DR, 8);
+    }
     init_iteration(&prev_itr, REL_POLAR);
     init_iteration(&next_itr, REL_POLAR);
 

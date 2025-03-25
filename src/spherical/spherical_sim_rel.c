@@ -38,6 +38,15 @@ void simulate_spherical_rel_orbit(const struct sim_ctx ctx) {
         return;
     }
 
+    {
+        const uint8_t field_names_3DR[][MAX_FIELD_NAME] = {
+            "t",          "r",       "r_dot",     "r_ddot",
+            "phi",        "phi_dot", "theta",     "theta_dot",
+            "theta_ddot", "gamma",   "delta_psi",
+        };
+
+        init_file_header(file_bin, field_names_3DR, 11);
+    }
     start_iteration(&iter_ctx);
 
     struct radial_bounds radial_bounds =
