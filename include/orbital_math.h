@@ -15,8 +15,11 @@
 
 #define SPEED_OF_LIGHT_SQUARE FLOAT_LITERAL_SUFFIX(18778.86507043055614177)
 #define INV_SPEED_OF_LIGHT_SQUARED                                             \
-    FLOAT_LITERAL_SUFFIX(                                                      \
-        0.00005325135444817764497014759719843327058544153594730151938573075309765889417268364826189597794887347264)
+    FLOAT_LITERAL_SUFFIX(0.00005325135444817764497014)
+
+#define G_FACTOR FLOAT_LITERAL_SUFFIX(2)
+#define S_Z_FACTOR FLOAT_LITERAL_SUFFIX(0.5)
+
 #define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
 #define SIM_PI FLOAT_LITERAL_SUFFIX(3.14159265358979323846)
 #define TWO_PI FLOAT_LITERAL_SUFFIX(6.28318530717958647692)
@@ -219,5 +222,106 @@ static inline scalar compute_sphere_rel_theta_dot_dot(scalar r, scalar r_dot,
 
 scalar compute_sphere_phi_dot_dot(scalar radius, scalar r_dot, scalar theta,
                                   scalar theta_dot, scalar phi_dot);
+
+static inline scalar compute_spin_gamma(scalar radius, scalar r_dot,
+                                        scalar theta, scalar theta_dot,
+                                        quantum_angular angular) {
+    const scalar sin_theta = sim_sin(theta);
+
+    const scalar term1 = -4 * SQUARE(SPEED_OF_LIGHT_SQUARE * angular * radius);
+
+    const scalar term2 = 4 * SPEED_OF_LIGHT_SQUARE * radius * SQUARE(sin_theta);
+    const scalar term3 = SQUARE(SPEED_OF_LIGHT_SQUARE * radius) * radius +
+                         G_FACTOR * S_Z_FACTOR * angular;
+    const scalar term4 = term2 * term3;
+
+    const scalar term5 =
+        SQUARE(G_FACTOR * S_Z_FACTOR) * SQUARE(SQUARE(sin_theta));
+    const scalar term6 = term1 + term4 + term5;
+
+    const scalar term7 =
+        SQUARE(theta_dot * radius) + SQUARE(r_dot) - SPEED_OF_LIGHT_SQUARE;
+    const scalar term8 = term6 / term7;
+
+    const scalar term9 = 2 * SPEED_OF_LIGHT_SQUARE * SQUARE(radius) * sin_theta;
+
+    const scalar result = sim_sqrt(term8) / term9;
+
+    return result;
+}
+
+static inline scalar compute_spin_phi_dot_0(quantum_angular angular,
+                                            quantum_magnetic magnetic,
+                                            scalar radius, scalar gamma) {
+    const scalar term1 =
+        angular * SQUARE(angular) / (gamma * SQUARE(magnetic * radius));
+    const scalar term2 = 0.5 * G_FACTOR * S_Z_FACTOR *
+                         INV_SPEED_OF_LIGHT_SQUARED /
+                         (gamma * SQUARE(radius) * radius);
+
+    const scalar result = term1 - term2;
+
+    return result;
+}
+
+static inline scalar compute_spin_r_ddot(scalar phi_dot, scalar radius,
+                                         scalar r_dot, scalar theta,
+                                         scalar theta_dot, scalar gamma) {
+    const scalar sin_theta = sim_sin(theta);
+
+    const scalar term1 = SQUARE(phi_dot * sin_theta) * radius;
+
+    const scalar term2 = SQUARE(theta_dot) * radius;
+
+    const scalar term3 = 1 / (gamma * SQUARE(radius));
+    const scalar term4 = SQUARE(r_dot) * INV_SPEED_OF_LIGHT_SQUARED;
+
+    const scalar term5 = 0.5 * G_FACTOR * S_Z_FACTOR *
+                         INV_SPEED_OF_LIGHT_SQUARED * phi_dot *
+                         SQUARE(sin_theta) / (gamma * radius);
+    const scalar term6 = 2 * theta_dot * r_dot * radius *
+                         INV_SPEED_OF_LIGHT_SQUARED * sim_cos(theta) /
+                         sin_theta;
+
+    const scalar result =
+        term1 + term2 - term3 * (1 - term4) - term5 * (1 - term6);
+
+    return result;
+}
+
+static inline scalar compute_spin_theta_ddot(scalar phi_dot, scalar radius,
+                                             scalar r_dot, scalar theta,
+                                             scalar theta_dot, scalar gamma) {
+    const scalar sin_cos_theta = sim_sin(theta) * sim_cos(theta);
+
+    const scalar term1 = SQUARE(phi_dot) * sin_cos_theta;
+
+    const scalar term2 = 2 * theta_dot * r_dot / radius;
+    const scalar term3 = 0.5 * INV_SPEED_OF_LIGHT_SQUARED / (gamma * radius);
+
+    const scalar term4 = G_FACTOR * S_Z_FACTOR *
+                         SQUARE(INV_SPEED_OF_LIGHT_SQUARED) * phi_dot *
+                         SQUARE(theta_dot) * sin_cos_theta / (gamma * radius);
+
+    const scalar result = term1 - term2 * (1 - term3) + term4;
+
+    return result;
+}
+
+static inline scalar compute_spin_phi_dot(scalar radius, scalar theta,
+                                          scalar gamma,
+                                          quantum_angular angular) {
+    const scalar sin_theta = sim_sin(theta);
+
+    const scalar term1 = angular / (gamma * SQUARE(radius) * sin_theta);
+
+    const scalar term2 = 0.5 * G_FACTOR * S_Z_FACTOR *
+                         INV_SPEED_OF_LIGHT_SQUARED /
+                         (gamma * SQUARE(radius) * radius);
+
+    const scalar result = term1 - term2;
+
+    return result;
+}
 
 #endif // ORBITAL_MATH_H
