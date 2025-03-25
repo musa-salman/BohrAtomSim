@@ -87,13 +87,13 @@ void SimulationExplorer::render() {
             auto datasets = monitor->getDatasets();
             simulation_card.render();
 
-            if (!datasets.contains("t") || datasets["t"].empty()) {
+            if (!datasets->contains("t") || datasets->at("t").empty()) {
                 ImGui::Text("No data available for plotting.");
                 ImGui::End();
                 return;
             }
 
-            const auto &t_data = datasets["t"];
+            const auto &t_data = datasets->at("t");
             double t_min = t_data.front();
             double t_max = t_data.back();
 
@@ -101,7 +101,7 @@ void SimulationExplorer::render() {
 
             ImGui::PushID("plot_selection");
 
-            for (const auto &[name, data] : datasets) {
+            for (const auto &[name, data] : *datasets) {
                 if (name == "t")
                     continue; // Skip "t"
 
@@ -116,7 +116,7 @@ void SimulationExplorer::render() {
             ImGui::PopID();
 
             // Loop again to plot only selected datasets
-            for (const auto &[name, data] : datasets) {
+            for (const auto &[name, data] : *datasets) {
                 if (name == "t" || !plot_selection[name])
                     continue;
 

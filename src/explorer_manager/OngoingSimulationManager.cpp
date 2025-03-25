@@ -25,8 +25,8 @@ void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
     char output_filename[FILE_PATH_SIZE]; // NOSONAR
     format_output_filename(id, output_filename);
 
-    auto _monitor = std::make_shared<SimulationResultMonitor>(
-        std::string(output_filename), simulation.type);
+    auto _monitor =
+        std::make_shared<SimulationResultMonitor>(std::string(output_filename));
 
     simulations.try_emplace(_simulation->id, _simulation);
     monitors.try_emplace(_simulation->id, _monitor);

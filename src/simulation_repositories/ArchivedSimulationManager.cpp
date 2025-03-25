@@ -2,7 +2,6 @@
 #include <format>
 #include <string>
 
-#include "explorer_manager/SimulationFields.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/SimulationResultLoader.hpp"
 
@@ -27,13 +26,10 @@ ArchivedSimulationManager::getSimulation(size_t id) {
             simulations, [id](const auto &s) { return s->id == id; });
 
         if (it != simulations.end()) {
-            int type = it->get()->type;
-
             std::string filepath =
                 std::format("{}/simulations/{}.bin", DB_PATH, id);
 
-            SimulationResultLoader::loadSimulation(
-                filepath, getColumnNames(type), *dataset);
+            SimulationResultLoader::loadSimulation(filepath, *dataset);
         }
     }
 
