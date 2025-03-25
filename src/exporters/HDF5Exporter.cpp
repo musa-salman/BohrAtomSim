@@ -11,9 +11,6 @@ void HDF5Exporter::exportData(
 
     try {
         H5::H5File file(path, H5F_ACC_TRUNC);
-        std::cout << "Exporting data to " << path << std::endl;
-        std::cout << "Datasets: " << datasets.size() << std::endl;
-        std::cout << "Dataset names: ";
         for (const auto &pair : datasets) {
             std::cout << pair.first << " ";
         }
