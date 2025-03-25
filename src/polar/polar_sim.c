@@ -28,6 +28,13 @@ void simulate_polar_orbit(const struct sim_ctx ctx) {
         return;
     }
 
+    {
+        const uint8_t field_names_2DNR[][MAX_FIELD_NAME] = {
+            "t", "r", "r_dot", "r_ddot", "phi", "phi_dot",
+        };
+
+        init_file_header(file_bin, field_names_2DNR, 6);
+    }
     start_iteration(&iter_ctx);
 
     struct radial_bounds radial_bounds =
