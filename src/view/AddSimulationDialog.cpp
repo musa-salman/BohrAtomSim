@@ -31,6 +31,7 @@ void AddSimulationDialog::render() {
         ImGui::RadioButton("3D non-relativistic", &simulation.type, SPHERICAL);
         ImGui::RadioButton("2D relativistic", &simulation.type, REL_POLAR);
         ImGui::RadioButton("3D relativistic", &simulation.type, REL_SPHERICAL);
+        ImGui::RadioButton("3D relativistic with spin", &simulation.type, SPIN);
         ImGui::Separator();
 
         // Electron orbit
@@ -39,8 +40,11 @@ void AddSimulationDialog::render() {
                            &simulation.orbit.principal);
         ImGui::InputScalar("Angular", ImGuiDataType_U8,
                            &simulation.orbit.angular);
-        ImGui::InputScalar("Magnetic", ImGuiDataType_U8,
-                           &simulation.orbit.magnetic);
+
+        if (simulation.type == SPIN || simulation.type == REL_SPHERICAL ||
+            simulation.type == SPHERICAL)
+            ImGui::InputScalar("Magnetic", ImGuiDataType_U8,
+                               &simulation.orbit.magnetic);
         ImGui::Separator();
 
         // Simulation parameters
