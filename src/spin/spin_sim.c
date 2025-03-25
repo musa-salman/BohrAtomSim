@@ -181,9 +181,8 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
             prev_itr->phi = -PHI(prev_itr);
         }
     } else {
-        next_itr->phi_dot = compute_spin_r_ddot(
-            PHI_DOT(prev_itr), RHO(prev_itr), R_DOT(prev_itr), THETA(prev_itr),
-            THETA_DOT(prev_itr), GAMMA(prev_itr));
+        next_itr->phi_dot = compute_spin_phi_dot(
+            RHO(prev_itr), THETA(prev_itr), GAMMA(prev_itr), orbit->magnetic);
 
         next_itr->theta_dot_dot = compute_spin_theta_ddot(
             PHI_DOT(prev_itr), RHO(prev_itr), R_DOT(prev_itr), THETA(prev_itr),
