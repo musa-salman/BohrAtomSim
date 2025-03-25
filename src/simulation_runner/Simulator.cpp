@@ -10,6 +10,7 @@
 #include "polar/polar_sim_rel.h"
 #include "spherical/spherical_sim.h"
 #include "spherical/spherical_sim_rel.h"
+#include "spin/spin_sim.h"
 
 Simulator::Simulator()
     : ioContext(1), workGuard(boost::asio::make_work_guard(ioContext)) {
@@ -45,8 +46,9 @@ void Simulator::simulateOrbit(
             simulate_spherical_orbit(ctx);
         } else if (type == REL_SPHERICAL) {
             simulate_spherical_rel_orbit(ctx);
+        } else if (type == SPIN) {
+            simulate_spin_orbit(ctx);
         }
-
         onCompletion();
     });
 }
