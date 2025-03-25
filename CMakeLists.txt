@@ -42,6 +42,16 @@ else()
     message(FATAL_ERROR "Boost not found")
 endif()
 
+
+# Find HDF5 library
+find_package(HDF5 REQUIRED COMPONENTS CXX)
+if(HDF5_FOUND)
+    include_directories(${HDF5_INCLUDE_DIRS})
+    message(STATUS "HDF5 found: ${HDF5_INCLUDE_DIRS}")
+else()
+    message(FATAL_ERROR "HDF5 not found")
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Add Awesome Icons
@@ -93,7 +103,7 @@ target_link_libraries(bohr_simulation PRIVATE)
 # Main C++ executable
 add_executable(bohr_main src/main.cpp ${C_SOURCES} ${CPP_SOURCES} ${HEADERS} ${IMGUI_SOURCES} ${IMPLOT_SOURCES})
 target_compile_options(bohr_main PRIVATE -g)
-target_link_libraries(bohr_main PRIVATE bohr_simulation glfw OpenGL::GL Matplot++::matplot 
+target_link_libraries(bohr_main PRIVATE bohr_simulation glfw OpenGL::GL Matplot++::matplot  ${HDF5_LIBRARIES}
  ${Boost_LIBRARIES} ${IMPLOT_HEADERS} ${SLEEF_LIBRARIES} ${SQLite3_LIBRARIES})
 
 # Set output directories
