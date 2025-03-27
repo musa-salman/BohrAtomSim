@@ -13,13 +13,14 @@ enum sim_type : unsigned char {
     REL_POLAR,
     SPHERICAL,
     REL_SPHERICAL,
-    SPIN,
-    REL_SPIN
+    SPIN
 };
 
 struct iter_ctx {
     struct sim_itr *prev_itr;
     struct sim_itr *next_itr;
+
+    scalar time;
 
     clock_t start_time;
     clock_t end_time;
@@ -53,7 +54,7 @@ static inline bool iterate(struct iter_ctx *ctx, scalar time_interval,
     const struct sim_itr *curr_itr = ctx->prev_itr;
     struct sim_itr *next_itr = ctx->next_itr;
 
-    next_itr->dt += time_interval;
+    ctx->time += time_interval;
 
     next_itr->r_dot = R_DOT(curr_itr) + R_DOT_DOT(curr_itr) * time_interval;
     next_itr->r = RHO(curr_itr) + R_DOT(curr_itr) * time_interval;
