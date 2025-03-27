@@ -17,7 +17,7 @@
 #define INV_SPEED_OF_LIGHT_SQUARED                                             \
     FLOAT_LITERAL_SUFFIX(0.00005325135444817764497014)
 
-#define G_FACTOR FLOAT_LITERAL_SUFFIX(2)
+#define G_FACTOR FLOAT_LITERAL_SUFFIX(-2.002319304)
 #define S_Z_FACTOR FLOAT_LITERAL_SUFFIX(0.5)
 
 #define HALF_PI FLOAT_LITERAL_SUFFIX(1.570796326794896557998981)
@@ -233,10 +233,10 @@ static inline scalar compute_spin_gamma(scalar radius, scalar r_dot,
         SPEED_OF_LIGHT_SQUARE * SQUARE(sin_theta * radius) + SQUARE(angular);
     const scalar term3 = term1 * term2;
 
-    const scalar term4 =
-        4 * SQUARE(G_FACTOR * S_Z_FACTOR) * SQUARE(SQUARE(sin_theta));
-    const scalar term5 = 4 * SPEED_OF_LIGHT_SQUARE * G_FACTOR * S_Z_FACTOR *
+    const scalar term4 = 4 * SPEED_OF_LIGHT_SQUARE * G_FACTOR * S_Z_FACTOR *
                          radius * SQUARE(sin_theta) * angular;
+    const scalar term5 =
+        SQUARE(G_FACTOR * S_Z_FACTOR) * SQUARE(SQUARE(sin_theta));
     const scalar term6 = -term3 + term4 - term5;
 
     const scalar term7 =
@@ -246,20 +246,6 @@ static inline scalar compute_spin_gamma(scalar radius, scalar r_dot,
     const scalar term9 = 2 * SPEED_OF_LIGHT_SQUARE * SQUARE(radius) * sin_theta;
 
     const scalar result = sim_sqrt(term8) / term9;
-
-    return result;
-}
-
-static inline scalar compute_spin_phi_dot_0(quantum_angular angular,
-                                            quantum_magnetic magnetic,
-                                            scalar radius, scalar gamma) {
-    const scalar term1 =
-        angular * SQUARE(angular) / (gamma * SQUARE(magnetic * radius));
-    const scalar term2 = 0.5 * G_FACTOR * S_Z_FACTOR *
-                         INV_SPEED_OF_LIGHT_SQUARED /
-                         (gamma * SQUARE(radius) * radius);
-
-    const scalar result = term1 - term2;
 
     return result;
 }
@@ -278,7 +264,7 @@ static inline scalar compute_spin_r_ddot(scalar phi_dot, scalar radius,
 
     const scalar term5 = 0.5 * G_FACTOR * S_Z_FACTOR *
                          INV_SPEED_OF_LIGHT_SQUARED * phi_dot *
-                         SQUARE(sin_theta) / (gamma * radius);
+                         SQUARE(sin_theta) / (gamma * SQUARE(radius));
     const scalar term6 = 2 * theta_dot * r_dot * radius *
                          INV_SPEED_OF_LIGHT_SQUARED * sim_cos(theta) /
                          sin_theta;
