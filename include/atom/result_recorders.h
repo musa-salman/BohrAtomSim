@@ -21,16 +21,16 @@ struct file_header {
 
 static inline uint8_t detect_endianness() {
     uint16_t x = 0x0123;
-    return *((uint8_t *)&x) == 0x23 ? 0 : 1; // 0 = little, 1 = big
+    return *((uint8_t *)&x) == 0x23 ? '<' : '>';
 }
 
 static inline uint8_t detect_scalar_type() {
 #ifdef FLOAT_SCALAR
-    return 1;
+    return 'f';
 #elif defined(LONG_DOUBLE_SCALAR)
-    return 3;
+    return 'g';
 #else
-    return 2; // default: double
+    return 'd'; // default: double
 #endif
 }
 
@@ -52,7 +52,7 @@ init_file_header(FILE *bin_file, const uint8_t (*field_names)[MAX_FIELD_NAME],
     }
 }
 
-void record2bin(FILE *bin_file, const struct sim_itr *iter);
+void record2bin(FILE *bin_file, const struct sim_itr *iter, scalar time);
 
 #endif // RESULT_RECORDER_H
 
