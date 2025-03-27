@@ -308,12 +308,27 @@ static inline scalar compute_spin_theta_ddot(scalar phi_dot, scalar radius,
     return result;
 }
 
+static inline scalar compute_spin_phi_dot_0(quantum_angular angular,
+                                            quantum_magnetic magnetic,
+                                            scalar radius, scalar gamma) {
+    const scalar term1 = SQUARE(angular) / (gamma * magnetic * SQUARE(radius));
+
+    const scalar term2 = 0.5 * G_FACTOR * S_Z_FACTOR *
+                         INV_SPEED_OF_LIGHT_SQUARED /
+                         (gamma * SQUARE(radius) * radius);
+
+    const scalar result = term1 - term2;
+
+    return result;
+}
+
 static inline scalar compute_spin_phi_dot(scalar radius, scalar theta,
                                           scalar gamma,
-                                          quantum_angular angular) {
+                                          quantum_magnetic magnetic) {
     const scalar sin_theta = sim_sin(theta);
 
-    const scalar term1 = angular / (gamma * SQUARE(radius) * sin_theta);
+    const scalar term1 =
+        magnetic / (gamma * SQUARE(radius) * SQUARE(sin_theta));
 
     const scalar term2 = 0.5 * G_FACTOR * S_Z_FACTOR *
                          INV_SPEED_OF_LIGHT_SQUARED /
