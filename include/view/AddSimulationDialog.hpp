@@ -17,8 +17,12 @@ class AddSimulationDialog : public Component {
 
   private:
     std::function<void(const Simulation &)> on_submit;
-
+    char date[20];
     Simulation simulation;
+
+    void resetSimulation();
+
+    void formatName(char *name);
 };
 
 #endif

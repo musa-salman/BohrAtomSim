@@ -1,7 +1,9 @@
+#include <cstdio>
 #include <imgui.h>
 #include <sys/stat.h>
 
 #include "simulator_runner/Simulation.hpp"
+#include "utils/iterator.h"
 #include "view/AddSimulationDialog.hpp"
 
 AddSimulationDialog::AddSimulationDialog() { simulation = Simulation(); }
@@ -13,15 +15,29 @@ void AddSimulationDialog::setOnSubmit(
 
 void AddSimulationDialog::render() {
     static bool is_open = false;
+    static time_t t = time(0);
+
     if (ImGui::Button("Add Simulation")) {
         is_open = true;
+        // update date
+        t = time(0);
+        struct tm *now = localtime(&t);
+        strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", now);
+
         ImGui::OpenPopup("Add Simulation");
     }
 
     if (is_open && ImGui::Begin("Add Simulation")) {
-        static char name[20]; // NOSONAR
+        static char name[200]; // NOSONAR
+        static bool auto_name = true;
         // Simulation name
         ImGui::InputText("Name", name, IM_ARRAYSIZE(name));
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto", &auto_name);
+
+        if (auto_name)
+            formatName(name);
+
         simulation.name = std::string(name);
         ImGui::Separator();
 
@@ -51,13 +67,13 @@ void AddSimulationDialog::render() {
         ImGui::Text("Simulation Parameters");
         ImGui::InputFloat("Revolutions", &simulation.revolutions);
         ImGui::InputScalar("Time Interval", ImGuiDataType_Double,
-                           &simulation.time_interval);
+                           &simulation.time_interval, 0, 0, "%e");
         ImGui::Separator();
 
         // Submit button
         if (ImGui::Button("Submit")) {
             on_submit(simulation);
-
+            resetSimulation();
             is_open = false;
             ImGui::CloseCurrentPopup();
         }
@@ -67,9 +83,22 @@ void AddSimulationDialog::render() {
         // Cancel button
         if (ImGui::Button("Cancel")) {
             is_open = false;
+            resetSimulation();
             ImGui::CloseCurrentPopup();
         }
 
         ImGui::End();
     }
+}
+
+void AddSimulationDialog::resetSimulation() { simulation = Simulation(); }
+
+void AddSimulationDialog::formatName(char *name) {
+    if (simulation.type == POLAR || simulation.type == REL_POLAR)
+        sprintf(name, "%s_%d_%d_%s", simulation.getType(),
+                simulation.orbit.principal, simulation.orbit.angular, date);
+    else
+        sprintf(name, "%s_%d_%d_%d_%s", simulation.getType(),
+                simulation.orbit.principal, simulation.orbit.angular,
+                simulation.orbit.magnetic, date);
 }
