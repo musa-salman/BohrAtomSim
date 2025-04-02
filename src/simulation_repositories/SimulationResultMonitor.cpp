@@ -16,7 +16,7 @@ void SimulationResultMonitor::startMonitoring() {
     running = true;
     monitor_thread = std::jthread([this]() {
         while (running) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
             size_t rows_added = SimulationResultLoader::loadSimulation(
                 filepath, accumulated_data, loaded_rows, 1024);

@@ -102,17 +102,17 @@ size_t SimulationResultLoader::loadSimulation(
     size_t rows_added = 0;
 
     switch (header.scalar_type) {
-    case 1: // float
+    case 'f':
         rows_added = appendDataRows<float>(file, start_row, rows_per_chunk,
                                            header.field_count, field_names,
                                            need_swap, datasets);
         break;
-    case 2: // double
+    case 'd':
         rows_added = appendDataRows<double>(file, start_row, rows_per_chunk,
                                             header.field_count, field_names,
                                             need_swap, datasets);
         break;
-    case 3: // long double
+    case 'g': // long double
         rows_added = appendDataRows<long double>(
             file, start_row, rows_per_chunk, header.field_count, field_names,
             need_swap, datasets);

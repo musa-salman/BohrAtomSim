@@ -62,6 +62,8 @@ struct Simulation {
             return "2DR";
         case REL_SPHERICAL:
             return "3DR";
+        case SPIN:
+            return "3DRS";
         default:
             return "Unknown";
         }

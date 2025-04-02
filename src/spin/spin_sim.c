@@ -26,6 +26,7 @@ void simulate_spin_orbit(const struct sim_ctx ctx) {
     struct iter_ctx iter_ctx = {
         .prev_itr = &prev_itr,
         .next_itr = &next_itr,
+        .time = 0,
     };
 
     struct electron_orbit orbit = ctx.orbit;
