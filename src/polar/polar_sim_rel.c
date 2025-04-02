@@ -63,14 +63,14 @@ void simulate_polar_orbit_rel(const struct sim_ctx ctx) {
                                                  orbit.angular);
 
         if (it % ctx.record_interval == 0)
-            record2bin(file_bin, &prev_itr);
+            record2bin(file_bin, &prev_itr, iter_ctx.time);
 
         if (is_at_interest) {
             is_at_maximum = !is_at_maximum;
             if (is_at_maximum) {
                 iter_ctx.prev_itr->delta_phi +=
                     PHI(iter_ctx.prev_itr) - prev_max_vec;
-                record2bin(file_bin, iter_ctx.prev_itr);
+                record2bin(file_bin, iter_ctx.prev_itr, iter_ctx.time);
 
                 iter_ctx.next_itr->delta_phi = DELTA_PHI(iter_ctx.prev_itr);
 

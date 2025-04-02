@@ -80,9 +80,8 @@ void simulate_spherical_orbit(const struct sim_ctx ctx) {
             simulate_orbit_step(&iter_ctx, &sign, &theta_flag, orbit.angular,
                                 orbit.magnetic, ctx.time_interval);
 
-        if (it % ctx.record_interval == 0) {
-            record2bin(file_bin, &prev_itr);
-        }
+        if (it % ctx.record_interval == 0)
+            record2bin(file_bin, &prev_itr, iter_ctx.time);
 
         if (is_max) {
             revolutions -= FLOAT_LITERAL_SUFFIX(0.5);

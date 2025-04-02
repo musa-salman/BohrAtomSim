@@ -98,7 +98,7 @@ void simulate_spherical_rel_orbit(const struct sim_ctx ctx) {
             orbit.angular, RHO(iter_ctx.prev_itr), R_DOT(iter_ctx.prev_itr));
 
         if (it % ctx.record_interval == 0)
-            record2bin(file_bin, iter_ctx.next_itr);
+            record2bin(file_bin, iter_ctx.next_itr, iter_ctx.time);
 
         if (is_at_interest) {
             if (fabsl(iter_ctx.prev_itr->r - radial_bounds.r_max) < 1e-1) {
@@ -111,7 +111,7 @@ void simulate_spherical_rel_orbit(const struct sim_ctx ctx) {
                     iter_ctx.prev_itr->delta_phi +=
                         compute_angular_distance(curr_max_vec, prev_max_vec);
 
-                    record2bin(file_bin, iter_ctx.prev_itr);
+                    record2bin(file_bin, iter_ctx.prev_itr, iter_ctx.time);
 
                     INFO("prev_max_vec: (%E %E %E), curr_max_vec: (%E %E "
                          "%E), delta_phi: %E",

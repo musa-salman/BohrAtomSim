@@ -4,10 +4,10 @@
 #include "utils/iterator.h"
 #include "utils/macros.h"
 
-void record2bin(FILE *bin_file, const struct sim_itr *iter) {
+void record2bin(FILE *bin_file, const struct sim_itr *iter, scalar time) {
     // Prepare data buffer
-    scalar data[] = {iter->dt,        RHO(iter), R_DOT(iter),
-                     R_DOT_DOT(iter), PHI(iter), PHI_DOT(iter)};
+    scalar data[] = {time,      RHO(iter),    R_DOT(iter), R_DOT_DOT(iter),
+                     PHI(iter), PHI_DOT(iter)};
 
     // Write the fixed data
     fwrite(data, sizeof(scalar), 6, bin_file);

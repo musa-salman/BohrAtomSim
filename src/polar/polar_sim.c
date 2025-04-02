@@ -55,7 +55,7 @@ void simulate_polar_orbit(const struct sim_ctx ctx) {
             simulate_orbit_step(&iter_ctx, ctx.time_interval, orbit.angular);
 
         if (it % ctx.record_interval == 0)
-            record2bin(file_bin, &prev_itr);
+            record2bin(file_bin, &prev_itr, iter_ctx.time);
         if (is_max) {
             revolutions = revolutions - 0.5;
             if (revolutions <= 0)
