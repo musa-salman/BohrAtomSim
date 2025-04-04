@@ -19,7 +19,7 @@ size_t
 appendDataRows(std::ifstream &file, size_t start_row, size_t rows_per_chunk,
                size_t field_count, const std::vector<std::string> &field_names,
                bool need_swap,
-               std::unordered_map<std::string, std::vector<scalar>> &datasets) {
+               std::unordered_map<std::string, std::vector<double>> &datasets) {
 
     size_t type_size = sizeof(T);
     file.seekg(0, std::ios::end);
@@ -74,7 +74,7 @@ appendDataRows(std::ifstream &file, size_t start_row, size_t rows_per_chunk,
 
 size_t SimulationResultLoader::loadSimulation(
     const std::string &filepath,
-    std::unordered_map<std::string, std::vector<scalar>> &datasets,
+    std::unordered_map<std::string, std::vector<double>> &datasets,
     size_t start_row, size_t rows_per_chunk) {
     std::ifstream file(filepath, std::ios::binary);
     if (!file.is_open()) {

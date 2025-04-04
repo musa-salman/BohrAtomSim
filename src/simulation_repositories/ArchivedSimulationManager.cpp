@@ -14,12 +14,12 @@ void ArchivedSimulationManager::loadSimulations() {
     simulations = db.getSimulations(false);
 }
 
-std::shared_ptr<std::unordered_map<std::string, std::vector<scalar>>>
+std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>
 ArchivedSimulationManager::getSimulation(size_t id) {
     if (!simulations_result.contains(id)) {
         loadSimulations();
         auto dataset = std::make_shared<
-            std::unordered_map<std::string, std::vector<scalar>>>();
+            std::unordered_map<std::string, std::vector<double>>>();
         simulations_result[id] = dataset;
 
         auto it = std::ranges::find_if(

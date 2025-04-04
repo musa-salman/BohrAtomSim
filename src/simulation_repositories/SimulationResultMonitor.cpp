@@ -7,7 +7,7 @@ SimulationResultMonitor::SimulationResultMonitor(const std::string &filepath)
     : filepath(filepath), running(false), loaded_rows(0) {
     shared_datasets.store(
         std::make_shared<
-            std::unordered_map<std::string, std::vector<scalar>>>());
+            std::unordered_map<std::string, std::vector<double>>>());
 }
 
 SimulationResultMonitor::~SimulationResultMonitor() { stopMonitoring(); }
@@ -24,7 +24,7 @@ void SimulationResultMonitor::startMonitoring() {
             if (rows_added > 0) {
                 loaded_rows += rows_added;
                 auto snapshot = std::make_shared<
-                    std::unordered_map<std::string, std::vector<scalar>>>(
+                    std::unordered_map<std::string, std::vector<double>>>(
                     accumulated_data);
                 shared_datasets.store(snapshot);
             }
@@ -39,7 +39,7 @@ void SimulationResultMonitor::stopMonitoring() {
     }
 }
 
-std::shared_ptr<const std::unordered_map<std::string, std::vector<scalar>>>
+std::shared_ptr<const std::unordered_map<std::string, std::vector<double>>>
 SimulationResultMonitor::getDatasets() const {
     return shared_datasets.load();
 }

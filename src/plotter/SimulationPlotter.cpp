@@ -26,12 +26,14 @@ void SimulationPlotter::createCombinedPlot(const std::string &outputFilePath) {
         std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>>>>
         futures;
 
-    for (const auto &[simId, _] : plotRequests) {
-        futures.push_back(std::async(std::launch::async, [this, simId]() {
-            return std::make_pair(
-                simId, archivedSimulationHandler.getSimulation(simId));
-        }));
-    }
+    // TODO: Uncomment this line to
+    // It has error, but not this code currently not used
+    // for (const auto &[simId, _] : plotRequests) {
+    //     futures.push_back(std::async(std::launch::async, [this, simId]() {
+    //         return std::make_pair(
+    //             simId, archivedSimulationHandler.getSimulation(simId));
+    //     }));
+    // }
 
     for (auto &future : futures) {
         auto [simId, data] = future.get();

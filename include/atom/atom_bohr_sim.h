@@ -12,6 +12,9 @@ extern "C" {
 
 #define DEBUG
 
+#define C2D(x)                                                                 \
+    _Generic((x), float: ((double)(x)), double: (x), long double: ((double)(x)))
+
 #ifdef DEBUG
 #define INFO(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #else
@@ -26,8 +29,8 @@ struct electron_orbit {
     quantum_principle principal;
 
     /**
-     * The azimuthal quantum number is the orbital shape aka subshell (l)
-     * l = 0, 1, 2,..., n-1
+     * The azimuthal quantum number is the orbital shape aka subshell
+     * (l) l = 0, 1, 2,..., n-1
      */
     quantum_angular angular;
 

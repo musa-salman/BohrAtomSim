@@ -1,7 +1,6 @@
 #ifndef SIMULATION_RESULT_MONITOR_HPP
 #define SIMULATION_RESULT_MONITOR_HPP
 
-#include "orbital_math.h"
 #include <atomic>
 #include <memory>
 #include <string>
@@ -17,7 +16,7 @@ class SimulationResultMonitor {
     void startMonitoring();
     void stopMonitoring();
 
-    std::shared_ptr<const std::unordered_map<std::string, std::vector<scalar>>>
+    std::shared_ptr<const std::unordered_map<std::string, std::vector<double>>>
     getDatasets() const;
 
   private:
@@ -26,10 +25,10 @@ class SimulationResultMonitor {
 
     std::jthread monitor_thread;
 
-    std::unordered_map<std::string, std::vector<scalar>> accumulated_data;
+    std::unordered_map<std::string, std::vector<double>> accumulated_data;
 
     std::atomic<
-        std::shared_ptr<std::unordered_map<std::string, std::vector<scalar>>>>
+        std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>>
         shared_datasets;
 
     size_t loaded_rows = 0;

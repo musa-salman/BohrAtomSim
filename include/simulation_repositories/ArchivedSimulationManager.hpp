@@ -16,7 +16,7 @@ class ArchivedSimulationManager {
         return simulations;
     }
 
-    std::shared_ptr<std::unordered_map<std::string, std::vector<scalar>>>
+    std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>
     getSimulation(size_t id);
 
   private:
@@ -24,7 +24,7 @@ class ArchivedSimulationManager {
 
     std::unordered_map<
         size_t,
-        std::shared_ptr<std::unordered_map<std::string, std::vector<scalar>>>>
+        std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>>
         simulations_result;
 
     std::vector<std::shared_ptr<Simulation>> simulations;
