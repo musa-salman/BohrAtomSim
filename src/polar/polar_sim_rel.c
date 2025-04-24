@@ -11,8 +11,9 @@
 #include "utils/types.h"
 #include "utils/utils.h"
 
-static bool simulate_orbit_rel_step(struct iter_ctx *ctx, scalar time_interval,
-                                    quantum_angular angular);
+inline static bool simulate_orbit_rel_step(struct iter_ctx *ctx,
+                                           scalar time_interval,
+                                           quantum_angular angular);
 
 void simulate_polar_orbit_rel(const struct sim_ctx ctx) {
     struct sim_itr prev_itr = {};
@@ -94,8 +95,9 @@ void simulate_polar_orbit_rel(const struct sim_ctx ctx) {
     end_iteration(&iter_ctx);
 }
 
-static bool simulate_orbit_rel_step(struct iter_ctx *ctx, scalar time_interval,
-                                    quantum_angular angular) {
+inline static bool simulate_orbit_rel_step(struct iter_ctx *ctx,
+                                           scalar time_interval,
+                                           quantum_angular angular) {
     const struct sim_itr *prev_itr = ctx->prev_itr;
     struct sim_itr *next_itr = ctx->next_itr;
 

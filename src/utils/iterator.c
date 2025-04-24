@@ -28,7 +28,7 @@ void init_iteration(struct sim_itr *itr, enum sim_type type) {
         .gamma = -1,
     };
 
-    if (type == REL_POLAR || type == REL_SPHERICAL || type == REL_SPIN) {
+    if (type == REL_POLAR || type == REL_SPHERICAL) {
         itr->gamma = 0;
         itr->delta_phi = 0;
     }

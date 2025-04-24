@@ -101,27 +101,9 @@ size_t SimulationResultLoader::loadSimulation(
 
     size_t rows_added = 0;
 
-    switch (header.scalar_type) {
-    case 'f':
-        rows_added = appendDataRows<float>(file, start_row, rows_per_chunk,
-                                           header.field_count, field_names,
-                                           need_swap, datasets);
-        break;
-    case 'd':
-        rows_added = appendDataRows<double>(file, start_row, rows_per_chunk,
-                                            header.field_count, field_names,
-                                            need_swap, datasets);
-        break;
-    case 'g': // long double
-        rows_added = appendDataRows<long double>(
-            file, start_row, rows_per_chunk, header.field_count, field_names,
-            need_swap, datasets);
-        break;
-    default:
-        std::cerr << "Unsupported scalar type in file.\n";
-        return 0;
-    }
-
+    rows_added = appendDataRows<double>(file, start_row, rows_per_chunk,
+                                        header.field_count, field_names,
+                                        need_swap, datasets);
     file.close();
 
     return rows_added;

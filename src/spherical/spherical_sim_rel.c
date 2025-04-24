@@ -115,9 +115,10 @@ void simulate_spherical_rel_orbit(const struct sim_ctx ctx) {
 
                     INFO("prev_max_vec: (%E %E %E), curr_max_vec: (%E %E "
                          "%E), delta_phi: %E",
-                         prev_max_vec->x, prev_max_vec->y, prev_max_vec->z,
-                         curr_max_vec->x, curr_max_vec->y, curr_max_vec->z,
-                         DELTA_PHI(iter_ctx.prev_itr));
+                         C2D(prev_max_vec->x), C2D(prev_max_vec->y),
+                         C2D(prev_max_vec->z), C2D(curr_max_vec->x),
+                         C2D(curr_max_vec->y), C2D(curr_max_vec->z),
+                         C2D(DELTA_PHI(iter_ctx.prev_itr)));
 
                     iter_ctx.next_itr->delta_phi = DELTA_PHI(iter_ctx.prev_itr);
 
