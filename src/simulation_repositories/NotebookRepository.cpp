@@ -7,7 +7,7 @@
 
 // Constructor: Open SQLite database and create tables
 NotebookRepository::NotebookRepository() {
-    db = DataSource::getInstance()->getDB();
+    // db = DataSource::getInstance()->getDB();
 
     // Create Notebooks table
     std::string sql_notebook = "CREATE TABLE IF NOT EXISTS Notebooks ("

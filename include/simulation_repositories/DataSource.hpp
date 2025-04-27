@@ -1,15 +1,15 @@
 #ifndef DATA_SOURCE_HPP
 #define DATA_SOURCE_HPP
 
+#include "SQLiteCpp/Database.h"
 #include <format>
 #include <memory>
-#include <sqlite3.h>
 #include <string>
 
 class DataSource {
   private:
     static std::unique_ptr<DataSource> instance;
-    sqlite3 *db;
+    std::shared_ptr<SQLite::Database> db;
     const std::string filename = std::format("{}/simulations.db", DB_PATH);
 
     DataSource();
@@ -20,9 +20,7 @@ class DataSource {
 
     static DataSource *getInstance();
 
-    sqlite3 *getDB();
-
-    ~DataSource();
+    std::shared_ptr<SQLite::Database> getDB();
 };
 
 #endif // DATA_SOURCE_HPP

@@ -5,13 +5,12 @@
 #include <sqlite3.h>
 #include <vector>
 
+#include "SQLiteCpp/Database.h"
 #include "simulator_runner/Simulation.hpp"
 
 class SimulationRepository {
   public:
     explicit SimulationRepository();
-
-    ~SimulationRepository();
 
     size_t createSimulation(const Simulation &simulation);
 
@@ -23,7 +22,7 @@ class SimulationRepository {
 
   private:
     std::vector<std::shared_ptr<Simulation>> simulations;
-    sqlite3 *db;
+    std::shared_ptr<SQLite::Database> db;
 
     static int callback(void *data, int argc, char **argv, char **colNames);
 };
