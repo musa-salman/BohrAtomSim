@@ -1,9 +1,10 @@
 #include <cstdio>
 #include <imgui.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 
 #include "simulator_runner/Simulation.hpp"
-#include "utils/iterator.h"
 #include "view/AddSimulationDialog.hpp"
 
 AddSimulationDialog::AddSimulationDialog() { simulation = Simulation(); }
@@ -41,33 +42,17 @@ void AddSimulationDialog::render() {
         simulation.name = std::string(name);
         ImGui::Separator();
 
-        // Simulation type
-        ImGui::Text("Simulation Type");
-        ImGui::RadioButton("2D non-relativistic", &simulation.type, POLAR);
-        ImGui::RadioButton("3D non-relativistic", &simulation.type, SPHERICAL);
-        ImGui::RadioButton("2D relativistic", &simulation.type, REL_POLAR);
-        ImGui::RadioButton("3D relativistic", &simulation.type, REL_SPHERICAL);
-        ImGui::RadioButton("3D relativistic with spin", &simulation.type, SPIN);
-        ImGui::Separator();
-
-        // Electron orbit
-        ImGui::Text("Electron Orbit");
-        ImGui::InputScalar("Principal", ImGuiDataType_U8,
-                           &simulation.orbit.principal);
-        ImGui::InputScalar("Angular", ImGuiDataType_U8,
-                           &simulation.orbit.angular);
-
-        if (simulation.type == SPIN || simulation.type == REL_SPHERICAL ||
-            simulation.type == SPHERICAL)
-            ImGui::InputScalar("Magnetic", ImGuiDataType_U8,
-                               &simulation.orbit.magnetic);
-        ImGui::Separator();
-
-        // Simulation parameters
         ImGui::Text("Simulation Parameters");
-        ImGui::InputFloat("Revolutions", &simulation.revolutions);
-        ImGui::InputScalar("Time Interval", ImGuiDataType_Double,
-                           &simulation.time_interval, 0, 0, "%e");
+        ImGui::InputDouble("Initial Radius", &simulation.r_0);
+        ImGui::InputDouble("Initial Velocity", &simulation.v_0);
+        ImGui::InputDouble("Initial Angle", &simulation.theta_rv);
+        ImGui::Separator();
+
+        ImGui::Text("Simulation Control");
+        ImGui::InputDouble("Total Duration", &simulation.total_duration);
+        ImGui::InputDouble("Time Interval", &simulation.time_interval);
+        ImGui::InputScalar("Record Interval", ImGuiDataType_U16,
+                           &simulation.record_interval);
         ImGui::Separator();
 
         // Submit button
@@ -94,11 +79,10 @@ void AddSimulationDialog::render() {
 void AddSimulationDialog::resetSimulation() { simulation = Simulation(); }
 
 void AddSimulationDialog::formatName(char *name) {
-    if (simulation.type == POLAR || simulation.type == REL_POLAR)
-        sprintf(name, "%s_%d_%d_%s", simulation.getType(),
-                simulation.orbit.principal, simulation.orbit.angular, date);
-    else
-        sprintf(name, "%s_%d_%d_%d_%s", simulation.getType(),
-                simulation.orbit.principal, simulation.orbit.angular,
-                simulation.orbit.magnetic, date);
+    // randomly generate a name
+    if (name[0] == '\0') {
+        snprintf(name, 200, "Simulation %s", date);
+    } else {
+        snprintf(name, 200, "%s %s", name, date);
+    }
 }

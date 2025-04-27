@@ -13,8 +13,7 @@ class Simulator {
 
     ~Simulator();
 
-    void simulateOrbit(const sim_ctx ctx, int type,
-                       std::function<void()> onCompletion);
+    void simulateOrbit(const sim2d_ctx ctx, std::function<void()> onCompletion);
 
   private:
     boost::asio::io_context ioContext;

@@ -45,15 +45,16 @@ void SimulationTableUI::renderActionButtons() {
 }
 
 void SimulationTableUI::renderTable() {
-    if (ImGui::BeginTable("SimTable", 7,
+    if (ImGui::BeginTable("SimTable", 8,
                           ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Name");
-        ImGui::TableSetupColumn("Type");
         ImGui::TableSetupColumn("Record Interval");
         ImGui::TableSetupColumn("Time Interval");
-        ImGui::TableSetupColumn("Orbit");
-        ImGui::TableSetupColumn("Revolutions");
+        ImGui::TableSetupColumn("Total Duration");
+        ImGui::TableSetupColumn("R0");
+        ImGui::TableSetupColumn("V0");
+        ImGui::TableSetupColumn("Theta");
         ImGui::TableHeadersRow();
 
         for (const auto &sim : simulations) {
@@ -80,20 +81,22 @@ void SimulationTableUI::renderTable() {
                     ImGui::Text("%s", sim->name.c_str());
                     break;
                 case 2:
-                    ImGui::Text("%s", sim->getType());
-                    break;
-                case 3:
                     ImGui::Text("%d", sim->record_interval);
                     break;
-                case 4:
+                case 3:
                     ImGui::Text("%e", sim->time_interval);
                     break;
+                case 4:
+                    ImGui::Text("%.2f", sim->total_duration);
+                    break;
                 case 5:
-                    ImGui::Text("n=%d, k=%d, m=%d", sim->orbit.principal,
-                                sim->orbit.angular, sim->orbit.magnetic);
+                    ImGui::Text("%.2f", sim->r_0);
                     break;
                 case 6:
-                    ImGui::Text("%.2f", sim->revolutions);
+                    ImGui::Text("%.2f", sim->v_0);
+                    break;
+                case 7:
+                    ImGui::Text("%.2f", sim->theta_rv);
                     break;
                 }
             }

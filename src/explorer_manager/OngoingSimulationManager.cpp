@@ -8,19 +8,20 @@
 
 #include "explorer_manager/OngoingSimulationManager.hpp"
 #include "explorer_manager/SimulationFields.hpp"
+#include "utils/iterator.h"
 #include "utils/utils.h"
 
 void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
-    const std::vector<std::string> fields = getColumnNames(simulation.type);
+    const std::vector<std::string> fields = getColumnNames(REL_POLAR);
     size_t id = this->simulation_repository.createSimulation(simulation);
     if (id == 0) {
         throw std::runtime_error("Failed to create simulation");
     }
 
     auto _simulation = std::make_shared<Simulation>(
-        simulation.name, id, simulation.orbit, simulation.type,
-        simulation.record_interval, simulation.revolutions,
-        simulation.time_interval);
+        simulation.name, id, simulation.record_interval,
+        simulation.total_duration, simulation.time_interval, simulation.r_0,
+        simulation.v_0, simulation.theta_rv);
 
     char output_filename[FILE_PATH_SIZE]; // NOSONAR
     format_output_filename(id, output_filename);

@@ -6,68 +6,47 @@
 #include <string>
 
 #include "atom/atom_bohr_sim.h"
-#include "utils/iterator.h"
+#include "orbital_math.h"
 
 struct Simulation {
     std::string name;
-    electron_orbit orbit;
-
     size_t id;
 
-    int type;
     unsigned short record_interval;
-    float revolutions;
     double time_interval;
+    double total_duration;
 
-    Simulation(const std::string &_name, const electron_orbit _orbit, int type,
-               unsigned short record_interval, float revolutions,
-               double time_interval)
-        : name(_name), type(type), record_interval(record_interval),
-          revolutions(revolutions), time_interval(time_interval) {
-        this->orbit.principal = _orbit.principal;
-        this->orbit.angular = _orbit.angular;
-        this->orbit.magnetic = _orbit.magnetic;
+    double r_0;
+    double v_0;
+    double theta_rv;
+
+    Simulation(const std::string &name, unsigned short record_interval,
+               float total_duration, double time_interval, double r_0,
+               double v_0, double theta_rv)
+        : name(name), record_interval(record_interval),
+          time_interval(time_interval), total_duration(total_duration),
+          r_0(r_0), v_0(v_0), theta_rv(theta_rv) {
 
         if (name.empty()) {
-            throw std::invalid_argument("Name cannot be empty");
+            throw std::invalid_argument("name cannot be empty");
         }
     }
 
-    Simulation(const std::string &_name, size_t _id,
-               const electron_orbit _orbit, int type,
-               unsigned short record_interval, float revolutions,
-               double time_interval)
-        : name(_name), id(_id), type(type), record_interval(record_interval),
-          revolutions(revolutions), time_interval(time_interval) {
-        this->orbit.principal = _orbit.principal;
-        this->orbit.angular = _orbit.angular;
-        this->orbit.magnetic = _orbit.magnetic;
+    Simulation(const std::string &name, size_t id,
+               unsigned short record_interval, float total_duration,
+               double time_interval, double r_0, double v_0, double theta_rv)
+        : name(name), id(id), record_interval(record_interval),
+          time_interval(time_interval), total_duration(total_duration),
+          r_0(r_0), v_0(v_0), theta_rv(theta_rv) {
 
         if (name.empty()) {
-            throw std::invalid_argument("Name cannot be empty");
+            throw std::invalid_argument("name cannot be empty");
         }
     }
 
     Simulation()
-        : name(""), orbit({3, 2, 1, 1}), type(POLAR), record_interval(1000),
-          revolutions(10), time_interval(1e-6) {}
-
-    inline const char *getType() const {
-        switch (type) {
-        case POLAR:
-            return "2DNR";
-        case SPHERICAL:
-            return "3DNR";
-        case REL_POLAR:
-            return "2DR";
-        case REL_SPHERICAL:
-            return "3DR";
-        case SPIN:
-            return "3DRS";
-        default:
-            return "Unknown";
-        }
-    }
+        : name(""), record_interval(1000), time_interval(0.01),
+          total_duration(10.0), r_0(2), v_0(1), theta_rv(HALF_PI) {}
 };
 
 #endif // SIMULATION_HPP

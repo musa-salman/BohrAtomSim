@@ -20,17 +20,18 @@ SimulationExplorer::SimulationExplorer(
     });
 
     simulation_card.setOnSimulate([this](const Simulation *simulation) {
-        sim_ctx ctx;
+        sim2d_ctx ctx;
 
         ctx.id = simulation->id;
 
         ctx.record_interval = simulation->record_interval;
         ctx.time_interval = simulation->time_interval;
-        ctx.revolutions = simulation->revolutions;
+        ctx.total_duration = simulation->total_duration;
+        ctx.r_0 = simulation->r_0;
+        ctx.v_0 = simulation->v_0;
+        ctx.theta_rv = simulation->theta_rv;
 
-        ctx.orbit = simulation->orbit;
-
-        simulator.simulateOrbit(ctx, simulation->type, [this, simulation]() {
+        simulator.simulateOrbit(ctx, [this, simulation]() {
             simulation_manager.markSimulationAsComplete(simulation->id);
             auto monitor = simulation_manager.getMonitor(simulation->id);
             if (monitor.has_value()) {
