@@ -35,6 +35,11 @@ struct vector3 {
     scalar z;
 };
 
+struct vector2 {
+    scalar x;
+    scalar y;
+};
+
 #define sim_sin(x)                                                             \
     _Generic((x),                                                              \
         float: Sleef_sinf1_u35purecfma,                                        \
@@ -100,10 +105,10 @@ scalar compute_phi_dot_0(quantum_angular angular, quantum_magnetic magnetic,
  * @param r_dot
  * @return double
  */
-static inline scalar compute_gamma(quantum_angular angular, scalar radius,
+static inline scalar compute_gamma(scalar angular_momentum, scalar radius,
                                    scalar r_dot) {
     const scalar term1 =
-        SQUARE(angular) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
+        SQUARE(angular_momentum) / (SPEED_OF_LIGHT_SQUARE * SQUARE(radius));
     const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
 
     const scalar result = sim_sqrt((1 + term1) / (1 - term2));
@@ -111,7 +116,7 @@ static inline scalar compute_gamma(quantum_angular angular, scalar radius,
 }
 
 /**
-    Calculates the angular change rate in relevistic
+    Calculates the angular change rate in relativistic
     where
         angular_velocity = (k * H_BAR) / (r^2 * mass * gamma)
 */
@@ -136,10 +141,9 @@ static inline scalar compute_gamma(quantum_angular angular, scalar radius,
  * @param r_dot
  * @return double
  */
-static inline scalar compute_rel_r_dot_dot(quantum_angular angular,
-                                           scalar gamma, scalar radius,
-                                           scalar r_dot) {
-    const scalar term1 = SQUARE(angular) / (gamma * radius);
+static inline scalar compute_rel_r_ddot(scalar angular_momentum, scalar gamma,
+                                        scalar radius, scalar r_dot) {
+    const scalar term1 = SQUARE(angular_momentum) / (gamma * radius);
     const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
 
     // Precompute reused terms
