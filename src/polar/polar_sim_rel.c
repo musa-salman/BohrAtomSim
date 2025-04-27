@@ -48,8 +48,8 @@ void simulate_polar_orbit_rel(const struct sim_ctx ctx) {
 
     prev_itr.gamma = compute_gamma(orbit.angular, prev_itr.r, prev_itr.r_dot);
 
-    prev_itr.r_dot_dot = compute_rel_r_dot_dot(orbit.angular, prev_itr.gamma,
-                                               prev_itr.r, prev_itr.r_dot);
+    prev_itr.r_dot_dot = compute_rel_r_ddot(orbit.angular, prev_itr.gamma,
+                                            prev_itr.r, prev_itr.r_dot);
 
     prev_itr.phi_dot =
         POLAR_PHI_DOT_REL(orbit.angular, prev_itr.r, prev_itr.gamma);
@@ -103,8 +103,8 @@ inline static bool simulate_orbit_rel_step(struct iter_ctx *ctx,
 
     const bool is_at_interest = iterate(ctx, time_interval, REL_POLAR);
 
-    next_itr->r_dot_dot = compute_rel_r_dot_dot(angular, GAMMA(prev_itr),
-                                                RHO(prev_itr), R_DOT(prev_itr));
+    next_itr->r_dot_dot = compute_rel_r_ddot(angular, GAMMA(prev_itr),
+                                             RHO(prev_itr), R_DOT(prev_itr));
 
     next_itr->phi_dot =
         POLAR_PHI_DOT_REL(angular, RHO(prev_itr), GAMMA(prev_itr));

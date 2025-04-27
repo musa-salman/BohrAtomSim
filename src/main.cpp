@@ -14,9 +14,7 @@
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
-#include "simulation_repositories/NotebookRepository.hpp"
 #include "simulator_runner/Simulator.hpp"
-#include "view/NotebookUI.hpp"
 #include "view/SideBar.hpp"
 #include "view/SimulationExplorer.hpp"
 #include "view/SimulationTableUI.hpp"
@@ -66,7 +64,6 @@ int main() {
 
     // Initialize Simulation
     SimulationRepository simulationRepository;
-    NotebookRepository notebookRepository;
 
     OngoingSimulationManager manager(simulationRepository);
     ArchivedSimulationManager archivedManager(simulationRepository);
@@ -76,9 +73,6 @@ int main() {
     SimulationExplorer explorer(manager, simulator);
 
     SimulationTableUI simulationTableUI(simulationRepository);
-
-    NotebookUI notebookUI(notebookRepository, simulationRepository,
-                          archivedManager);
 
     Sidebar sidebar;
 
@@ -111,8 +105,6 @@ int main() {
         } else if (sidebar.getActiveSection() ==
                    Sidebar::Section::SIMULATION_MANAGER) {
             simulationTableUI.render();
-        } else if (sidebar.getActiveSection() == Sidebar::Section::NOTEBOOK) {
-            notebookUI.render();
         }
 
         // Render GUI

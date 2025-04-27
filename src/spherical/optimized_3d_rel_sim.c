@@ -29,7 +29,7 @@ void optimized_3d_rel_sim() {
         so it can be used for the other functions that require gamma
     */
     scalar inv_gamma = compute_gamma(ANGULAR, r, r_dot);
-    scalar r_dot_dot = compute_rel_r_dot_dot(ANGULAR, inv_gamma, r, r_dot);
+    scalar r_dot_dot = compute_rel_r_ddot(ANGULAR, inv_gamma, r, r_dot);
 
     scalar phi_dot = compute_sphere_rel_phi_dot(MAGNETIC, theta, r, inv_gamma);
 

@@ -84,8 +84,8 @@ void simulate_spherical_rel_orbit(const struct sim_ctx ctx) {
             prev_itr.phi_dot, prev_itr.gamma);
     }
 
-    next_itr.r_dot_dot = compute_rel_r_dot_dot(orbit.angular, prev_itr.gamma,
-                                               prev_itr.r, prev_itr.r_dot);
+    next_itr.r_dot_dot = compute_rel_r_ddot(orbit.angular, prev_itr.gamma,
+                                            prev_itr.r, prev_itr.r_dot);
     size_t it = 0;
 
     scalar time_interval = ctx.time_interval;
@@ -185,8 +185,8 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
             THETA_DOT(prev_itr), PHI_DOT(prev_itr), GAMMA(prev_itr));
     }
 
-    next_itr->r_dot_dot = compute_rel_r_dot_dot(orbit->angular, GAMMA(prev_itr),
-                                                RHO(prev_itr), R_DOT(prev_itr));
+    next_itr->r_dot_dot = compute_rel_r_ddot(orbit->angular, GAMMA(prev_itr),
+                                             RHO(prev_itr), R_DOT(prev_itr));
 
     return is_at_interest;
 }

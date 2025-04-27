@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(BohrAtomSimulation VERSION 1.0)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+project(BohrAtomSimulation VERSION 1.0)
+
+include(FetchContent)
 
 set(CMAKE_AR llvm-ar)
 set(CMAKE_RANLIB llvm-ranlib)
@@ -92,10 +94,19 @@ add_definitions(${SLEEF_CFLAGS_OTHER})
 find_package(SQLite3 REQUIRED)
 include_directories(${SQLite3_INCLUDE_DIRS})
 
+FetchContent_Declare(
+    SQLiteCpp
+    GIT_REPOSITORY https://github.com/SRombauts/SQLiteCpp.git
+    GIT_TAG master
+)
+
+FetchContent_MakeAvailable(SQLiteCpp)
+
 # Collect source files
 file(GLOB_RECURSE CPP_SOURCES "src/*.cpp")
 file(GLOB_RECURSE C_SOURCES "src/*.c")
 file(GLOB_RECURSE HEADERS "include/*.h")
+list(REMOVE_ITEM CPP_SOURCES "${PROJECT_SOURCE_DIR}/src/main.cpp")
 add_library(bohr_simulation SHARED ${C_SOURCES})
 target_compile_options(bohr_simulation PRIVATE)
 target_link_libraries(bohr_simulation PRIVATE)
@@ -103,7 +114,7 @@ target_link_libraries(bohr_simulation PRIVATE)
 # Main C++ executable
 add_executable(bohr_main src/main.cpp ${C_SOURCES} ${CPP_SOURCES} ${HEADERS} ${IMGUI_SOURCES} ${IMPLOT_SOURCES})
 target_compile_options(bohr_main PRIVATE -g)
-target_link_libraries(bohr_main PRIVATE bohr_simulation glfw OpenGL::GL Matplot++::matplot  ${HDF5_LIBRARIES}
+target_link_libraries(bohr_main PRIVATE bohr_simulation SQLiteCpp glfw OpenGL::GL Matplot++::matplot  ${HDF5_LIBRARIES}
  ${Boost_LIBRARIES} ${IMPLOT_HEADERS} ${SLEEF_LIBRARIES} ${SQLite3_LIBRARIES})
 
 # Set output directories

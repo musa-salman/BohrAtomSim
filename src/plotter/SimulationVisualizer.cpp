@@ -142,7 +142,7 @@ void SimulationVisualizer::manageSimulationPlotFunctions(
     std::vector<std::shared_ptr<IPlotFunction>> &funcs =
         assignedFunctions[sim->id];
     std::vector<std::shared_ptr<IPlotFunction>> plotFunctions;
-    switch (sim->type) {
+    switch (1) {
     case 0:
         plotFunctions = plotFunctions2DNR;
         break;
