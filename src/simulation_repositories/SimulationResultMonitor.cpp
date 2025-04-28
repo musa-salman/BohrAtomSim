@@ -1,7 +1,10 @@
-#include "simulation_repositories/SimulationResultMonitor.hpp"
-#include "simulation_repositories/SimulationResultLoader.hpp"
-
 #include <chrono>
+#include <cmath>
+#include <memory>
+
+#include "math_utils.hpp"
+#include "simulation_repositories/SimulationResultLoader.hpp"
+#include "simulation_repositories/SimulationResultMonitor.hpp"
 
 SimulationResultMonitor::SimulationResultMonitor(const std::string &filepath)
     : filepath(filepath), running(false), loaded_rows(0) {
@@ -26,7 +29,11 @@ void SimulationResultMonitor::startMonitoring() {
                 auto snapshot = std::make_shared<
                     std::unordered_map<std::string, std::vector<double>>>(
                     accumulated_data);
+
+                auto snapshot_trajectories = polar2cartesian(snapshot);
+
                 shared_datasets.store(snapshot);
+                trajectories.store(snapshot_trajectories);
             }
         }
     });
@@ -42,4 +49,9 @@ void SimulationResultMonitor::stopMonitoring() {
 std::shared_ptr<const std::unordered_map<std::string, std::vector<double>>>
 SimulationResultMonitor::getDatasets() const {
     return shared_datasets.load();
+}
+
+std::shared_ptr<const std::unordered_map<std::string, std::vector<double>>>
+SimulationResultMonitor::getTrajectories() const {
+    return trajectories.load();
 }

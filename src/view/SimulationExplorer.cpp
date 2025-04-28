@@ -50,6 +50,8 @@ SimulationExplorer::SimulationExplorer(
     if (!simulations.empty()) {
         selected_simulation = simulations.begin()->first;
     }
+
+    plot_selection.emplace("trajectories", false);
 }
 
 void SimulationExplorer::render() {
@@ -114,6 +116,11 @@ void SimulationExplorer::render() {
 
                 ImGui::Checkbox(name.c_str(), &plot_selection[name]);
             }
+
+            ImGui::SameLine();
+            ImGui::Checkbox("Show Trajectories",
+                            &plot_selection["trajectories"]);
+
             ImGui::PopID();
 
             // Loop again to plot only selected datasets
@@ -129,6 +136,20 @@ void SimulationExplorer::render() {
 
                     ImPlot::PlotLine(name.c_str(), t_data.data(), data.data(),
                                      static_cast<int>(data.size()));
+                    ImPlot::EndPlot();
+                }
+            }
+
+            if (plot_selection["trajectories"]) {
+                auto cartesian_data = monitor->getTrajectories();
+                if (ImPlot::BeginPlot("Trajectories")) {
+                    ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit,
+                                      ImPlotAxisFlags_AutoFit);
+
+                    ImPlot::PlotLine(
+                        "Trajectory", cartesian_data->at("x").data(),
+                        cartesian_data->at("y").data(),
+                        static_cast<int>(cartesian_data->at("x").size()));
                     ImPlot::EndPlot();
                 }
             }

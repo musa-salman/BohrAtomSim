@@ -19,6 +19,9 @@ class SimulationResultMonitor {
     std::shared_ptr<const std::unordered_map<std::string, std::vector<double>>>
     getDatasets() const;
 
+    std::shared_ptr<const std::unordered_map<std::string, std::vector<double>>>
+    getTrajectories() const;
+
   private:
     std::string filepath;
     std::atomic<bool> running;
@@ -26,6 +29,10 @@ class SimulationResultMonitor {
     std::jthread monitor_thread;
 
     std::unordered_map<std::string, std::vector<double>> accumulated_data;
+
+    std::atomic<
+        std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>>
+        trajectories;
 
     std::atomic<
         std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>>
