@@ -59,19 +59,6 @@ struct sim_ctx {
     struct electron_orbit orbit;
 };
 
-struct sim2d_ctx {
-    unsigned short record_interval;
-    float total_duration;
-
-    size_t id;
-
-    scalar time_interval;
-
-    scalar v_0;
-    scalar r_0;
-    scalar theta_rv;
-};
-
 #endif // ATOM_BOHR_SIM_H
 
 #ifdef __cplusplus
