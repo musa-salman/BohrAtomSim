@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <format>
 #include <iostream>
@@ -7,10 +8,11 @@
 
 #include <SQLiteCpp/SQLiteCpp.h>
 
+#include "atom/result_recorders.h"
 #include "simulation_repositories/DataSource.hpp"
 #include "simulation_repositories/SimulationRepository.hpp"
+#include "utils/utils.h"
 
-// Constructor: Open SQLite database and create table if it doesn't exist
 SimulationRepository::SimulationRepository() {
     db = DataSource::getInstance()->getDB();
     if (!db) {
@@ -55,13 +57,31 @@ size_t SimulationRepository::createSimulation(const Simulation &simulation) {
         query.bind(1, simulation.name);
         query.bind(2, simulation.record_interval);
         query.bind(3, simulation.total_duration);
-        query.bind(4, simulation.time_interval);
+        query.bind(4, simulation.delta_time);
         query.bind(5, "in progress");
         query.bind(6, simulation.r_0);
         query.bind(7, simulation.v_0);
         query.bind(8, simulation.theta_rv);
 
         query.exec();
+
+        {
+            char file_name[FILE_PATH_SIZE];
+            format_output_filename(db->getLastInsertRowid(), file_name);
+            FILE *file_bin = fopen(file_name, "wb");
+            if (!file_bin) {
+                std::cerr << "Error opening file for writing: " << file_name
+                          << std::endl;
+                return 0; // Indicate error
+            }
+            const uint8_t field_names_2DR[][MAX_FIELD_NAME] = {
+                "t", "r", "r_dot", "r_ddot", "phi", "phi_dot", "gamma"};
+
+            init_file_header(file_bin, field_names_2DR,
+                             sizeof(field_names_2DR) /
+                                 sizeof(field_names_2DR[0]));
+            fclose(file_bin);
+        }
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error inserting simulation: " << e.what() << std::endl;
         return 0; // Indicate error
@@ -130,7 +150,7 @@ SimulationRepository::getSimulations(bool cached) {
             simulation->name = query.getColumn(1).getText();
             simulation->record_interval = query.getColumn(2).getInt();
             simulation->total_duration = query.getColumn(3).getDouble();
-            simulation->time_interval = query.getColumn(4).getDouble();
+            simulation->delta_time = query.getColumn(4).getDouble();
             simulation->r_0 = query.getColumn(5).getDouble();
             simulation->v_0 = query.getColumn(6).getDouble();
             simulation->theta_rv = query.getColumn(7).getDouble();

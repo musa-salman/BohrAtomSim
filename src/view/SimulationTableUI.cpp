@@ -84,7 +84,7 @@ void SimulationTableUI::renderTable() {
                     ImGui::Text("%d", sim->record_interval);
                     break;
                 case 3:
-                    ImGui::Text("%e", sim->time_interval);
+                    ImGui::Text("%e", sim->delta_time);
                     break;
                 case 4:
                     ImGui::Text("%.2f", sim->total_duration);
