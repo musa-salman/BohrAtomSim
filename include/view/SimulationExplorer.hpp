@@ -8,7 +8,6 @@
 #include "simulator_runner/Simulation.hpp"
 #include "simulator_runner/Simulator.hpp"
 #include "view/AddSimulationDialog.hpp"
-#include "view/SimulationCard.hpp"
 
 class SimulationExplorer : public Component {
   public:
@@ -19,12 +18,11 @@ class SimulationExplorer : public Component {
 
   private:
     AddSimulationDialog add_simulation_interface;
-    SimulationCard simulation_card;
     OngoingSimulationManager &simulation_manager;
     Simulator &simulator;
     const std::unordered_map<size_t, std::shared_ptr<Simulation>> &simulations;
     std::unordered_map<std::string, bool> plot_selection;
-    size_t selected_simulation;
+    Simulation *selected_simulation;
 };
 
 #endif // SIMULATION_MANAGER_H

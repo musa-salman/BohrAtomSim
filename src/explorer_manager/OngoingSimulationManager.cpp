@@ -20,14 +20,14 @@ void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
 
     auto _simulation = std::make_shared<Simulation>(
         simulation.name, id, simulation.record_interval,
-        simulation.total_duration, simulation.time_interval, simulation.r_0,
+        simulation.total_duration, simulation.delta_time, simulation.r_0,
         simulation.v_0, simulation.theta_rv);
 
     char output_filename[FILE_PATH_SIZE]; // NOSONAR
     format_output_filename(id, output_filename);
 
-    auto _monitor =
-        std::make_shared<SimulationResultMonitor>(std::string(output_filename));
+    auto _monitor = std::make_shared<SimulationResultMonitor>(
+        std::string(output_filename), &_simulation->status);
 
     simulations.try_emplace(_simulation->id, _simulation);
     monitors.try_emplace(_simulation->id, _monitor);

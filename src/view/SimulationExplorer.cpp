@@ -11,6 +11,7 @@ SimulationExplorer::SimulationExplorer(
     OngoingSimulationManager &_simulation_manager, Simulator &_simulator)
     : simulation_manager(_simulation_manager), simulator(_simulator),
       simulations(simulation_manager.getSimulations()) {
+
     add_simulation_interface.setOnSubmit([this](const Simulation &simulation) {
         try {
             simulation_manager.addSimulation(simulation);
@@ -19,37 +20,10 @@ SimulationExplorer::SimulationExplorer(
         }
     });
 
-    simulation_card.setOnSimulate([this](const Simulation *simulation) {
-        sim2d_ctx ctx;
+    this->selected_simulation = nullptr;
 
-        ctx.id = simulation->id;
-
-        ctx.record_interval = simulation->record_interval;
-        ctx.time_interval = simulation->time_interval;
-        ctx.total_duration = simulation->total_duration;
-        ctx.r_0 = simulation->r_0;
-        ctx.v_0 = simulation->v_0;
-        ctx.theta_rv = simulation->theta_rv;
-
-        simulator.simulateOrbit(ctx, [this, simulation]() {
-            simulation_manager.markSimulationAsComplete(simulation->id);
-            auto monitor = simulation_manager.getMonitor(simulation->id);
-            if (monitor.has_value()) {
-                monitor->get()->stopMonitoring();
-            }
-        });
-
-        auto monitor = simulation_manager.getMonitor(simulation->id);
-        if (monitor.has_value()) {
-            monitor->get()->startMonitoring();
-        }
-    });
-
-    this->selected_simulation = std::numeric_limits<size_t>::max();
-
-    if (!simulations.empty()) {
-        selected_simulation = simulations.begin()->first;
-    }
+    if (!simulations.empty())
+        selected_simulation = simulations.begin()->second.get();
 
     plot_selection.emplace("trajectories", false);
 }
@@ -70,9 +44,9 @@ void SimulationExplorer::render() {
 
         for (auto const &[id, simulation] : simulations) {
             if (ImGui::Selectable(simulation->name.c_str(),
-                                  selected_simulation == id)) {
-                selected_simulation = id;
-                simulation_card.setSimulation(*simulation);
+                                  selected_simulation != nullptr &&
+                                      selected_simulation->id == id)) {
+                selected_simulation = simulation.get();
             }
         }
     }
@@ -80,82 +54,124 @@ void SimulationExplorer::render() {
 
     ImGui::Begin("Simulation Plot", nullptr, ImGuiWindowFlags_NoCollapse);
     {
-        if (selected_simulation != std::numeric_limits<size_t>::max()) {
-            auto opt_monitor =
-                simulation_manager.getMonitor(selected_simulation);
-            std::shared_ptr<SimulationResultMonitor> monitor;
-            if (opt_monitor.has_value()) {
-                monitor = opt_monitor.value();
-            }
-            auto datasets = monitor->getDatasets();
-            simulation_card.render();
+        if (selected_simulation == nullptr) {
+            ImGui::Text("No simulation selected.");
+            ImGui::End();
+            return;
+        }
 
-            if (!datasets->contains("t") || datasets->at("t").empty()) {
-                ImGui::Text("No data available for plotting.");
-                ImGui::End();
-                return;
-            }
+        auto opt_monitor =
+            simulation_manager.getMonitor(selected_simulation->id);
+        std::shared_ptr<SimulationResultMonitor> monitor;
+        if (opt_monitor.has_value()) {
+            monitor = opt_monitor.value();
+        }
+        auto datasets = monitor->getDatasets();
 
-            const auto &t_data = datasets->at("t");
-            double t_min = t_data.front();
-            double t_max = t_data.back();
-
-            ImGui::Text("Select Datasets to Plot:");
-
-            ImGui::PushID("plot_selection");
-
-            for (const auto &[name, data] : *datasets) {
-                if (name == "t")
-                    continue; // Skip "t"
-
-                if (!plot_selection.contains(name)) {
-                    plot_selection[name] = false;
-                }
-
-                ImGui::SameLine();
-
-                ImGui::Checkbox(name.c_str(), &plot_selection[name]);
+        if (selected_simulation->status ==
+            Simulation::SimulationStatus::COMPLETED) {
+            ImGui::Text("Simulation completed.");
+        } else if (selected_simulation->status ==
+                   Simulation::SimulationStatus::RUNNING) {
+            if (ImGui::Button("Pause Simulation")) {
+                simulator.pauseSimulation(selected_simulation->id);
             }
 
             ImGui::SameLine();
-            ImGui::Checkbox("Show Trajectories",
-                            &plot_selection["trajectories"]);
-
-            ImGui::PopID();
-
-            // Loop again to plot only selected datasets
-            for (const auto &[name, data] : *datasets) {
-                if (name == "t" || !plot_selection[name])
-                    continue;
-
-                if (ImPlot::BeginPlot(name.c_str())) {
-                    ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_AutoFit,
-                                      ImPlotAxisFlags_AutoFit);
-                    ImPlot::SetupAxisLimits(ImAxis_X1, t_min, t_max,
-                                            ImGuiCond_Always);
-
-                    ImPlot::PlotLine(name.c_str(), t_data.data(), data.data(),
-                                     static_cast<int>(data.size()));
-                    ImPlot::EndPlot();
-                }
+            if (ImGui::Button("Stop Simulation")) {
+                simulator.stopSimulation(selected_simulation->id);
             }
 
-            if (plot_selection["trajectories"]) {
-                auto cartesian_data = monitor->getTrajectories();
-                if (ImPlot::BeginPlot("Trajectories")) {
-                    ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit,
-                                      ImPlotAxisFlags_AutoFit);
-
-                    ImPlot::PlotLine(
-                        "Trajectory", cartesian_data->at("x").data(),
-                        cartesian_data->at("y").data(),
-                        static_cast<int>(cartesian_data->at("x").size()));
-                    ImPlot::EndPlot();
-                }
+            ImGui::Text("Simulation is running...");
+        } else if (selected_simulation->status ==
+                   Simulation::SimulationStatus::PAUSED) {
+            if (ImGui::Button("Resume Simulation")) {
+                simulator.resumeSimulation(selected_simulation->id);
             }
 
-        } else {
-            ImGui::Text("Select a simulation to view live plotting.");
+            ImGui::SameLine();
+            if (ImGui::Button("Stop Simulation")) {
+                simulator.stopSimulation(selected_simulation->id);
+            }
+            ImGui::Text("Simulation is paused.");
+        } else if (selected_simulation->status ==
+                   Simulation::SimulationStatus::IDLE) {
+            if (ImGui::Button("Run Simulation")) {
+                simulator.simulateOrbit(*selected_simulation, [this]() {
+                    simulation_manager.markSimulationAsComplete(
+                        selected_simulation->id);
+                });
+
+                auto monitor =
+                    simulation_manager.getMonitor(selected_simulation->id);
+                if (monitor.has_value()) {
+                    monitor->get()->startMonitoring();
+                }
+            }
+            ImGui::Text("Simulation is ready to run.");
+        }
+
+        if (!datasets->contains("t") || datasets->at("t").empty()) {
+            ImGui::Text("No data available for plotting.");
+            ImGui::End();
+            return;
+        }
+
+        const auto &t_data = datasets->at("t");
+        double t_min = t_data.front();
+        double t_max = t_data.back();
+
+        ImGui::Text("Select Datasets to Plot:");
+
+        ImGui::PushID("plot_selection");
+
+        for (const auto &[name, data] : *datasets) {
+            if (name == "t")
+                continue; // Skip "t"
+
+            if (!plot_selection.contains(name)) {
+                plot_selection[name] = false;
+            }
+
+            ImGui::SameLine();
+
+            ImGui::Checkbox(name.c_str(), &plot_selection[name]);
+        }
+
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Trajectories", &plot_selection["trajectories"]);
+
+        ImGui::PopID();
+
+        // Loop again to plot only selected datasets
+        for (const auto &[name, data] : *datasets) {
+            if (name == "t" || !plot_selection[name])
+                continue;
+
+            if (ImPlot::BeginPlot(name.c_str())) {
+                ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_AutoFit,
+                                  ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxisLimits(ImAxis_X1, t_min, t_max,
+                                        ImGuiCond_Always);
+
+                ImPlot::PlotLine(name.c_str(), t_data.data(), data.data(),
+                                 static_cast<int>(data.size()));
+                ImPlot::EndPlot();
+            }
+        }
+
+        if (plot_selection["trajectories"]) {
+            auto cartesian_data = monitor->getTrajectories();
+            if (ImPlot::BeginPlot("Trajectories")) {
+                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit,
+                                  ImPlotAxisFlags_AutoFit);
+
+                ImPlot::PlotLine(
+                    "Trajectory", cartesian_data->at("x").data(),
+                    cartesian_data->at("y").data(),
+                    static_cast<int>(cartesian_data->at("x").size()));
+                ImPlot::EndPlot();
+            }
         }
     }
     ImGui::End();

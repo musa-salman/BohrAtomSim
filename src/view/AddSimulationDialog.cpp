@@ -11,6 +11,7 @@ AddSimulationDialog::AddSimulationDialog() { simulation = Simulation(); }
 
 void AddSimulationDialog::setOnSubmit(
     const std::function<void(const Simulation &)> &_on_submit) {
+    simulation.initial_motion_step.time = 0;
     this->on_submit = _on_submit;
 }
 
@@ -50,7 +51,7 @@ void AddSimulationDialog::render() {
 
         ImGui::Text("Simulation Control");
         ImGui::InputDouble("Total Duration", &simulation.total_duration);
-        ImGui::InputDouble("Time Interval", &simulation.time_interval);
+        ImGui::InputDouble("Time Interval", &simulation.delta_time);
         ImGui::InputScalar("Record Interval", ImGuiDataType_U16,
                            &simulation.record_interval);
         ImGui::Separator();

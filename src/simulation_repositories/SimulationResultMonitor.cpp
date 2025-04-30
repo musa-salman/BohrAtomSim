@@ -6,8 +6,9 @@
 #include "simulation_repositories/SimulationResultLoader.hpp"
 #include "simulation_repositories/SimulationResultMonitor.hpp"
 
-SimulationResultMonitor::SimulationResultMonitor(const std::string &filepath)
-    : filepath(filepath), running(false), loaded_rows(0) {
+SimulationResultMonitor::SimulationResultMonitor(
+    const std::string &filepath, Simulation::SimulationStatus *status)
+    : filepath(filepath), running(false), status(status), loaded_rows(0) {
     shared_datasets.store(
         std::make_shared<
             std::unordered_map<std::string, std::vector<double>>>());
@@ -18,7 +19,11 @@ SimulationResultMonitor::~SimulationResultMonitor() { stopMonitoring(); }
 void SimulationResultMonitor::startMonitoring() {
     running = true;
     monitor_thread = std::jthread([this]() {
-        while (running) {
+        while (running && *status != Simulation::SimulationStatus::COMPLETED) {
+            if (*status == Simulation::SimulationStatus::PAUSED) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
             size_t rows_added = SimulationResultLoader::loadSimulation(

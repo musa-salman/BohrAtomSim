@@ -8,9 +8,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "simulator_runner/Simulation.hpp"
+
 class SimulationResultMonitor {
   public:
-    SimulationResultMonitor(const std::string &filepath);
+    SimulationResultMonitor(const std::string &filepath,
+                            Simulation::SimulationStatus *status);
     ~SimulationResultMonitor();
 
     void startMonitoring();
@@ -27,6 +30,8 @@ class SimulationResultMonitor {
     std::atomic<bool> running;
 
     std::jthread monitor_thread;
+
+    Simulation::SimulationStatus *status;
 
     std::unordered_map<std::string, std::vector<double>> accumulated_data;
 

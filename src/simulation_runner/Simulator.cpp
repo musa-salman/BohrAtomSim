@@ -5,7 +5,9 @@
 #include "atom/result_recorders.h"
 #include "simulator_runner/Simulator.hpp"
 
-#include "simulation_2d/simulation_2d.h"
+#include "simulator_runner/Simulation.hpp"
+
+#include "utils/utils.h"
 
 Simulator::Simulator()
     : ioContext(1), workGuard(boost::asio::make_work_guard(ioContext)) {
@@ -20,6 +22,26 @@ Simulator::Simulator(int numThreads)
     }
 }
 
+void Simulator::pauseSimulation(size_t id) {
+    auto it = steppers.find(id);
+    if (it != steppers.end())
+        it->second->pause();
+}
+
+void Simulator::resumeSimulation(size_t id) {
+    auto it = steppers.find(id);
+    if (it != steppers.end())
+        boost::asio::post(ioContext, [it]() { it->second->resume(); });
+}
+
+void Simulator::stopSimulation(size_t id) {
+    auto it = steppers.find(id);
+    if (it != steppers.end()) {
+        it->second->stop();
+        steppers.erase(it);
+    }
+}
+
 Simulator::~Simulator() {
     ioContext.stop();
     for (auto &worker : workers) {
@@ -29,12 +51,19 @@ Simulator::~Simulator() {
     }
 }
 
-void Simulator::simulateOrbit(
-    const sim2d_ctx ctx,                        // NOSONAR
-    const std::function<void()> onCompletion) { // NOSONAR
-    boost::asio::post(ioContext, [ctx, onCompletion]() {
-        simulate_2d_electron_motion(ctx);
+void Simulator::simulateOrbit(Simulation &simulation,
+                              std::function<void()> onCompletion) {
 
-        onCompletion();
-    });
+    char output_filename[FILE_PATH_SIZE]; // NOSONAR
+    format_output_filename(simulation.id, output_filename);
+    FILE *file_bin = fopen(output_filename, "a+b");
+
+    if (file_bin == nullptr)
+        throw std::runtime_error("Failed to open file for writing");
+
+    auto ss2d = std::make_shared<SimulationStepper2D>(simulation, onCompletion,
+                                                      file_bin);
+    steppers[simulation.id] = ss2d;
+
+    boost::asio::post(ioContext, [ss2d]() { ss2d->run(); });
 }
