@@ -38,7 +38,6 @@ void simulate_spherical_orbit(const struct sim_ctx ctx) {
 
         init_file_header(file_bin, field_names_3DNR, 9);
     }
-    start_iteration(&iter_ctx);
 
     struct radial_bounds radial_bounds =
         compute_radial_limits(orbit.principal, orbit.angular);
@@ -63,16 +62,16 @@ void simulate_spherical_orbit(const struct sim_ctx ctx) {
         next_itr.theta_dot = prev_itr.theta_dot;
 
         prev_itr.phi_dot = 0;
-        prev_itr.theta_dot_dot = 0;
+        prev_itr.theta_ddot = 0;
     } else {
         prev_itr.phi_dot =
             compute_phi_dot_0(orbit.angular, orbit.magnetic, prev_itr.r);
 
-        prev_itr.theta_dot_dot = compute_sphere_theta_dot_dot(
+        prev_itr.theta_ddot = compute_sphere_theta_dot_dot(
             prev_itr.r, prev_itr.r_dot, prev_itr.theta, prev_itr.theta_dot,
             prev_itr.phi_dot);
     }
-    next_itr.r_dot_dot = compute_r_dot_dot(prev_itr.r, orbit.angular);
+    next_itr.r_ddot = compute_r_dot_dot(prev_itr.r, orbit.angular);
 
     size_t it = 0;
     while (revolutions > 0) {
@@ -98,7 +97,6 @@ void simulate_spherical_orbit(const struct sim_ctx ctx) {
     }
 
     fclose(file_bin);
-    end_iteration(&iter_ctx);
 }
 
 static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
@@ -130,12 +128,12 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
     } else {
         next_itr->phi_dot =
             compute_spherical_phi_dot(magnetic, THETA(prev_itr), RHO(prev_itr));
-        next_itr->theta_dot_dot = compute_sphere_theta_dot_dot(
+        next_itr->theta_ddot = compute_sphere_theta_dot_dot(
             RHO(prev_itr), R_DOT(prev_itr), THETA(prev_itr),
             THETA_DOT(prev_itr), PHI_DOT(prev_itr));
     }
 
-    next_itr->r_dot_dot = compute_r_dot_dot(RHO(prev_itr), angular);
+    next_itr->r_ddot = compute_r_dot_dot(RHO(prev_itr), angular);
 
     return is_at_interest;
 }

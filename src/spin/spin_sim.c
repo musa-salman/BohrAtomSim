@@ -48,7 +48,6 @@ void simulate_spin_orbit(const struct sim_ctx ctx) {
 
         init_file_header(file_bin, field_names_3DR, 11);
     }
-    start_iteration(&iter_ctx);
 
     struct radial_bounds radial_bounds =
         compute_radial_limits(orbit.principal, orbit.angular);
@@ -77,17 +76,17 @@ void simulate_spin_orbit(const struct sim_ctx ctx) {
             SPHERICAL_THETA_DOT_REL(orbit.angular, prev_itr.r, prev_itr.gamma);
 
         prev_itr.phi_dot = 0;
-        prev_itr.theta_dot_dot = 0;
+        prev_itr.theta_ddot = 0;
     } else {
         prev_itr.phi_dot = compute_spin_phi_dot_0(orbit.angular, orbit.magnetic,
                                                   prev_itr.r, prev_itr.gamma);
 
-        prev_itr.theta_dot_dot = compute_spin_theta_ddot(
+        prev_itr.theta_ddot = compute_spin_theta_ddot(
             prev_itr.phi_dot, prev_itr.r, prev_itr.r_dot, prev_itr.theta,
             prev_itr.theta_dot, prev_itr.gamma);
     }
 
-    next_itr.r_dot_dot =
+    next_itr.r_ddot =
         compute_spin_r_ddot(prev_itr.phi_dot, prev_itr.r, prev_itr.r_dot,
                             prev_itr.theta, prev_itr.theta_dot, prev_itr.gamma);
     size_t it = 0;
@@ -153,7 +152,6 @@ void simulate_spin_orbit(const struct sim_ctx ctx) {
     }
 
     fclose(file_bin);
-    end_iteration(&iter_ctx);
 }
 
 static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
@@ -186,12 +184,12 @@ static bool simulate_orbit_step(struct iter_ctx *iter_ctx, scalar *sign,
         next_itr->phi_dot = compute_spin_phi_dot(
             RHO(prev_itr), THETA(prev_itr), GAMMA(prev_itr), orbit->magnetic);
 
-        next_itr->theta_dot_dot = compute_spin_theta_ddot(
+        next_itr->theta_ddot = compute_spin_theta_ddot(
             PHI_DOT(prev_itr), RHO(prev_itr), R_DOT(prev_itr), THETA(prev_itr),
             THETA_DOT(prev_itr), GAMMA(prev_itr));
     }
 
-    next_itr->r_dot_dot = compute_spin_r_ddot(
+    next_itr->r_ddot = compute_spin_r_ddot(
         PHI_DOT(prev_itr), RHO(prev_itr), R_DOT(prev_itr), THETA(prev_itr),
         THETA_DOT(prev_itr), GAMMA(prev_itr));
 

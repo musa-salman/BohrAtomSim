@@ -16,22 +16,11 @@ struct file_header {
     uint8_t version;
     uint8_t field_count;
     uint8_t endianness;
-    uint8_t scalar_type;
 } __attribute__((packed));
 
 static inline uint8_t detect_endianness() {
     uint16_t x = 0x0123;
     return *((uint8_t *)&x) == 0x23 ? '<' : '>';
-}
-
-static inline uint8_t detect_scalar_type() {
-#ifdef FLOAT_SCALAR
-    return 'f';
-#elif defined(LONG_DOUBLE_SCALAR)
-    return 'g';
-#else
-    return 'd'; // default: double
-#endif
 }
 
 static inline void
@@ -42,7 +31,6 @@ init_file_header(FILE *bin_file, const uint8_t (*field_names)[MAX_FIELD_NAME],
         .version = 1,
         .field_count = field_count,
         .endianness = detect_endianness(),
-        .scalar_type = detect_scalar_type(),
     };
 
     fwrite(&header, sizeof(struct file_header), 1, bin_file);

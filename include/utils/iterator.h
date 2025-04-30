@@ -1,8 +1,11 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ITERATOR_H
 #define ITERATOR_H
 
 #include <stdbool.h>
-#include <time.h>
 
 #include "orbital_math.h"
 #include "types.h"
@@ -21,33 +24,41 @@ struct iter_ctx {
     struct sim_itr *next_itr;
 
     scalar time;
-
-    clock_t start_time;
-    clock_t end_time;
 };
 
 // simulation iteration to hold the current and next iteration values
 struct sim_itr {
-    scalar dt;        // iteration time
-    scalar r;         // iteration distance
-    scalar r_dot;     // iteration movement speed
-    scalar r_dot_dot; // iteration movement acceleration
+    scalar r;      // iteration distance
+    scalar r_dot;  // iteration movement speed
+    scalar r_ddot; // iteration movement acceleration
 
     scalar phi;     // iteration angle
     scalar phi_dot; // iteration angular speed
 
     scalar theta;
     scalar theta_dot;
-    scalar theta_dot_dot;
+    scalar theta_ddot;
 
     scalar delta_phi; // iteration angle of the perihelion
 
     scalar gamma; // iteration rel mass mult
 };
 
-void start_iteration(struct iter_ctx *ctx);
+struct motion_step_2d {
+    scalar time;
 
-void end_iteration(struct iter_ctx *ctx);
+    scalar r;
+    scalar r_dot;
+    scalar r_ddot;
+
+    scalar phi;
+    scalar phi_dot;
+
+    scalar gamma;
+};
+
+void init_motion_step(struct motion_step_2d *step, scalar r_0, scalar v_0,
+                      scalar theta_rv);
 
 static inline bool iterate(struct iter_ctx *ctx, scalar time_interval,
                            enum sim_type type) {
@@ -76,3 +87,7 @@ static inline bool iterate(struct iter_ctx *ctx, scalar time_interval,
 void init_iteration(struct sim_itr *itr, enum sim_type type);
 
 #endif // ITERATOR_H
+
+#ifdef __cplusplus
+}
+#endif

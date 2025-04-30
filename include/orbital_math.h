@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ORBITAL_MATH_H
 #define ORBITAL_MATH_H
 
@@ -146,11 +150,9 @@ static inline scalar compute_rel_r_ddot(scalar angular_momentum, scalar gamma,
     const scalar term1 = SQUARE(angular_momentum) / (gamma * radius);
     const scalar term2 = SQUARE(r_dot) / SPEED_OF_LIGHT_SQUARE;
 
-    // Precompute reused terms
     const scalar radius_squared = radius * radius;
     const scalar reciprocal = 1.0 / (gamma * radius_squared);
 
-    // Perform computation
     const scalar intermediate = term1 + term2 - 1.0;
     const scalar result = intermediate * reciprocal;
 
@@ -330,3 +332,7 @@ static inline scalar compute_spin_phi_dot(scalar radius, scalar theta,
 }
 
 #endif // ORBITAL_MATH_H
+
+#ifdef __cplusplus
+}
+#endif
