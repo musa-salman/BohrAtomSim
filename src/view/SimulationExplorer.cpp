@@ -29,15 +29,8 @@ SimulationExplorer::SimulationExplorer(
 }
 
 void SimulationExplorer::render() {
-    ImGui::Begin("Simulation Runner", nullptr,
-                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar);
-
-    ImGuiID dockspace_id = ImGui::GetID("SimExplorerDockSpace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0, 0), ImGuiDockNodeFlags_None);
-
-    ImGui::End();
-
-    ImGui::Begin("Simulation Manager", nullptr, ImGuiWindowFlags_NoCollapse);
+    ImGui::BeginChild("Simulations List", ImVec2(200, 0),
+                      ImGuiChildFlags_Borders);
     {
         ImGui::Text("Simulations");
         add_simulation_interface.render();
@@ -50,13 +43,16 @@ void SimulationExplorer::render() {
             }
         }
     }
-    ImGui::End();
+    ImGui::EndChild();
 
-    ImGui::Begin("Simulation Plot", nullptr, ImGuiWindowFlags_NoCollapse);
+    ImGui::SameLine();
+
+    ImGui::BeginChild("Simulation Details", ImVec2(0, 0),
+                      ImGuiChildFlags_Borders);
     {
         if (selected_simulation == nullptr) {
             ImGui::Text("No simulation selected.");
-            ImGui::End();
+            ImGui::EndChild();
             return;
         }
 
@@ -113,7 +109,7 @@ void SimulationExplorer::render() {
 
         if (!datasets->contains("t") || datasets->at("t").empty()) {
             ImGui::Text("No data available for plotting.");
-            ImGui::End();
+            ImGui::EndChild();
             return;
         }
 
@@ -176,5 +172,5 @@ void SimulationExplorer::render() {
             }
         }
     }
-    ImGui::End();
+    ImGui::EndChild();
 }

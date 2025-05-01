@@ -15,7 +15,6 @@
 #include "atom/result_recorders.h"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulator_runner/Simulator.hpp"
-#include "view/SideBar.hpp"
 #include "view/SimulationExplorer.hpp"
 #include "view/SimulationTableUI.hpp"
 
@@ -27,6 +26,7 @@ void glfw_error_callback(int error, const char *description) {
 
 int main() {
     // Initialize GLFW
+
     if (!glfwInit())
         return -1;
     GLFWwindow *window =
@@ -34,16 +34,13 @@ int main() {
     if (!window)
         return -1;
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
+    glfwSwapInterval(5);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.IniFilename = IM_GUI_INI_PATH;
-
-    // Enable Docking and Viewports
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 130");
@@ -60,7 +57,7 @@ int main() {
     const ImGuiWindowFlags window_flags =
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
-        ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
+        ImGuiWindowFlags_NoNavFocus;
 
     // Initialize Simulation
     SimulationRepository simulationRepository;
@@ -74,8 +71,6 @@ int main() {
 
     SimulationTableUI simulationTableUI(simulationRepository);
 
-    Sidebar sidebar;
-
     // Main Loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -85,27 +80,37 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Set up docking space
-        ImGui::SetNextWindowSize(ImVec2(1920, 1080), ImGuiCond_FirstUseEver);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->Pos);
+        ImGui::SetNextWindowSize(viewport->Size);
 
         ImGui::Begin("Atom Simulator", nullptr, window_flags);
 
-        // Create DockSpace
-        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0, 0), ImGuiDockNodeFlags_None);
+        if (ImGui::BeginTabBar("Sidebar", ImGuiTabBarFlags_None)) {
 
-        ImGui::End();
-        ImGui::PopStyleVar();
+            if (ImGui::BeginTabItem(" Simulations")) {
+                explorer.render();
+                ImGui::EndTabItem();
+            }
 
-        sidebar.render();
-        if (sidebar.getActiveSection() ==
-            Sidebar::Section::ONGOING_SIMULATIONS) {
-            explorer.render();
-        } else if (sidebar.getActiveSection() ==
-                   Sidebar::Section::SIMULATION_MANAGER) {
-            simulationTableUI.render();
+            if (ImGui::BeginTabItem("Archived Simulations")) {
+                simulationTableUI.render();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Settings")) {
+                ImGui::Text("Settings");
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("About")) {
+                ImGui::Text("About");
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
         }
+        ImGui::End();
 
         // Render GUI
         ImGui::Render();

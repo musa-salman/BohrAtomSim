@@ -13,13 +13,9 @@ SimulationTableUI::SimulationTableUI(SimulationRepository &repo)
 }
 
 void SimulationTableUI::render() {
-    ImGui::Begin("Simulation Table");
-
     renderSearchBar();
     renderActionButtons();
     renderTable();
-
-    ImGui::End();
 }
 
 void SimulationTableUI::renderSearchBar() {
