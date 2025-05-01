@@ -12,4 +12,6 @@ polar2cartesian(
     const std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>
         &polar_data);
 
+double computeAngleVec2D(double u[2], double v[2]);
+
 #endif // MATH_UTILS_HPP

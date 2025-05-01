@@ -27,7 +27,7 @@ SimulationRepository::SimulationRepository() {
         "record_interval INTEGER NOT NULL, "
         "total_duration REAL NOT NULL, "
         "time_interval REAL NOT NULL, "
-        "status TEXT NOT NULL, "
+        "status INTEGER NOT NULL, "
         "r_0 REAL NOT NULL, "
         "v_0 REAL NOT NULL, "
         "theta_rv REAL NOT NULL, "
@@ -54,14 +54,14 @@ size_t SimulationRepository::createSimulation(const Simulation &simulation) {
                  "timestamp) "
                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'));");
 
-        query.bind(1, simulation.name);
-        query.bind(2, simulation.record_interval);
-        query.bind(3, simulation.total_duration);
-        query.bind(4, simulation.delta_time);
-        query.bind(5, "in progress");
-        query.bind(6, simulation.r_0);
-        query.bind(7, simulation.v_0);
-        query.bind(8, simulation.theta_rv);
+        query.bind(1, simulation.getName());
+        query.bind(2, simulation.getRecordInterval());
+        query.bind(3, simulation.getTotalDuration());
+        query.bind(4, simulation.getDeltaTime());
+        query.bind(5, (int)simulation.status);
+        query.bind(6, simulation.getR0());
+        query.bind(7, simulation.getV0());
+        query.bind(8, simulation.getThetaRV());
 
         query.exec();
 
@@ -117,7 +117,7 @@ void SimulationRepository::markSimulationComplete(size_t id) {
 
     try {
         SQLite::Statement query(
-            *db, "UPDATE Simulations SET status = 'completed' WHERE id = ?;");
+            *db, "UPDATE Simulations SET status = 3 WHERE id = ?;");
         query.bind(1, (int32_t)id);
         query.exec();
     } catch (const SQLite::Exception &e) {
@@ -146,14 +146,17 @@ SimulationRepository::getSimulations(bool cached) {
         SQLite::Statement query(*db, sql);
         while (query.executeStep()) {
             auto simulation = std::make_shared<Simulation>();
-            simulation->id = query.getColumn(0).getInt();
-            simulation->name = query.getColumn(1).getText();
-            simulation->record_interval = query.getColumn(2).getInt();
-            simulation->total_duration = query.getColumn(3).getDouble();
-            simulation->delta_time = query.getColumn(4).getDouble();
-            simulation->r_0 = query.getColumn(5).getDouble();
-            simulation->v_0 = query.getColumn(6).getDouble();
-            simulation->theta_rv = query.getColumn(7).getDouble();
+
+            simulation->setId(query.getColumn(0).getInt());
+            simulation->setName(query.getColumn(1).getText());
+            simulation->setRecordInterval(query.getColumn(2).getInt());
+            simulation->setTotalDuration(query.getColumn(3).getDouble());
+            simulation->setDeltaTime(query.getColumn(4).getDouble());
+            simulation->setStatus(static_cast<Simulation::SimulationStatus>(
+                query.getColumn(5).getInt()));
+            simulation->setR0(query.getColumn(6).getDouble());
+            simulation->setV0(query.getColumn(7).getDouble());
+            simulation->setThetaRV(query.getColumn(8).getDouble());
 
             simulations.push_back(simulation);
         }

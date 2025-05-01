@@ -18,10 +18,8 @@ void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
         throw std::runtime_error("Failed to create simulation");
     }
 
-    auto _simulation = std::make_shared<Simulation>(
-        simulation.name, id, simulation.record_interval,
-        simulation.total_duration, simulation.delta_time, simulation.r_0,
-        simulation.v_0, simulation.theta_rv);
+    auto _simulation = std::make_shared<Simulation>(simulation);
+    _simulation->setId(id);
 
     char output_filename[FILE_PATH_SIZE]; // NOSONAR
     format_output_filename(id, output_filename);
@@ -29,8 +27,8 @@ void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
     auto _monitor = std::make_shared<SimulationResultMonitor>(
         std::string(output_filename), &_simulation->status);
 
-    simulations.try_emplace(_simulation->id, _simulation);
-    monitors.try_emplace(_simulation->id, _monitor);
+    simulations.try_emplace(_simulation->getId(), _simulation);
+    monitors.try_emplace(_simulation->getId(), _monitor);
 }
 
 std::optional<std::shared_ptr<SimulationResultMonitor>>

@@ -7,11 +7,11 @@ inline static void simulate_step(struct motion_step_2d *step, scalar delta_time,
 SimulationStepper2D::SimulationStepper2D(Simulation &simulation,
                                          std::function<void()> onCompletion,
                                          FILE *file_bin)
-    : delta_time(simulation.delta_time),
-      total_duration(simulation.total_duration),
-      angular_momentum(simulation.r_0 * simulation.v_0 *
-                       sin(simulation.theta_rv)),
-      record_interval(simulation.record_interval),
+    : delta_time(simulation.getDeltaTime()),
+      total_duration(simulation.getTotalDuration()),
+      angular_momentum(simulation.getR0() * simulation.getV0() *
+                       sin(simulation.getThetaRV())),
+      record_interval(simulation.getRecordInterval()),
       step(simulation.initial_motion_step), file_bin(file_bin),
       status(&simulation.status), onCompletion(onCompletion) {
     if (!file_bin) {
@@ -53,6 +53,7 @@ void SimulationStepper2D::run() {
         }
         onCompletion();
         isFinished = true;
+        *status = Simulation::SimulationStatus::COMPLETED;
     }
 }
 

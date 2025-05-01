@@ -23,7 +23,7 @@ ArchivedSimulationManager::getSimulation(size_t id) {
         simulations_result[id] = dataset;
 
         auto it = std::ranges::find_if(
-            simulations, [id](const auto &s) { return s->id == id; });
+            simulations, [id](const auto &s) { return s->getId() == id; });
 
         if (it != simulations.end()) {
             std::string filepath =

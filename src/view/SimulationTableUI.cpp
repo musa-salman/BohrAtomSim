@@ -59,8 +59,9 @@ void SimulationTableUI::renderTable() {
 
         for (const auto &sim : simulations) {
             if (!searchQuery.empty() &&
-                sim->name.find(searchQuery) == std::string::npos &&
-                std::to_string(sim->id).find(searchQuery) == std::string::npos)
+                sim->getName().find(searchQuery) == std::string::npos &&
+                std::to_string(sim->getId()).find(searchQuery) ==
+                    std::string::npos)
                 continue;
 
             ImGui::TableNextRow();
@@ -71,32 +72,32 @@ void SimulationTableUI::renderTable() {
                 switch (column) {
                 case 0:
                     if (ImGui::Selectable(
-                            std::to_string(sim->id).c_str(),
-                            selectedSimulationId == sim->id,
+                            std::to_string(sim->getId()).c_str(),
+                            selectedSimulationId == sim->getId(),
                             ImGuiSelectableFlags_SpanAllColumns)) {
-                        selectedSimulationId = sim->id;
+                        selectedSimulationId = sim->getId();
                     }
                     break;
                 case 1:
-                    ImGui::Text("%s", sim->name.c_str());
+                    ImGui::Text("%s", sim->getName().c_str());
                     break;
                 case 2:
-                    ImGui::Text("%d", sim->record_interval);
+                    ImGui::Text("%d", sim->getRecordInterval());
                     break;
                 case 3:
-                    ImGui::Text("%e", sim->delta_time);
+                    ImGui::Text("%7e", sim->getDeltaTime());
                     break;
                 case 4:
-                    ImGui::Text("%.2f", sim->total_duration);
+                    ImGui::Text("%.7e", sim->getTotalDuration());
                     break;
                 case 5:
-                    ImGui::Text("%.2f", sim->r_0);
+                    ImGui::Text("%.7e", sim->getR0());
                     break;
                 case 6:
-                    ImGui::Text("%.2f", sim->v_0);
+                    ImGui::Text("%.7e", sim->getV0());
                     break;
                 case 7:
-                    ImGui::Text("%.2f", sim->theta_rv);
+                    ImGui::Text("%.7e", sim->getThetaRV());
                     break;
                 }
             }

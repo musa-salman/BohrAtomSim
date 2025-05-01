@@ -40,7 +40,7 @@ void AddSimulationDialog::render() {
         if (auto_name)
             formatName(name);
 
-        simulation.name = std::string(name);
+        simulation.setName(std::string(name));
         ImGui::Separator();
 
         ImGui::Text("Simulation Parameters");

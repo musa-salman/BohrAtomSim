@@ -43,9 +43,9 @@ void SimulationExplorer::render() {
         add_simulation_interface.render();
 
         for (auto const &[id, simulation] : simulations) {
-            if (ImGui::Selectable(simulation->name.c_str(),
+            if (ImGui::Selectable(simulation->getName().c_str(),
                                   selected_simulation != nullptr &&
-                                      selected_simulation->id == id)) {
+                                      selected_simulation->getId() == id)) {
                 selected_simulation = simulation.get();
             }
         }
@@ -61,7 +61,7 @@ void SimulationExplorer::render() {
         }
 
         auto opt_monitor =
-            simulation_manager.getMonitor(selected_simulation->id);
+            simulation_manager.getMonitor(selected_simulation->getId());
         std::shared_ptr<SimulationResultMonitor> monitor;
         if (opt_monitor.has_value()) {
             monitor = opt_monitor.value();
@@ -74,24 +74,24 @@ void SimulationExplorer::render() {
         } else if (selected_simulation->status ==
                    Simulation::SimulationStatus::RUNNING) {
             if (ImGui::Button("Pause Simulation")) {
-                simulator.pauseSimulation(selected_simulation->id);
+                simulator.pauseSimulation(selected_simulation->getId());
             }
 
             ImGui::SameLine();
             if (ImGui::Button("Stop Simulation")) {
-                simulator.stopSimulation(selected_simulation->id);
+                simulator.stopSimulation(selected_simulation->getId());
             }
 
             ImGui::Text("Simulation is running...");
         } else if (selected_simulation->status ==
                    Simulation::SimulationStatus::PAUSED) {
             if (ImGui::Button("Resume Simulation")) {
-                simulator.resumeSimulation(selected_simulation->id);
+                simulator.resumeSimulation(selected_simulation->getId());
             }
 
             ImGui::SameLine();
             if (ImGui::Button("Stop Simulation")) {
-                simulator.stopSimulation(selected_simulation->id);
+                simulator.stopSimulation(selected_simulation->getId());
             }
             ImGui::Text("Simulation is paused.");
         } else if (selected_simulation->status ==
@@ -99,11 +99,11 @@ void SimulationExplorer::render() {
             if (ImGui::Button("Run Simulation")) {
                 simulator.simulateOrbit(*selected_simulation, [this]() {
                     simulation_manager.markSimulationAsComplete(
-                        selected_simulation->id);
+                        selected_simulation->getId());
                 });
 
                 auto monitor =
-                    simulation_manager.getMonitor(selected_simulation->id);
+                    simulation_manager.getMonitor(selected_simulation->getId());
                 if (monitor.has_value()) {
                     monitor->get()->startMonitoring();
                 }
@@ -163,8 +163,10 @@ void SimulationExplorer::render() {
         if (plot_selection["trajectories"]) {
             auto cartesian_data = monitor->getTrajectories();
             if (ImPlot::BeginPlot("Trajectories")) {
-                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit,
-                                  ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxes("X", "Y");
+
+                ImPlot::SetupAxisLimits(ImAxis_X1, -20, 20, ImGuiCond_Once);
+                ImPlot::SetupAxisLimits(ImAxis_Y1, -20, 20, ImGuiCond_Once);
 
                 ImPlot::PlotLine(
                     "Trajectory", cartesian_data->at("x").data(),

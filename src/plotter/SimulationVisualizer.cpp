@@ -105,7 +105,7 @@ void SimulationVisualizer::displaySimulationSelector() {
 
     if (showSimulationSelector && ImGui::Begin("Select Simulation")) {
         for (const auto &sim : simulations) {
-            if (ImGui::Selectable(sim->name.c_str()) &&
+            if (ImGui::Selectable(sim->getName().c_str()) &&
                 std::ranges::find(selectedSimulations, sim) ==
                     selectedSimulations.end()) {
                 selectedSimulations.push_back(sim);
@@ -120,7 +120,7 @@ void SimulationVisualizer::manageSelectedSimulations() {
     for (auto it = selectedSimulations.begin();
          it != selectedSimulations.end();) {
         ImGui::PushID(it->get());
-        if (auto sim = *it; ImGui::TreeNode(sim->name.c_str())) {
+        if (auto sim = *it; ImGui::TreeNode(sim->getName().c_str())) {
             manageSimulationPlotFunctions(sim);
             ImGui::TreePop();
         } else if (ImGui::Button("X")) {
@@ -140,7 +140,7 @@ void SimulationVisualizer::manageSimulationPlotFunctions(
     }
 
     std::vector<std::shared_ptr<IPlotFunction>> &funcs =
-        assignedFunctions[sim->id];
+        assignedFunctions[sim->getId()];
     std::vector<std::shared_ptr<IPlotFunction>> plotFunctions;
     switch (1) {
     case 0:
@@ -159,8 +159,8 @@ void SimulationVisualizer::manageSimulationPlotFunctions(
 
     if (showPlotPopup && ImGui::Begin("Select Plot Function", &showPlotPopup)) {
         ImGui::SeparatorText(
-            std::format("Select Functions for {}", sim->name).c_str());
-        ImGui::PushID((int)sim->id);
+            std::format("Select Functions for {}", sim->getName()).c_str());
+        ImGui::PushID((int)sim->getId());
         for (const auto &func : plotFunctions) {
             if (ImGui::Selectable(func->name().c_str()) &&
                 std::ranges::find(funcs, func) == funcs.end())
@@ -255,8 +255,8 @@ void SimulationVisualizer::plotSelectedSimulations() {
     isPlottingInProgress = true;
     auto f = std::async(std::launch::async, [this]() {
         for (const auto &sim : selectedSimulations) {
-            for (const auto &func : assignedFunctions[sim->id]) {
-                plotter.addPlot(sim->id, func);
+            for (const auto &func : assignedFunctions[sim->getId()]) {
+                plotter.addPlot(sim->getId(), func);
             }
         }
         plotter.createCombinedPlot(std::format("{}/plots/tmp.png", DB_PATH));

@@ -55,7 +55,7 @@ void Simulator::simulateOrbit(Simulation &simulation,
                               std::function<void()> onCompletion) {
 
     char output_filename[FILE_PATH_SIZE]; // NOSONAR
-    format_output_filename(simulation.id, output_filename);
+    format_output_filename(simulation.getId(), output_filename);
     FILE *file_bin = fopen(output_filename, "a+b");
 
     if (file_bin == nullptr)
@@ -63,7 +63,7 @@ void Simulator::simulateOrbit(Simulation &simulation,
 
     auto ss2d = std::make_shared<SimulationStepper2D>(simulation, onCompletion,
                                                       file_bin);
-    steppers[simulation.id] = ss2d;
+    steppers[simulation.getId()] = ss2d;
 
     boost::asio::post(ioContext, [ss2d]() { ss2d->run(); });
 }
