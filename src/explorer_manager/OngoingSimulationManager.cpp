@@ -13,7 +13,7 @@
 
 void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
     const std::vector<std::string> fields = getColumnNames(REL_POLAR);
-    size_t id = this->simulation_repository.createSimulation(simulation);
+    size_t id = this->simulationRepository->add(simulation);
     if (id == 0) {
         throw std::runtime_error("Failed to create simulation");
     }
@@ -41,7 +41,7 @@ OngoingSimulationManager::getMonitor(size_t id) {
 }
 
 void OngoingSimulationManager::markSimulationAsComplete(size_t id) {
-    simulation_repository.markSimulationComplete(id);
+    simulationRepository->markSimulationComplete(id);
 }
 
 const std::unordered_map<size_t, std::shared_ptr<Simulation>> &

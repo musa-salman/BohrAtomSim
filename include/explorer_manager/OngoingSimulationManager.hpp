@@ -6,23 +6,22 @@
 #include <optional>
 #include <unordered_map>
 
-#include "simulation_repositories/SimulationRepository.hpp"
+#include "service_locator/ServiceLocator.hpp"
+#include "simulation_repositories/ISimulationRepository.hpp"
 #include "simulation_repositories/SimulationResultMonitor.hpp"
 #include "simulator_runner/Simulation.hpp"
 
 class OngoingSimulationManager {
   private:
-    SimulationRepository &simulation_repository;
+    std::shared_ptr<ISimulationRepository> simulationRepository;
     std::unordered_map<size_t, std::shared_ptr<Simulation>> simulations;
     std::unordered_map<size_t, std::shared_ptr<SimulationResultMonitor>>
         monitors;
 
   public:
-    explicit OngoingSimulationManager(
-        SimulationRepository &simulation_repository)
-        : simulation_repository(simulation_repository) {}
-
-    OngoingSimulationManager() = delete;
+    explicit OngoingSimulationManager()
+        : simulationRepository(
+              ServiceLocator::getInstance().get<ISimulationRepository>()) {}
 
     void addSimulation(const Simulation &simulation);
 
