@@ -9,12 +9,13 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 
 #include "atom/result_recorders.h"
+#include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/DataSource.hpp"
 #include "simulation_repositories/SimulationRepository.hpp"
 #include "utils/utils.h"
 
 SimulationRepository::SimulationRepository() {
-    db = DataSource::getInstance()->getDB();
+    db = ServiceLocator::getInstance().get<DataSource>()->getDB();
     if (!db) {
         std::cerr << "Failed to open database." << std::endl;
         return;
@@ -41,7 +42,7 @@ SimulationRepository::SimulationRepository() {
     }
 }
 
-size_t SimulationRepository::createSimulation(const Simulation &simulation) {
+size_t SimulationRepository::add(const Simulation &simulation) {
     if (!db) {
         std::cerr << "Database not initialized." << std::endl;
         return 0; // Indicate error
@@ -90,7 +91,7 @@ size_t SimulationRepository::createSimulation(const Simulation &simulation) {
     return db->getLastInsertRowid();
 }
 
-void SimulationRepository::removeSimulation(size_t id) {
+void SimulationRepository::remove(size_t id) {
     if (!db) {
         std::cerr << "Database not initialized." << std::endl;
         return;
@@ -126,14 +127,9 @@ void SimulationRepository::markSimulationComplete(size_t id) {
     }
 }
 
-std::vector<std::shared_ptr<Simulation>>
-SimulationRepository::getSimulations(bool cached) {
+std::vector<std::shared_ptr<Simulation>> SimulationRepository::getAll() {
     if (!db) {
         return {};
-    }
-
-    if (cached && !simulations.empty()) {
-        return simulations;
     }
 
     simulations.clear();

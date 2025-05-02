@@ -6,25 +6,24 @@
 #include <vector>
 
 #include "SQLiteCpp/Database.h"
+#include "simulation_repositories/ISimulationRepository.hpp"
 #include "simulator_runner/Simulation.hpp"
 
-class SimulationRepository {
+class SimulationRepository : public ISimulationRepository {
   public:
     explicit SimulationRepository();
 
-    size_t createSimulation(const Simulation &simulation);
+    void markSimulationComplete(size_t id) override;
 
-    void markSimulationComplete(size_t id);
+    size_t add(const Simulation &simulation) override;
 
-    void removeSimulation(size_t id);
+    void remove(size_t id) override;
 
-    std::vector<std::shared_ptr<Simulation>> getSimulations(bool cached = true);
+    std::vector<std::shared_ptr<Simulation>> getAll() override;
 
   private:
     std::vector<std::shared_ptr<Simulation>> simulations;
     std::shared_ptr<SQLite::Database> db;
-
-    static int callback(void *data, int argc, char **argv, char **colNames);
 };
 
 #endif // SIMULATION_REPOSITORY_HPP
