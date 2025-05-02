@@ -30,78 +30,104 @@ void SimulationAnalyzer::renderSimulationDetails() {
         ImGui::Separator();
         ImGui::Columns(2, nullptr, false);
 
+        ImGui::BeginGroup();
         ImGui::TextDisabled("General Info");
-        ImGui::Text("ID:");
-        ImGui::NextColumn();
-        ImGui::Text("%zu", simulation->getId());
+        if (ImGui::BeginTable("GeneralInfoTable", 2,
+                              ImGuiTableFlags_SizingStretchSame)) {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("ID");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%zu", simulation->getId());
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Name");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", simulation->getName().c_str());
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Status");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", status == Simulation::SimulationStatus::COMPLETED
+                                  ? "Completed"
+                              : status == Simulation::SimulationStatus::RUNNING
+                                  ? "Running"
+                              : status == Simulation::SimulationStatus::PAUSED
+                                  ? "Paused"
+                                  : "Unknown");
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Time Step");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%.5e", simulation->getDeltaTime());
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Duration");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%.2f", simulation->getTotalDuration());
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Record Interval");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%hu", simulation->getRecordInterval());
+
+            ImGui::EndTable();
+        }
+        ImGui::EndGroup();
+
         ImGui::NextColumn();
 
-        ImGui::Text("Name:");
-        ImGui::NextColumn();
-        ImGui::Text("%s", simulation->getName().c_str());
-        ImGui::NextColumn();
-
-        ImGui::Text("Status:");
-        ImGui::NextColumn();
-        ImGui::Text(
-            "%s", status == Simulation::SimulationStatus::COMPLETED
-                      ? "Completed"
-                  : status == Simulation::SimulationStatus::RUNNING ? "Running"
-                  : status == Simulation::SimulationStatus::PAUSED  ? "Paused"
-                                                                   : "Unknown");
-        ImGui::NextColumn();
-
-        ImGui::Text("Time Step:");
-        ImGui::NextColumn();
-        ImGui::Text("%.5e", simulation->getDeltaTime());
-        ImGui::NextColumn();
-
-        ImGui::Text("Duration:");
-        ImGui::NextColumn();
-        ImGui::Text("%.2f", simulation->getTotalDuration());
-        ImGui::NextColumn();
-
-        ImGui::Separator();
-
+        ImGui::BeginGroup();
         ImGui::TextDisabled("Initial Conditions");
-        ImGui::Text("Record Interval:");
-        ImGui::NextColumn();
-        ImGui::Text("%hu", simulation->getRecordInterval());
-        ImGui::NextColumn();
+        if (ImGui::BeginTable("InitialConditionsTable", 2,
+                              ImGuiTableFlags_SizingStretchSame)) {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Position (x, y)");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("(%.2e, %.2e)", simulation->getR0X(),
+                        simulation->getR0Y());
 
-        ImGui::Text("Position (x, y):");
-        ImGui::NextColumn();
-        ImGui::Text("(%.2e, %.2e)", simulation->getR0X(), simulation->getR0Y());
-        ImGui::NextColumn();
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Velocity (x, y)");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("(%.2e, %.2e)", simulation->getV0X(),
+                        simulation->getV0Y());
 
-        ImGui::Text("Velocity (x, y):");
-        ImGui::NextColumn();
-        ImGui::Text("(%.2e, %.2e)", simulation->getV0X(), simulation->getV0Y());
-        ImGui::NextColumn();
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Angle θ");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%.2e", simulation->getThetaRV());
 
-        ImGui::Text("Angle θ:");
-        ImGui::NextColumn();
-        ImGui::Text("%.2e", simulation->getThetaRV());
-        ImGui::NextColumn();
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Radius");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%.2e", simulation->getR0());
 
-        ImGui::Text("Radius:");
-        ImGui::NextColumn();
-        ImGui::Text("%.2e", simulation->getR0());
-        ImGui::NextColumn();
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Velocity Mag.");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%.2e", simulation->getV0());
 
-        ImGui::Text("Velocity Magnitude:");
-        ImGui::NextColumn();
-        ImGui::Text("%.2e", simulation->getV0());
-        ImGui::NextColumn();
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Angular Momentum");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%.2e", simulation->getV0() * simulation->getR0() *
+                                    sin(simulation->getThetaRV()));
 
-        ImGui::Separator();
-
-        ImGui::TextDisabled("Derived Values");
-        ImGui::Text("Angular Momentum:");
-        ImGui::NextColumn();
-        ImGui::Text("%.2e", simulation->getV0() * simulation->getR0() *
-                                sin(simulation->getThetaRV()));
-        ImGui::NextColumn();
+            ImGui::EndTable();
+        }
+        ImGui::EndGroup();
 
         ImGui::Columns(1);
     }
@@ -153,6 +179,18 @@ void SimulationAnalyzer::renderTrajectories() {
             else
                 currentIndex = t_data.size() - 1;
         }
+
+        ImGui::Text(
+            "At Time %.3e: position = (%.7e, %.7e), radius = %.7e, r_dot = "
+            "%7e, r_ddot = %.7e, phi = %.7e, phi_dot = %.7e, gamma = %.7e",
+            currentT, trajectoryData->at("x")[currentIndex],
+            trajectoryData->at("y")[currentIndex],
+            datasets->at("r")[currentIndex],
+            datasets->at("r_dot")[currentIndex],
+            datasets->at("r_ddot")[currentIndex],
+            datasets->at("phi")[currentIndex],
+            datasets->at("phi_dot")[currentIndex],
+            datasets->at("gamma")[currentIndex]);
 
         if (plotSelection["trajectories"]) {
             if (ImPlot::BeginPlot("Trajectories")) {
