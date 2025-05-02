@@ -100,7 +100,7 @@ void SimulationVisualizer::displaySimulationSelector() {
     if (ImGui::Button("Add Simulation")) {
         showSimulationSelector = true;
         if (simulations.empty())
-            simulations = simulationRepository.getSimulations(false);
+            simulations = simulationRepository.getAll();
     }
 
     if (showSimulationSelector && ImGui::Begin("Select Simulation")) {

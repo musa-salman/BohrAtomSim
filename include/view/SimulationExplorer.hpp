@@ -2,26 +2,28 @@
 #define SIMULATION_MANAGER_VIEW_HPP
 
 #include <imgui.h>
+#include <memory>
 
 #include "Component.hpp"
 #include "explorer_manager/OngoingSimulationManager.hpp"
+#include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulation.hpp"
-#include "simulator_runner/Simulator.hpp"
 #include "view/AddSimulationDialog.hpp"
 
 class SimulationExplorer : public Component {
   public:
-    explicit SimulationExplorer(OngoingSimulationManager &simulation_manager,
-                                Simulator &simulator);
+    explicit SimulationExplorer();
 
     void render() override;
 
   private:
     AddSimulationDialog add_simulation_interface;
-    OngoingSimulationManager &simulation_manager;
-    Simulator &simulator;
+
+    std::shared_ptr<OngoingSimulationManager> simulationManager;
+    std::shared_ptr<ISimulator> simulator;
+
     const std::unordered_map<size_t, std::shared_ptr<Simulation>> &simulations;
-    std::unordered_map<std::string, bool> plot_selection;
+    std::unordered_map<std::string, bool> plotSelection;
     Simulation *selected_simulation;
 };
 

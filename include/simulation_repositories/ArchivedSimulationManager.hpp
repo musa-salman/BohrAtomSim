@@ -5,12 +5,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include "simulation_repositories/SimulationRepository.hpp"
+#include "simulation_repositories/ISimulationRepository.hpp"
 #include "simulator_runner/Simulation.hpp"
 
 class ArchivedSimulationManager {
   public:
-    explicit ArchivedSimulationManager(SimulationRepository &db);
+    explicit ArchivedSimulationManager();
 
     std::vector<std::shared_ptr<Simulation>> getSimulations() const {
         return simulations;
@@ -28,7 +28,7 @@ class ArchivedSimulationManager {
         simulations_result;
 
     std::vector<std::shared_ptr<Simulation>> simulations;
-    SimulationRepository &db;
+    std::shared_ptr<ISimulationRepository> simulationRepository;
 };
 
 #endif // ARCHIVED_SIMULATION_MANAGER_HPP

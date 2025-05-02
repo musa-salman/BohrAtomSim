@@ -4,17 +4,18 @@
 #include <iostream>
 #include <sys/stat.h>
 
+#include "service_locator/ServiceLocator.hpp"
 #include "view/AddSimulationDialog.hpp"
 #include "view/SimulationExplorer.hpp"
 
-SimulationExplorer::SimulationExplorer(
-    OngoingSimulationManager &_simulation_manager, Simulator &_simulator)
-    : simulation_manager(_simulation_manager), simulator(_simulator),
-      simulations(simulation_manager.getSimulations()) {
-
+SimulationExplorer::SimulationExplorer()
+    : simulationManager(
+          ServiceLocator::getInstance().get<OngoingSimulationManager>()),
+      simulator(ServiceLocator::getInstance().get<ISimulator>()),
+      simulations(simulationManager->getSimulations()) {
     add_simulation_interface.setOnSubmit([this](const Simulation &simulation) {
         try {
-            simulation_manager.addSimulation(simulation);
+            simulationManager->addSimulation(simulation);
         } catch (const std::exception &e) {
             std::cerr << "Error adding simulation: " << e.what() << std::endl;
         }
@@ -25,7 +26,7 @@ SimulationExplorer::SimulationExplorer(
     if (!simulations.empty())
         selected_simulation = simulations.begin()->second.get();
 
-    plot_selection.emplace("trajectories", false);
+    plotSelection.emplace("trajectories", false);
 }
 
 void SimulationExplorer::render() {
@@ -57,7 +58,7 @@ void SimulationExplorer::render() {
         }
 
         auto opt_monitor =
-            simulation_manager.getMonitor(selected_simulation->getId());
+            simulationManager->getMonitor(selected_simulation->getId());
         std::shared_ptr<SimulationResultMonitor> monitor;
         if (opt_monitor.has_value()) {
             monitor = opt_monitor.value();
@@ -70,36 +71,36 @@ void SimulationExplorer::render() {
         } else if (selected_simulation->status ==
                    Simulation::SimulationStatus::RUNNING) {
             if (ImGui::Button("Pause Simulation")) {
-                simulator.pauseSimulation(selected_simulation->getId());
+                simulator->pauseSimulation(selected_simulation->getId());
             }
 
             ImGui::SameLine();
             if (ImGui::Button("Stop Simulation")) {
-                simulator.stopSimulation(selected_simulation->getId());
+                simulator->stopSimulation(selected_simulation->getId());
             }
 
             ImGui::Text("Simulation is running...");
         } else if (selected_simulation->status ==
                    Simulation::SimulationStatus::PAUSED) {
             if (ImGui::Button("Resume Simulation")) {
-                simulator.resumeSimulation(selected_simulation->getId());
+                simulator->resumeSimulation(selected_simulation->getId());
             }
 
             ImGui::SameLine();
             if (ImGui::Button("Stop Simulation")) {
-                simulator.stopSimulation(selected_simulation->getId());
+                simulator->stopSimulation(selected_simulation->getId());
             }
             ImGui::Text("Simulation is paused.");
         } else if (selected_simulation->status ==
                    Simulation::SimulationStatus::IDLE) {
             if (ImGui::Button("Run Simulation")) {
-                simulator.simulateOrbit(*selected_simulation, [this]() {
-                    simulation_manager.markSimulationAsComplete(
+                simulator->simulateOrbit(*selected_simulation, [this]() {
+                    simulationManager->markSimulationAsComplete(
                         selected_simulation->getId());
                 });
 
                 auto monitor =
-                    simulation_manager.getMonitor(selected_simulation->getId());
+                    simulationManager->getMonitor(selected_simulation->getId());
                 if (monitor.has_value()) {
                     monitor->get()->startMonitoring();
                 }
@@ -125,23 +126,23 @@ void SimulationExplorer::render() {
             if (name == "t")
                 continue; // Skip "t"
 
-            if (!plot_selection.contains(name)) {
-                plot_selection[name] = false;
+            if (!plotSelection.contains(name)) {
+                plotSelection[name] = false;
             }
 
             ImGui::SameLine();
 
-            ImGui::Checkbox(name.c_str(), &plot_selection[name]);
+            ImGui::Checkbox(name.c_str(), &plotSelection[name]);
         }
 
         ImGui::SameLine();
-        ImGui::Checkbox("Show Trajectories", &plot_selection["trajectories"]);
+        ImGui::Checkbox("Show Trajectories", &plotSelection["trajectories"]);
 
         ImGui::PopID();
 
         // Loop again to plot only selected datasets
         for (const auto &[name, data] : *datasets) {
-            if (name == "t" || !plot_selection[name])
+            if (name == "t" || !plotSelection[name])
                 continue;
 
             if (ImPlot::BeginPlot(name.c_str())) {
@@ -156,7 +157,7 @@ void SimulationExplorer::render() {
             }
         }
 
-        if (plot_selection["trajectories"]) {
+        if (plotSelection["trajectories"]) {
             auto cartesian_data = monitor->getTrajectories();
             if (ImPlot::BeginPlot("Trajectories")) {
                 ImPlot::SetupAxes("X", "Y");

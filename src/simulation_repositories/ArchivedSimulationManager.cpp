@@ -2,16 +2,18 @@
 #include <format>
 #include <string>
 
+#include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/SimulationResultLoader.hpp"
 
-ArchivedSimulationManager::ArchivedSimulationManager(SimulationRepository &db)
-    : db(db) {
+ArchivedSimulationManager::ArchivedSimulationManager()
+    : simulationRepository(
+          ServiceLocator::getInstance().get<ISimulationRepository>()) {
     loadSimulations();
 }
 
 void ArchivedSimulationManager::loadSimulations() {
-    simulations = db.getSimulations(false);
+    simulations = simulationRepository->getAll();
 }
 
 std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>

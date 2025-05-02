@@ -13,8 +13,14 @@
 
 #include "atom/atom_bohr_sim.h"
 #include "atom/result_recorders.h"
+#include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
+#include "simulation_repositories/DataSource.hpp"
+#include "simulation_repositories/ISimulationRepository.hpp"
+#include "simulation_repositories/SimulationRepository.hpp"
+#include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulator.hpp"
+#include "view/SimulationAnalysisManager.hpp"
 #include "view/SimulationExplorer.hpp"
 #include "view/SimulationTableUI.hpp"
 
@@ -60,16 +66,27 @@ int main() {
         ImGuiWindowFlags_NoNavFocus;
 
     // Initialize Simulation
-    SimulationRepository simulationRepository;
+    ServiceLocator::getInstance().registerService<ISimulator>(
+        std::make_shared<Simulator>(10));
 
-    OngoingSimulationManager manager(simulationRepository);
-    ArchivedSimulationManager archivedManager(simulationRepository);
-    Simulator simulator(5);
+    ServiceLocator::getInstance().registerService<DataSource>(
+        std::make_shared<DataSource>());
+
+    ServiceLocator::getInstance().registerService<ISimulationRepository>(
+        std::make_shared<SimulationRepository>());
+
+    ServiceLocator::getInstance().registerService<OngoingSimulationManager>(
+        std::make_shared<OngoingSimulationManager>());
+
+    ServiceLocator::getInstance().registerService<ArchivedSimulationManager>(
+        std::make_shared<ArchivedSimulationManager>());
 
     // Initialize UI Components
-    SimulationExplorer explorer(manager, simulator);
+    SimulationExplorer explorer;
 
-    SimulationTableUI simulationTableUI(simulationRepository);
+    SimulationTableUI simulationTableUI;
+
+    SimulationAnalysisManager simulationAnalysisManager;
 
     // Main Loop
     while (!glfwWindowShouldClose(window)) {
@@ -95,6 +112,11 @@ int main() {
 
             if (ImGui::BeginTabItem("Archived Simulations")) {
                 simulationTableUI.render();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Analysis")) {
+                simulationAnalysisManager.render();
                 ImGui::EndTabItem();
             }
 

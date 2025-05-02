@@ -2,19 +2,19 @@
 #include <imgui.h>
 #include <implot.h>
 #include <string>
-#include <vector>
 
-#include "simulation_repositories/SimulationRepository.hpp"
+#include "service_locator/ServiceLocator.hpp"
 #include "view/SimulationTableUI.hpp"
 
-SimulationTableUI::SimulationTableUI(SimulationRepository &repo)
-    : repository(repo) {
-    simulations = repository.getSimulations(true);
-}
+SimulationTableUI::SimulationTableUI()
+    : simulationRepository(
+          ServiceLocator::getInstance().get<ISimulationRepository>()),
+      simulations(simulationRepository->getAll()), searchQuery("") {}
 
 void SimulationTableUI::render() {
-    renderSearchBar();
     renderActionButtons();
+    ImGui::SameLine();
+    renderSearchBar();
     renderTable();
 }
 
@@ -27,15 +27,15 @@ void SimulationTableUI::renderSearchBar() {
 
 void SimulationTableUI::renderActionButtons() {
     if (ImGui::Button("Refresh")) {
-        simulations = repository.getSimulations(false);
+        simulations = simulationRepository->getAll();
     }
 
     ImGui::SameLine();
     if (selectedSimulationId.has_value()) {
         if (ImGui::Button("Delete Selected")) {
-            repository.removeSimulation(*selectedSimulationId);
+            simulationRepository->remove(*selectedSimulationId);
             selectedSimulationId.reset();
-            simulations = repository.getSimulations(false);
+            simulations = simulationRepository->getAll();
         }
     }
 }
