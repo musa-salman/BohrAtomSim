@@ -28,8 +28,12 @@ appendDataRows(std::ifstream &file, size_t start_row, size_t rows_per_chunk,
     size_t total_data_bytes = total_bytes - header_bytes;
     size_t total_rows = total_data_bytes / (field_count * type_size);
 
-    if (start_row >= total_rows)
+    if (start_row >= total_rows) {
+        for (const std::string &field : field_names)
+            datasets[field].clear();
+
         return 0;
+    }
 
     file.seekg(header_bytes + start_row * field_count * type_size,
                std::ios::beg);
