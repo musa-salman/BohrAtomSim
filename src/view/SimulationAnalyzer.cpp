@@ -1,10 +1,10 @@
 #include "imgui.h"
 #include "implot.h"
+#include <sys/stat.h>
+
 #include "math_utils.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
-#include <sys/stat.h>
-
 #include "view/SimulationAnalyzer.hpp"
 
 SimulationAnalyzer::SimulationAnalyzer(
@@ -118,7 +118,7 @@ void SimulationAnalyzer::renderTrajectories() {
         ImGui::PushID("plot_selection");
         for (const auto &[name, data] : *datasets) {
             if (name == "t")
-                continue; // Skip "t"
+                continue;
 
             if (!plotSelection.contains(name)) {
                 plotSelection[name] = false;
@@ -133,6 +133,27 @@ void SimulationAnalyzer::renderTrajectories() {
 
         auto t_data = datasets->at("t");
 
+        float minT;
+        float maxT;
+        static float currentT = 800;
+        static uint32_t currentIndex = 0;
+        if (t_data.size() == 0) {
+            minT = 0;
+            maxT = 800;
+        } else {
+            minT = t_data.front();
+            maxT = t_data.back();
+        }
+
+        if (ImGui::DragFloat("Time Range", &currentT, 1.0f, minT, maxT, "%.7e",
+                             ImGuiSliderFlags_AlwaysClamp)) {
+            auto it = std::lower_bound(t_data.begin(), t_data.end(), currentT);
+            if (it != t_data.end())
+                currentIndex = std::distance(t_data.begin(), it);
+            else
+                currentIndex = t_data.size() - 1;
+        }
+
         if (plotSelection["trajectories"]) {
             if (ImPlot::BeginPlot("Trajectories")) {
                 ImPlot::SetupAxes("X", "Y");
@@ -140,22 +161,10 @@ void SimulationAnalyzer::renderTrajectories() {
                 ImPlot::SetupAxisLimits(ImAxis_X1, -20, 20, ImGuiCond_Once);
                 ImPlot::SetupAxisLimits(ImAxis_Y1, -20, 20, ImGuiCond_Once);
 
-                ImPlot::PlotLine(
-                    "Trajectory", trajectoryData->at("x").data(),
-                    trajectoryData->at("y").data(),
-                    static_cast<int>(trajectoryData->at("x").size()));
+                ImPlot::PlotLine("Trajectory", trajectoryData->at("x").data(),
+                                 trajectoryData->at("y").data(), currentIndex);
                 ImPlot::EndPlot();
             }
-        }
-
-        double minT;
-        double maxT;
-        if (t_data.size() == 0) {
-            minT = 0;
-            maxT = 800;
-        } else {
-            minT = t_data.front();
-            maxT = t_data.back();
         }
 
         for (const auto &[name, data] : *datasets) {
@@ -167,7 +176,7 @@ void SimulationAnalyzer::renderTrajectories() {
                                   ImPlotAxisFlags_AutoFit);
                 ImPlot::SetupAxisLimits(ImAxis_X1, minT, maxT, ImGuiCond_Once);
                 ImPlot::PlotLine(name.c_str(), t_data.data(), data.data(),
-                                 static_cast<int>(data.size()));
+                                 currentIndex);
 
                 ImPlot::EndPlot();
             }
@@ -187,7 +196,7 @@ void SimulationAnalyzer::renderExportOptions() {
         ImGui::Text("Export Data to File:");
         ImGui::InputText("File Name", fileName, sizeof(fileName));
         if (ImGui::Button("Export")) {
-            // Export logic here
+            // TODO: Export logic here
         }
     }
     ImGui::EndChild();
@@ -202,7 +211,7 @@ void SimulationAnalyzer::renderGraphOptions() {
         ImGui::Text("Select Graph Type:");
 
         if (ImGui::Button("Apply")) {
-            // Apply graph type logic here
+            // TODO: Apply graph type logic here
         }
     }
     ImGui::EndChild();
