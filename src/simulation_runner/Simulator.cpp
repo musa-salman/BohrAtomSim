@@ -9,11 +9,6 @@
 
 #include "utils/utils.h"
 
-Simulator::Simulator()
-    : ioContext(1), workGuard(boost::asio::make_work_guard(ioContext)) {
-    workers.emplace_back([this]() { ioContext.run(); });
-}
-
 Simulator::Simulator(int numThreads)
     : ioContext(numThreads),
       workGuard(boost::asio::make_work_guard(ioContext)) {

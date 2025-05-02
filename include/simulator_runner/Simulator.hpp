@@ -7,11 +7,11 @@
 
 #include "atom/atom_bohr_sim.h"
 #include "simulation_2d/SimulationStepper2D.hpp"
+#include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulation.hpp"
 
-class Simulator {
+class Simulator : public ISimulator {
   public:
-    Simulator();
     explicit Simulator(int numThreads);
 
     ~Simulator();
