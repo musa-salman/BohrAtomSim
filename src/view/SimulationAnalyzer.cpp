@@ -13,7 +13,6 @@ SimulationAnalyzer::SimulationAnalyzer(
 
 void SimulationAnalyzer::renderSimulationDetails() {
     if (!isInitialized) {
-
         datasets = ServiceLocator::getInstance()
                        .get<ArchivedSimulationManager>()
                        ->getSimulation(simulation->getId());
@@ -22,6 +21,7 @@ void SimulationAnalyzer::renderSimulationDetails() {
         plotSelection.emplace("trajectories", false);
         isInitialized = true;
     }
+
     ImGui::BeginGroup();
     {
         Simulation::SimulationStatus status = simulation->status;
@@ -148,6 +148,16 @@ void SimulationAnalyzer::renderTrajectories() {
             }
         }
 
+        double minT;
+        double maxT;
+        if (t_data.size() == 0) {
+            minT = 0;
+            maxT = 800;
+        } else {
+            minT = t_data.front();
+            maxT = t_data.back();
+        }
+
         for (const auto &[name, data] : *datasets) {
             if (name == "t" || !plotSelection[name])
                 continue;
@@ -155,8 +165,7 @@ void SimulationAnalyzer::renderTrajectories() {
             if (ImPlot::BeginPlot(name.c_str())) {
                 ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_AutoFit,
                                   ImPlotAxisFlags_AutoFit);
-                ImPlot::SetupAxisLimits(ImAxis_X1, t_data.front(),
-                                        t_data.back(), ImGuiCond_Once);
+                ImPlot::SetupAxisLimits(ImAxis_X1, minT, maxT, ImGuiCond_Once);
                 ImPlot::PlotLine(name.c_str(), t_data.data(), data.data(),
                                  static_cast<int>(data.size()));
 
