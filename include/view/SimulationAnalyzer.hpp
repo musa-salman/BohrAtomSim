@@ -1,11 +1,12 @@
 #ifndef SIMULATION_ANALYZER_HPP
 #define SIMULATION_ANALYZER_HPP
 
-#include "simulator_runner/Simulation.hpp"
-#include "view/Component.hpp"
 #include <memory>
 #include <string>
 #include <unordered_map>
+
+#include "simulator_runner/Simulation.hpp"
+#include "view/Component.hpp"
 
 class SimulationAnalyzer : public Component {
     const std::shared_ptr<Simulation> simulation;
@@ -29,9 +30,9 @@ class SimulationAnalyzer : public Component {
 
   private:
     void renderSimulationDetails();
-    void renderTrajectories();
-    void renderExportOptions();
-    void renderGraphOptions();
+    void renderVisualizer();
+    void renderPlotter();
+    void renderDatasetsViewer();
 };
 
 #endif // SIMULATION_ANALYZER_HPP

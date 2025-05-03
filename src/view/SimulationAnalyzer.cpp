@@ -11,6 +11,27 @@ SimulationAnalyzer::SimulationAnalyzer(
     const std::shared_ptr<Simulation> simulation)
     : simulation(simulation) {}
 
+void SimulationAnalyzer::render() {
+    ImGui::BeginTabBar("SimulationAnalyzerTabBar", ImGuiTabBarFlags_None);
+    if (ImGui::BeginTabItem("Details")) {
+        renderSimulationDetails();
+        ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Visualizer")) {
+        renderVisualizer();
+        ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Plotter")) {
+        renderPlotter();
+        ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Datasets Viewer")) {
+        renderDatasetsViewer();
+        ImGui::EndTabItem();
+    }
+    ImGui::EndTabBar();
+}
+
 void SimulationAnalyzer::renderSimulationDetails() {
     if (!isInitialized) {
         datasets = ServiceLocator::getInstance()
@@ -130,11 +151,24 @@ void SimulationAnalyzer::renderSimulationDetails() {
         ImGui::EndGroup();
 
         ImGui::Columns(1);
+
+        // Buttons
+        ImGui::Separator();
+        ImGui::TextDisabled("Actions");
+        ImGui::BeginGroup();
+        if (ImGui::Button("Delete")) {
+            // TODO: Delete logic here
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Export")) {
+            // TODO: Export logic here
+        }
+        ImGui::EndGroup();
     }
     ImGui::EndGroup();
 }
 
-void SimulationAnalyzer::renderTrajectories() {
+void SimulationAnalyzer::renderVisualizer() {
     ImGui::BeginGroup();
     {
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Trajectories");
@@ -223,39 +257,68 @@ void SimulationAnalyzer::renderTrajectories() {
     ImGui::EndGroup();
 }
 
-void SimulationAnalyzer::renderExportOptions() {
-    ImGui::BeginChild("ExportOptions", ImVec2(0, 0), true);
+void SimulationAnalyzer::renderPlotter() {
+    ImGui::BeginGroup();
     {
-        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Export Options");
+
+        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Plotter");
         ImGui::Separator();
 
-        static char fileName[128] = "simulation_data.hdf5";
+        if (ImPlot::BeginPlot("Plotter")) {
+            ImPlot::SetupAxes("X", "Y");
 
-        ImGui::Text("Export Data to File:");
-        ImGui::InputText("File Name", fileName, sizeof(fileName));
-        if (ImGui::Button("Export")) {
-            // TODO: Export logic here
+            ImPlot::SetupAxisLimits(ImAxis_X1, -20, 20, ImGuiCond_Once);
+            ImPlot::SetupAxisLimits(ImAxis_Y1, -20, 20, ImGuiCond_Once);
+
+            ImPlot::EndPlot();
         }
     }
-    ImGui::EndChild();
+    ImGui::EndGroup();
 }
 
-void SimulationAnalyzer::renderGraphOptions() {
-    ImGui::BeginChild("GraphOptions", ImVec2(0, 0), true);
-    {
-        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Graph Options");
-        ImGui::Separator();
+void SimulationAnalyzer::renderDatasetsViewer() {
+    ImGui::BeginGroup();
+    if (datasets && !datasets->empty()) {
+        const size_t rowCount = datasets->begin()->second.size();
+        const size_t colCount = datasets->size();
 
-        ImGui::Text("Select Graph Type:");
-
-        if (ImGui::Button("Apply")) {
-            // TODO: Apply graph type logic here
+        if (ImGui::BeginTable("HeaderTable", colCount,
+                              ImGuiTableFlags_Borders)) {
+            for (const auto &[key, _] : *datasets) {
+                ImGui::TableSetupColumn(key.c_str());
+            }
+            ImGui::TableHeadersRow();
+            ImGui::EndTable();
         }
-    }
-    ImGui::EndChild();
-}
 
-void SimulationAnalyzer::render() {
-    renderSimulationDetails();
-    renderTrajectories();
+        if (ImGui::BeginChild("ScrollableData", ImVec2(0, 400), false)) {
+            if (ImGui::BeginTable("DatasetsTable", colCount,
+                                  ImGuiTableFlags_Borders |
+                                      ImGuiTableFlags_RowBg)) {
+                ImGuiListClipper clipper;
+                clipper.Begin(static_cast<int>(rowCount));
+                while (clipper.Step()) {
+                    for (int row = clipper.DisplayStart;
+                         row < clipper.DisplayEnd; ++row) {
+                        ImGui::TableNextRow();
+
+                        int col = 0;
+                        for (const auto &[key, vec] : *datasets) {
+                            ImGui::TableSetColumnIndex(col++);
+                            if (row < static_cast<int>(vec.size()))
+                                ImGui::Text("%.10e", vec[row]);
+                            else
+                                ImGui::Text("NaN");
+                        }
+                    }
+                }
+
+                ImGui::EndTable();
+            }
+        } else {
+            ImGui::Text("No dataset loaded.");
+        }
+        ImGui::EndChild();
+    }
+    ImGui::EndGroup();
 }
