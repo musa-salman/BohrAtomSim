@@ -142,6 +142,6 @@ void Tokenizer::tokenizeIdentifier() {
 }
 
 void Tokenizer::addToken(TokenType type, std::any literal) {
-    tokens.emplace_back(type, expression.substr(start, current - start),
-                        literal);
+    tokens.emplace_back(
+        type, std::string(expression.substr(start, current - start)), literal);
 }
