@@ -27,7 +27,7 @@ class Parser {
 
     std::shared_ptr<Expr> parseArguments();
 
-    bool match(TokenType type...);
+    bool match(std::initializer_list<TokenType> types);
 
     bool check(TokenType type);
 
