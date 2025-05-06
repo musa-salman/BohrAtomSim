@@ -1,0 +1,40 @@
+
+#include "dataset/FilteredDatasetView.hpp"
+#include <stdexcept>
+#include <vector>
+
+FilteredDatasetView::FilteredDatasetView(const Dataset &dataset)
+    : baseDataset(dataset) {}
+
+void FilteredDatasetView::setMask(const std::vector<uint8_t> &newMask) {
+    mask = &newMask;
+
+    for (auto &[_, columnCache] : cache)
+        columnCache.setSource(nullptr, nullptr);
+}
+
+const std::vector<std::string> &FilteredDatasetView::getColumns() const {
+    return baseDataset.getColumns();
+}
+
+const std::vector<double> &
+FilteredDatasetView::get(std::string_view column) const {
+    if (!mask)
+        throw std::runtime_error("Mask not set");
+
+    auto &cacheEntry = cache[std::string(column)];
+
+    if (cacheEntry.getSource() == nullptr)
+        cacheEntry.setSource(baseDataset.get(column), *mask);
+
+    return cacheEntry.get();
+}
+
+size_t FilteredDatasetView::getRowCount() const {
+    if (!mask)
+        return 0;
+    size_t count = 0;
+    for (uint8_t bit : *mask)
+        count += bit;
+    return count;
+}

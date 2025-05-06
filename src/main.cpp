@@ -40,7 +40,7 @@ int main() {
     if (!window)
         return -1;
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(5);
+    glfwSwapInterval(1);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
