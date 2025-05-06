@@ -27,9 +27,7 @@ struct Expr {
         virtual ~Visitor() = default;
     };
 
-    template <typename R> R accept(Visitor<R> &visitor) {
-        return acceptImpl(visitor);
-    }
+    template <typename R> R accept(Visitor<R> &visitor);
 
   private:
     template <typename R> R acceptImpl(Visitor<R> &visitor) const;
@@ -40,65 +38,53 @@ struct Binary : Expr {
     Token op;
     std::shared_ptr<Expr> right;
 
-    Binary(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
-        : left(left), op(op), right(right) {}
+    explicit Binary(std::shared_ptr<Expr> left, Token op,
+                    std::shared_ptr<Expr> right);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const {
-        return visitor.visitBinaryExpr(*this);
-    }
+    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
 };
 
 struct Unary : Expr {
     Token op;
     std::shared_ptr<Expr> right;
 
-    Unary(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {}
+    explicit Unary(Token op, std::shared_ptr<Expr> right);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const {
-        return visitor.visitUnaryExpr(*this);
-    }
+    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
 };
 
 struct Number : Expr {
     Token value;
 
-    Number(Token value) : value(value) {}
+    explicit Number(Token value) : value(value) {}
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const {
-        return visitor.visitNumberExpr(*this);
-    }
+    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
 };
 
 struct Variable : Expr {
     Token name;
 
-    Variable(Token name) : name(name) {}
+    explicit Variable(Token name);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const {
-        return visitor.visitVariableExpr(*this);
-    }
+    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
 };
 
 struct Grouping : Expr {
     std::shared_ptr<Expr> expression;
 
-    Grouping(std::shared_ptr<Expr> expression) : expression(expression) {}
+    explicit Grouping(std::shared_ptr<Expr> expression);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const {
-        return visitor.visitGroupingExpr(*this);
-    }
+    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
 };
 
 struct Call : Expr {
     std::shared_ptr<Expr> callee;
     std::vector<std::shared_ptr<Expr>> args;
 
-    Call(std::shared_ptr<Expr> callee, std::vector<std::shared_ptr<Expr>> args)
-        : callee(callee), args(args) {}
+    explicit Call(std::shared_ptr<Expr> callee,
+                  std::vector<std::shared_ptr<Expr>> args);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const {
-        return visitor.visitCallExpr(*this);
-    }
+    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
 };
 
 #endif // EXPR_HPP
