@@ -36,8 +36,7 @@ template <typename R> R Variable::acceptImpl(Visitor<R> &visitor) const {
     return visitor.visitVariableExpr(*this);
 }
 
-Call::Call(std::shared_ptr<Expr> callee,
-           std::vector<std::shared_ptr<Expr>> args)
+Call::Call(Token callee, std::vector<std::shared_ptr<Expr>> args)
     : callee(callee), args(args) {}
 
 template <typename R> R Call::acceptImpl(Visitor<R> &visitor) const {

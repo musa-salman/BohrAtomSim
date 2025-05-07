@@ -78,11 +78,10 @@ struct Grouping : Expr {
 };
 
 struct Call : Expr {
-    std::shared_ptr<Expr> callee;
+    Token callee;
     std::vector<std::shared_ptr<Expr>> args;
 
-    explicit Call(std::shared_ptr<Expr> callee,
-                  std::vector<std::shared_ptr<Expr>> args);
+    explicit Call(Token callee, std::vector<std::shared_ptr<Expr>> args);
 
     template <typename R> R acceptImpl(Visitor<R> &visitor) const;
 };
