@@ -4,7 +4,11 @@
 #include <cstdarg>
 
 /*
-    expression -> equality
+    expression -> logical_or
+    logical_or -> logical_and ( "or" logical_and )*
+    logical_and -> approx_equal ( "and" approx_equal )*
+
+    approx_equal -> equality ( "~=" equality ( ":" equality )? )* ;
     equality -> comparison ( ( "!=" | "=" ) comparison )*
     comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )*
     term -> factor ( ( "-" | "+" ) factor )*
@@ -18,7 +22,52 @@
     arguments -> expression ( "," expression )*
 */
 
-std::shared_ptr<Expr> Parser::parseExpression() { return parseEquality(); }
+std::shared_ptr<Expr> Parser::parseExpression() { return parseLogicalOr(); }
+
+std::shared_ptr<Expr> Parser::parseLogicalOr() {
+    auto expr = parseLogicalAnd();
+
+    while (match({TokenType::OR})) {
+        auto op = previous();
+        auto right = parseLogicalAnd();
+        expr = std::make_shared<Binary>(expr, op, right);
+    }
+
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::parseLogicalAnd() {
+    auto expr = parseApprox();
+    while (match({TokenType::AND})) {
+        auto op = previous();
+        auto right = parseApprox();
+        expr = std::make_shared<Binary>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::parseApprox() {
+    auto expr = parseEquality();
+
+    while (match({TokenType::APPROX})) {
+        auto op = previous();
+        auto right = parseEquality();
+
+        if (match({TokenType::COLON})) {
+            auto op2 = previous();
+            auto right2 = parseEquality();
+
+            if (!std::dynamic_pointer_cast<Number>(right2))
+                throw ParserError(
+                    "Expect number after ':' in approx operator.");
+
+            expr = std::make_shared<Trinary>(expr, op, right, op2, right2);
+        } else
+            expr = std::make_shared<Binary>(expr, op, right);
+    }
+
+    return expr;
+}
 
 std::shared_ptr<Expr> Parser::parseEquality() {
     auto expr = parseComparison();

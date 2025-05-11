@@ -1,44 +1,34 @@
-
 #include "data_expr/Expr.hpp"
-#include "data_expr/AstTypeChecker.hpp"
 
-template <typename R> R Expr::accept(Visitor<R> &visitor) {
-    return acceptImpl(visitor);
-}
+Trinary::Trinary(std::shared_ptr<Expr> left, Token op1,
+                 std::shared_ptr<Expr> middle, Token op2,
+                 std::shared_ptr<Expr> right)
+    : left(left), op1(op1), middle(middle), op2(op2), right(right) {}
+
+void Trinary::accept(Visitor &visitor) { visitor.visitTrinaryExpr(*this); }
 
 Binary::Binary(std::shared_ptr<Expr> left, Token op,
                std::shared_ptr<Expr> right)
     : left(left), op(op), right(right) {}
 
-template <typename R> R Binary::acceptImpl(Visitor<R> &visitor) const {
-    return visitor.visitBinaryExpr(*this);
-}
+void Binary::accept(Visitor &visitor) { visitor.visitBinaryExpr(*this); }
 
 Unary::Unary(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {}
 
-template <typename R> R Unary::acceptImpl(Visitor<R> &visitor) const {
-    return visitor.visitUnaryExpr(*this);
-}
+void Unary::accept(Visitor &visitor) { visitor.visitUnaryExpr(*this); }
 
 Grouping::Grouping(std::shared_ptr<Expr> expression) : expression(expression) {}
 
-template <typename R> R Grouping::acceptImpl(Visitor<R> &visitor) const {
-    return visitor.visitGroupingExpr(*this);
-}
+void Grouping::accept(Visitor &visitor) { visitor.visitGroupingExpr(*this); }
 
-template <typename R> R Number::acceptImpl(Visitor<R> &visitor) const {
-    return visitor.visitNumberExpr(*this);
-}
+Number::Number(Token value) : value(value) {}
+void Number::accept(Visitor &visitor) { visitor.visitNumberExpr(*this); }
 
 Variable::Variable(Token name) : name(name) {}
 
-template <typename R> R Variable::acceptImpl(Visitor<R> &visitor) const {
-    return visitor.visitVariableExpr(*this);
-}
+void Variable::accept(Visitor &visitor) { visitor.visitVariableExpr(*this); }
 
 Call::Call(Token callee, std::vector<std::shared_ptr<Expr>> args)
     : callee(callee), args(args) {}
 
-template <typename R> R Call::acceptImpl(Visitor<R> &visitor) const {
-    return visitor.visitCallExpr(*this);
-}
+void Call::accept(Visitor &visitor) { visitor.visitCallExpr(*this); }

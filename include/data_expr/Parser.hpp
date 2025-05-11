@@ -8,8 +8,11 @@
 #include "data_expr/Token.hpp"
 
 class Parser {
+    std::shared_ptr<Expr> parseLogicalOr();
 
-    std::shared_ptr<Expr> parseExpression();
+    std::shared_ptr<Expr> parseLogicalAnd();
+
+    std::shared_ptr<Expr> parseApprox();
 
     std::shared_ptr<Expr> parseEquality();
 
@@ -61,6 +64,8 @@ class Parser {
     };
 
     Parser(const std::vector<Token> &tokens) : tokens(tokens), current(0) {}
+
+    std::shared_ptr<Expr> parseExpression();
 };
 
 #endif // PARSER_HPP
