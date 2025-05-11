@@ -11,8 +11,6 @@
 
 #include <IconsFontAwesome4.h>
 
-#include "atom/atom_bohr_sim.h"
-#include "atom/result_recorders.h"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/DataSource.hpp"
@@ -36,7 +34,7 @@ int main() {
     if (!glfwInit())
         return -1;
     GLFWwindow *window =
-        glfwCreateWindow(1920, 1080, "Atom Simulator", nullptr, nullptr);
+        glfwCreateWindow(1600, 800, "Atom Simulator", nullptr, nullptr);
     if (!window)
         return -1;
     glfwMakeContextCurrent(window);

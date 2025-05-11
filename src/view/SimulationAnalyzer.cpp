@@ -1,11 +1,15 @@
+#include "data_expr/Interpreter.hpp"
+#include "data_expr/Parser.hpp"
+#include "data_expr/Tokenizer.hpp"
+#include "dataset/Dataset.hpp"
 #include "imgui.h"
 #include "implot.h"
-#include <sys/stat.h>
 
-#include "math_utils.hpp"
+#include "data_expr/AstPrinter.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "view/SimulationAnalyzer.hpp"
+#include <memory>
 
 SimulationAnalyzer::SimulationAnalyzer(
     const std::shared_ptr<Simulation> simulation)
@@ -34,11 +38,16 @@ void SimulationAnalyzer::render() {
 
 void SimulationAnalyzer::renderSimulationDetails() {
     if (!isInitialized) {
-        datasets = ServiceLocator::getInstance()
-                       .get<ArchivedSimulationManager>()
-                       ->getSimulation(simulation->getId());
+        const auto &dataset = ServiceLocator::getInstance()
+                                  .get<ArchivedSimulationManager>()
+                                  ->getSimulation(simulation->getId());
 
-        trajectoryData = polar2cartesian(datasets);
+        filteredDatasetView.setBaseDataset(dataset);
+        bitVector = std::make_unique<BitVector>(dataset.getRowCount());
+        bitVector->setAll(true);
+        filteredDatasetView.setMask(*bitVector);
+
+        trajectoryData = polar2cartesian(dataset.get("r"), dataset.get("phi"));
         plotSelection.emplace("trajectories", false);
         isInitialized = true;
     }
@@ -169,14 +178,59 @@ void SimulationAnalyzer::renderSimulationDetails() {
 }
 
 void SimulationAnalyzer::renderVisualizer() {
+    const auto &dataset = ServiceLocator::getInstance()
+                              .get<ArchivedSimulationManager>()
+                              ->getSimulation(simulation->getId());
+
     ImGui::BeginGroup();
     {
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Trajectories");
         ImGui::Separator();
 
+        ImGui::InputText("Filter", filter, sizeof(filter));
+        ImGui::SameLine();
+        if (ImGui::Button("Apply")) {
+            if (std::string(filter).empty()) {
+                filteredDatasetView.setBaseDataset(dataset);
+                bitVector = std::make_unique<BitVector>(dataset.getRowCount());
+                bitVector->setAll(true);
+                filteredDatasetView.setMask(*bitVector);
+                errorMessageExpr.clear();
+            } else {
+                try {
+                    Interpreter interpreter(dataset);
+
+                    Tokenizer tokenizer(filter);
+                    Parser parser(tokenizer.scanTokens());
+                    AstPrinter astPrinter;
+                    std::shared_ptr<Expr> expr = parser.parseExpression();
+                    filterExpr = astPrinter.print(expr);
+                    auto result = interpreter.evaluate(expr);
+
+                    if (std::holds_alternative<std::unique_ptr<BitVector>>(
+                            result)) {
+                        bitVector = std::move(
+                            std::get<std::unique_ptr<BitVector>>(result));
+                        filteredDatasetView.setBaseDataset(dataset);
+                        filteredDatasetView.setMask(*bitVector);
+                        errorMessageExpr.clear();
+                    } else {
+                        errorMessageExpr = "Invalid filter expression";
+                    }
+                } catch (const std::exception &e) {
+                    errorMessageExpr = e.what();
+                }
+            }
+        }
+        if (!errorMessageExpr.empty()) {
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: %s",
+                               errorMessageExpr.c_str());
+        } else
+            ImGui::Text("Parsed Expression: %s", filterExpr.c_str());
+
         ImGui::Text("Select Datasets to Plot:");
         ImGui::PushID("plot_selection");
-        for (const auto &[name, data] : *datasets) {
+        for (const auto &name : dataset.getColumnsNames()) {
             if (name == "t")
                 continue;
 
@@ -191,12 +245,12 @@ void SimulationAnalyzer::renderVisualizer() {
         ImGui::Checkbox("Show Trajectories", &plotSelection["trajectories"]);
         ImGui::PopID();
 
-        auto t_data = datasets->at("t");
+        const auto &t_data = filteredDatasetView.get("t");
 
         float minT;
         float maxT;
-        static float currentT = 800;
-        static uint32_t currentIndex = 0;
+        // static float currentT = 800;
+        // static uint32_t currentIndex = 0;
         if (t_data.size() == 0) {
             minT = 0;
             maxT = 800;
@@ -205,26 +259,27 @@ void SimulationAnalyzer::renderVisualizer() {
             maxT = t_data.back();
         }
 
-        if (ImGui::DragFloat("Time Range", &currentT, 1.0f, minT, maxT, "%.7e",
-                             ImGuiSliderFlags_AlwaysClamp)) {
-            auto it = std::lower_bound(t_data.begin(), t_data.end(), currentT);
-            if (it != t_data.end())
-                currentIndex = std::distance(t_data.begin(), it);
-            else
-                currentIndex = t_data.size() - 1;
-        }
+        // if (ImGui::DragFloat("Time Range (Is it needed?)", &currentT, 1.0f,
+        //                      minT, maxT, "%.7e",
+        //                      ImGuiSliderFlags_AlwaysClamp)) {
+        //     auto it = std::lower_bound(t_data.begin(), t_data.end(),
+        //     currentT); if (it != t_data.end())
+        //         currentIndex = std::distance(t_data.begin(), it);
+        //     else
+        //         currentIndex = t_data.size() - 1;
+        // }
 
-        ImGui::Text(
-            "At Time %.3e: position = (%.7e, %.7e), radius = %.7e, r_dot = "
-            "%7e, r_ddot = %.7e, phi = %.7e, phi_dot = %.7e, gamma = %.7e",
-            currentT, trajectoryData->at("x")[currentIndex],
-            trajectoryData->at("y")[currentIndex],
-            datasets->at("r")[currentIndex],
-            datasets->at("r_dot")[currentIndex],
-            datasets->at("r_ddot")[currentIndex],
-            datasets->at("phi")[currentIndex],
-            datasets->at("phi_dot")[currentIndex],
-            datasets->at("gamma")[currentIndex]);
+        // ImGui::Text(
+        //     "At Time %.3e: position = (%.4e, %.4e), radius = %.5e, r_dot = "
+        //     "%7e, r_ddot = %.7e, phi = %.7e, phi_dot = %.7e, gamma = %.5e",
+        //     currentT, trajectoryData.at("x")[currentIndex],
+        //     trajectoryData.at("y")[currentIndex],
+        //     dataset.get("r")[currentIndex],
+        //     dataset.get("r_dot")[currentIndex],
+        //     dataset.get("r_ddot")[currentIndex],
+        //     dataset.get("phi")[currentIndex],
+        //     dataset.get("phi_dot")[currentIndex],
+        //     dataset.get("gamma")[currentIndex]);
 
         if (plotSelection["trajectories"]) {
             if (ImPlot::BeginPlot("Trajectories")) {
@@ -233,13 +288,14 @@ void SimulationAnalyzer::renderVisualizer() {
                 ImPlot::SetupAxisLimits(ImAxis_X1, -20, 20, ImGuiCond_Once);
                 ImPlot::SetupAxisLimits(ImAxis_Y1, -20, 20, ImGuiCond_Once);
 
-                ImPlot::PlotLine("Trajectory", trajectoryData->at("x").data(),
-                                 trajectoryData->at("y").data(), currentIndex);
+                ImPlot::PlotLine("Trajectory", trajectoryData.at("x").data(),
+                                 trajectoryData.at("y").data(),
+                                 trajectoryData.at("x").size());
                 ImPlot::EndPlot();
             }
         }
 
-        for (const auto &[name, data] : *datasets) {
+        for (const auto &name : dataset.getColumnsNames()) {
             if (name == "t" || !plotSelection[name])
                 continue;
 
@@ -247,8 +303,9 @@ void SimulationAnalyzer::renderVisualizer() {
                 ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_AutoFit,
                                   ImPlotAxisFlags_AutoFit);
                 ImPlot::SetupAxisLimits(ImAxis_X1, minT, maxT, ImGuiCond_Once);
-                ImPlot::PlotLine(name.c_str(), t_data.data(), data.data(),
-                                 currentIndex);
+                ImPlot::PlotScatter(name.c_str(), t_data.data(),
+                                    filteredDatasetView.get(name).data(),
+                                    filteredDatasetView.get(name).size());
 
                 ImPlot::EndPlot();
             }
@@ -264,12 +321,97 @@ void SimulationAnalyzer::renderPlotter() {
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Plotter");
         ImGui::Separator();
 
+        ImGui::InputText("X Expression", xExpr, sizeof(xExpr));
+
+        ImGui::InputText("Y Expression", yExpr, sizeof(yExpr));
+        if (ImGui::Button("Apply")) {
+            try {
+                const auto &dataset = ServiceLocator::getInstance()
+                                          .get<ArchivedSimulationManager>()
+                                          ->getSimulation(simulation->getId());
+                // X expression
+                {
+                    Interpreter interpreter(dataset);
+
+                    Tokenizer tokenizer(xExpr);
+                    Parser parser(tokenizer.scanTokens());
+                    AstPrinter astPrinter;
+                    std::shared_ptr<Expr> expr = parser.parseExpression();
+                    xExprStr = astPrinter.print(expr);
+                    auto result = interpreter.evaluate(expr);
+
+                    if (std::holds_alternative<
+                            std::unique_ptr<std::vector<double>>>(result)) {
+                        xData = std::move(
+                            std::get<std::unique_ptr<std::vector<double>>>(
+                                result));
+                        errorMessagePlot.clear();
+                    } else {
+                        errorMessagePlot = "Invalid X expression";
+                    }
+                }
+
+                // Y expression
+                if (errorMessagePlot.empty()) {
+                    Interpreter interpreter(dataset);
+
+                    Tokenizer tokenizer(yExpr);
+                    Parser parser(tokenizer.scanTokens());
+                    AstPrinter astPrinter;
+                    std::shared_ptr<Expr> expr = parser.parseExpression();
+                    yExprStr = astPrinter.print(expr);
+                    auto result = interpreter.evaluate(expr);
+
+                    if (std::holds_alternative<
+                            std::unique_ptr<std::vector<double>>>(result)) {
+                        yData = std::move(
+                            std::get<std::unique_ptr<std::vector<double>>>(
+                                result));
+                        errorMessagePlot.clear();
+                    } else {
+                        errorMessagePlot = "Invalid Y expression";
+                    }
+                }
+            } catch (const std::exception &e) {
+                errorMessagePlot = e.what();
+            }
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Reset")) {
+            xData.reset();
+            yData.reset();
+            xExprStr.clear();
+            yExprStr.clear();
+            yExpr[0] = '\0';
+            xExpr[0] = '\0';
+            errorMessagePlot.clear();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Save")) {
+            // TODO: Save logic here
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Export")) {
+            // TODO: Export logic here
+        }
+
         if (ImPlot::BeginPlot("Plotter")) {
             ImPlot::SetupAxes("X", "Y");
 
             ImPlot::SetupAxisLimits(ImAxis_X1, -20, 20, ImGuiCond_Once);
             ImPlot::SetupAxisLimits(ImAxis_Y1, -20, 20, ImGuiCond_Once);
 
+            if (errorMessagePlot.empty()) {
+                if (xData && yData) {
+                    ImPlot::PlotLine("Plot", xData->data(), yData->data(),
+                                     static_cast<int>(xData->size()));
+                }
+            } else {
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: %s",
+                                   errorMessagePlot.c_str());
+            }
             ImPlot::EndPlot();
         }
     }
@@ -277,48 +419,108 @@ void SimulationAnalyzer::renderPlotter() {
 }
 
 void SimulationAnalyzer::renderDatasetsViewer() {
+    const auto &datasets = ServiceLocator::getInstance()
+                               .get<ArchivedSimulationManager>()
+                               ->getSimulation(simulation->getId());
+
     ImGui::BeginGroup();
-    if (datasets && !datasets->empty()) {
-        const size_t rowCount = datasets->begin()->second.size();
-        const size_t colCount = datasets->size();
+    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Datasets Viewer");
+    ImGui::Separator();
+    const size_t colCount = datasets.getColumnCount();
 
-        if (ImGui::BeginTable("HeaderTable", colCount,
-                              ImGuiTableFlags_Borders)) {
-            for (const auto &[key, _] : *datasets) {
-                ImGui::TableSetupColumn(key.c_str());
+    ImGui::InputText("Filter", filter, sizeof(filter));
+    ImGui::SameLine();
+    if (ImGui::Button("Apply")) {
+        if (std::string(filter).empty()) {
+            filteredDatasetView.setBaseDataset(datasets);
+            bitVector = std::make_unique<BitVector>(datasets.getRowCount());
+            bitVector->setAll(true);
+            filteredDatasetView.setMask(*bitVector);
+            errorMessageExpr.clear();
+        } else {
+            try {
+                Interpreter interpreter(datasets);
+
+                Tokenizer tokenizer(filter);
+                Parser parser(tokenizer.scanTokens());
+                AstPrinter astPrinter;
+                std::shared_ptr<Expr> expr = parser.parseExpression();
+                filterExpr = astPrinter.print(expr);
+                auto result = interpreter.evaluate(expr);
+
+                if (std::holds_alternative<std::unique_ptr<BitVector>>(
+                        result)) {
+                    bitVector =
+                        std::move(std::get<std::unique_ptr<BitVector>>(result));
+                    filteredDatasetView.setBaseDataset(datasets);
+                    filteredDatasetView.setMask(*bitVector);
+                    errorMessageExpr.clear();
+                } else {
+                    errorMessageExpr = "Invalid filter expression";
+                }
+            } catch (const std::exception &e) {
+                errorMessageExpr = e.what();
             }
-            ImGui::TableHeadersRow();
-            ImGui::EndTable();
         }
+    }
 
-        if (ImGui::BeginChild("ScrollableData", ImVec2(0, 400), false)) {
-            if (ImGui::BeginTable("DatasetsTable", colCount,
-                                  ImGuiTableFlags_Borders |
-                                      ImGuiTableFlags_RowBg)) {
-                ImGuiListClipper clipper;
-                clipper.Begin(static_cast<int>(rowCount));
-                while (clipper.Step()) {
-                    for (int row = clipper.DisplayStart;
-                         row < clipper.DisplayEnd; ++row) {
-                        ImGui::TableNextRow();
+    ImGui::SameLine();
+    if (ImGui::Button("Reset")) {
+        filteredDatasetView.setBaseDataset(datasets);
+        bitVector = std::make_unique<BitVector>(datasets.getRowCount());
+        bitVector->setAll(true);
+        filteredDatasetView.setMask(*bitVector);
+        filterExpr.clear();
+        errorMessageExpr.clear();
+    }
 
-                        int col = 0;
-                        for (const auto &[key, vec] : *datasets) {
-                            ImGui::TableSetColumnIndex(col++);
-                            if (row < static_cast<int>(vec.size()))
-                                ImGui::Text("%.10e", vec[row]);
-                            else
-                                ImGui::Text("NaN");
-                        }
+    ImGui::SameLine();
+    if (ImGui::Button("Export")) {
+        // TODO: Export logic here
+    }
+
+    if (!errorMessageExpr.empty()) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: %s",
+                           errorMessageExpr.c_str());
+    } else
+        ImGui::Text("Parsed Expression: %s", filterExpr.c_str());
+    if (ImGui::BeginTable("HeaderTable", colCount, ImGuiTableFlags_Borders)) {
+        for (const auto &key : datasets.getColumnsNames())
+            ImGui::TableSetupColumn(key.c_str());
+
+        ImGui::TableHeadersRow();
+        ImGui::EndTable();
+    }
+
+    if (ImGui::BeginChild("ScrollableData", ImVec2(0, 400), false)) {
+        if (ImGui::BeginTable("DatasetsTable", colCount,
+                              ImGuiTableFlags_Borders |
+                                  ImGuiTableFlags_RowBg)) {
+            ImGuiListClipper clipper;
+            clipper.Begin(static_cast<int>(filteredDatasetView.getRowCount()));
+            while (clipper.Step()) {
+                for (int row = clipper.DisplayStart; row < clipper.DisplayEnd;
+                     ++row) {
+                    ImGui::TableNextRow();
+
+                    int col = 0;
+                    for (const auto &key : datasets.getColumnsNames()) {
+                        const auto &vec = filteredDatasetView.get(key);
+                        ImGui::TableSetColumnIndex(col++);
+                        if (row < static_cast<int>(vec.size()))
+                            ImGui::Text("%.10e", vec[row]);
+                        else
+                            ImGui::Text("NaN");
                     }
                 }
-
-                ImGui::EndTable();
             }
-        } else {
-            ImGui::Text("No dataset loaded.");
+
+            ImGui::EndTable();
         }
-        ImGui::EndChild();
+    } else {
+        ImGui::Text("No dataset loaded.");
     }
+    ImGui::EndChild();
+
     ImGui::EndGroup();
 }

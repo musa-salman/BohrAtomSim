@@ -4,15 +4,12 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include "explorer_manager/OngoingSimulationManager.hpp"
-#include "explorer_manager/SimulationFields.hpp"
 #include "utils/iterator.h"
 #include "utils/utils.h"
 
 void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
-    const std::vector<std::string> fields = getColumnNames(REL_POLAR);
     size_t id = this->simulationRepository->add(simulation);
     if (id == 0) {
         throw std::runtime_error("Failed to create simulation");

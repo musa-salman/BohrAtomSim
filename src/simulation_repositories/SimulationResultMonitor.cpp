@@ -35,10 +35,14 @@ void SimulationResultMonitor::startMonitoring() {
                     std::unordered_map<std::string, std::vector<double>>>(
                     accumulated_data);
 
-                auto snapshot_trajectories = polar2cartesian(snapshot);
+                auto snapshot_trajectories =
+                    polar2cartesian(snapshot->at("r"), snapshot->at("phi"));
 
                 shared_datasets.store(snapshot);
-                trajectories.store(snapshot_trajectories);
+                trajectories.store(
+                    std::make_shared<
+                        std::unordered_map<std::string, std::vector<double>>>(
+                        std::move(snapshot_trajectories)));
             }
         }
     });

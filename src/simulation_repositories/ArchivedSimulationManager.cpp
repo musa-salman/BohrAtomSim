@@ -2,6 +2,7 @@
 #include <format>
 #include <string>
 
+#include "dataset/DatasetFactory.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/SimulationResultLoader.hpp"
@@ -16,13 +17,11 @@ void ArchivedSimulationManager::loadSimulations() {
     simulations = simulationRepository->getAll();
 }
 
-std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>
-ArchivedSimulationManager::getSimulation(size_t id) {
-    if (!simulations_result.contains(id)) {
+const Dataset &ArchivedSimulationManager::getSimulation(size_t id) {
+    if (!simulationsResult.contains(id)) {
         loadSimulations();
-        auto dataset = std::make_shared<
-            std::unordered_map<std::string, std::vector<double>>>();
-        simulations_result[id] = dataset;
+        auto archivedResults =
+            std::unordered_map<std::string, std::vector<double>>();
 
         auto it = std::ranges::find_if(
             simulations, [id](const auto &s) { return s->getId() == id; });
@@ -31,9 +30,12 @@ ArchivedSimulationManager::getSimulation(size_t id) {
             std::string filepath =
                 std::format("{}/simulations/{}.bin", DB_PATH, id);
 
-            SimulationResultLoader::loadSimulation(filepath, *dataset);
+            SimulationResultLoader::loadSimulation(filepath, archivedResults);
         }
+
+        simulationsResult[id] =
+            DatasetFactory::create(std::move(archivedResults));
     }
 
-    return simulations_result[id];
+    return *simulationsResult[id];
 }
