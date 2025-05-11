@@ -2,16 +2,15 @@
 #include <cctype>
 #include <string>
 
+#include "data_expr/Token.hpp"
 #include "data_expr/Tokenizer.hpp"
 
 std::vector<Token> Tokenizer::scanTokens() {
     if (isAtEnd())
         return tokens;
 
-    while (!isAtEnd()) {
-        start = current;
+    while (!isAtEnd())
         scanToken();
-    }
 
     addToken(TokenType::END);
     return tokens;
@@ -21,6 +20,8 @@ void Tokenizer::scanToken() {
     skipWhitespace();
     if (isAtEnd())
         return;
+
+    start = current;
 
     char c = advance();
     switch (c) {
@@ -59,6 +60,12 @@ void Tokenizer::scanToken() {
         break;
     case '<':
         addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
+        break;
+    case '~':
+        addToken(TokenType::APPROX);
+        break;
+    case ':':
+        addToken(TokenType::COLON);
         break;
     default:
         if (isdigit(c))
@@ -127,13 +134,12 @@ void Tokenizer::tokenizeNumber() {
 }
 
 void Tokenizer::tokenizeIdentifier() {
-    size_t start = current;
     while (isalnum(peak()) || peak() == '_')
         advance();
 
     std::string_view lexeme = expression.substr(start, current - start);
-    auto it = keywords.find(lexeme);
-    if (it != keywords.end()) {
+    auto it = TokenUtils::keywords().find(lexeme);
+    if (it != TokenUtils::keywords().end()) {
         addToken(it->second);
         return;
     }
@@ -142,6 +148,17 @@ void Tokenizer::tokenizeIdentifier() {
 }
 
 void Tokenizer::addToken(TokenType type, std::any literal) {
+
+    if (type == TokenType::END) {
+        tokens.emplace_back(type, "", literal);
+        return;
+    }
+
+    if (type == TokenType::ERROR) {
+        tokens.emplace_back(type, "Unexpected character", literal);
+        return;
+    }
+
     tokens.emplace_back(
         type, std::string(expression.substr(start, current - start)), literal);
 }
