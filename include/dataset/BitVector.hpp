@@ -12,6 +12,8 @@ class BitVector {
 
     void set(size_t pos, bool value);
 
+    void setAll(bool value);
+
     void clear();
 
     [[nodiscard]] size_t bitSize() const;

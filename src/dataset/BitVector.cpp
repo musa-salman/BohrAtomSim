@@ -22,6 +22,11 @@ void BitVector::set(size_t pos, bool value) {
         words[pos / 64] &= ~mask;
 }
 
+void BitVector::setAll(bool value) {
+    uint64_t word = value ? ~0ULL : 0;
+    std::fill(words.begin(), words.end(), word);
+}
+
 void BitVector::clear() { std::fill(words.begin(), words.end(), 0); }
 
 size_t BitVector::bitSize() const { return size; }
