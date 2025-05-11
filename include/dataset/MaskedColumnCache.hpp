@@ -1,24 +1,23 @@
-#include <cstdint>
 #include <string_view>
 #include <vector>
 
+#include "dataset/BitVector.hpp"
+
 class MaskedColumnCache {
     const std::vector<double> *fullData = nullptr;
-    const std::vector<uint8_t> *mask = nullptr;
+    const BitVector *mask = nullptr;
 
     std::vector<double> filteredData;
     size_t cachedMaskHash = 0;
 
   public:
-    void setSource(const std::vector<double> &data,
-                   const std::vector<uint8_t> &mask_) {
+    void setSource(const std::vector<double> &data, const BitVector &mask_) {
         fullData = &data;
         mask = &mask_;
         cachedMaskHash = 0;
     }
 
-    void setSource(const std::vector<double> *data,
-                   const std::vector<uint8_t> *mask_) {
+    void setSource(const std::vector<double> *data, const BitVector *mask_) {
         fullData = data;
         mask = mask_;
         cachedMaskHash = 0;
@@ -32,8 +31,9 @@ class MaskedColumnCache {
         if (!fullData || !mask)
             return empty;
 
-        size_t currentHash = std::hash<std::string_view>{}(std::string_view(
-            reinterpret_cast<const char *>(mask->data()), mask->size()));
+        size_t currentHash = std::hash<std::string_view>{}(
+            std::string_view(reinterpret_cast<const char *>(mask->raw().data()),
+                             mask->raw().size()));
 
         if (currentHash != cachedMaskHash) {
             rebuild();
@@ -48,7 +48,7 @@ class MaskedColumnCache {
         filteredData.clear();
         filteredData.reserve(fullData->size());
         for (size_t i = 0; i < fullData->size(); ++i) {
-            if ((*mask)[i]) {
+            if (mask->get(i)) {
                 filteredData.push_back((*fullData)[i]);
             }
         }

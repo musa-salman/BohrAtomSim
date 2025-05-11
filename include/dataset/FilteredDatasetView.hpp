@@ -3,19 +3,19 @@
 
 #include <unordered_map>
 
+#include "dataset/BitVector.hpp"
 #include "dataset/Dataset.hpp"
 #include "dataset/MaskedColumnCache.hpp"
 
 class FilteredDatasetView {
-    const Dataset &baseDataset;
-    const std::vector<uint8_t> *mask = nullptr;
+    const Dataset *baseDataset = nullptr;
+    const BitVector *mask = nullptr;
 
     mutable std::unordered_map<std::string, MaskedColumnCache> cache;
 
   public:
-    explicit FilteredDatasetView(const Dataset &dataset);
-
-    void setMask(const std::vector<uint8_t> &newMask);
+    void setBaseDataset(const Dataset &newBaseDataset);
+    void setMask(const BitVector &newMask);
 
     [[nodiscard]] const std::vector<std::string> &getColumns() const;
 
@@ -23,7 +23,7 @@ class FilteredDatasetView {
 
     [[nodiscard]] size_t getRowCount() const;
 
-    size_t getColumnCount() const { return baseDataset.getColumnCount(); }
+    size_t getColumnCount() const { return baseDataset->getColumnCount(); }
 };
 
 #endif // FILTERED_DATASET_VIEW_HPP
