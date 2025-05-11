@@ -2,6 +2,7 @@
 #define INTERPRETER_HPP
 
 #include <memory>
+#include <stack>
 #include <variant>
 #include <vector>
 
@@ -9,34 +10,34 @@
 #include "dataset/BitVector.hpp"
 #include "dataset/Dataset.hpp"
 
-class Interpreter
-    : public Expr::Visitor<std::variant<std::vector<double>, BitVector>> {
+class Interpreter : public Expr::Visitor {
   public:
-    explicit Interpreter(Dataset &dataset);
+    explicit Interpreter(const Dataset &dataset);
 
-    [[nodiscard]] std::variant<std::vector<double>, BitVector>
+    [[nodiscard]] std::variant<std::unique_ptr<std::vector<double>>,
+                               std::unique_ptr<BitVector>>
     evaluate(const std::shared_ptr<Expr> &expr);
 
-    std::variant<std::vector<double>, BitVector>
-    visitBinaryExpr(const Binary &expr) override;
+    void visitTrinaryExpr(const Trinary &expr) override;
 
-    std::variant<std::vector<double>, BitVector>
-    visitUnaryExpr(const Unary &expr) override;
+    void visitBinaryExpr(const Binary &expr) override;
 
-    std::variant<std::vector<double>, BitVector>
-    visitGroupingExpr(const Grouping &expr) override;
+    void visitUnaryExpr(const Unary &expr) override;
 
-    std::variant<std::vector<double>, BitVector>
-    visitNumberExpr(const Number &expr) override;
+    void visitGroupingExpr(const Grouping &expr) override;
 
-    std::variant<std::vector<double>, BitVector>
-    visitVariableExpr(const Variable &expr) override;
+    void visitNumberExpr(const Number &expr) override;
 
-    std::variant<std::vector<double>, BitVector>
-    visitCallExpr(const Call &expr) override;
+    void visitVariableExpr(const Variable &expr) override;
+
+    void visitCallExpr(const Call &expr) override;
 
   private:
     const Dataset &dataset;
+
+    std::stack<std::variant<std::unique_ptr<std::vector<double>>,
+                            std::unique_ptr<BitVector>>>
+        resultStack;
 };
 
-#endif
+#endif // INTERPRETER_HPP
