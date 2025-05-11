@@ -2,7 +2,7 @@
 #define TOKEN_HPP
 
 #include <any>
-#include <string_view>
+#include <string>
 #include <unordered_map>
 
 enum class TokenType {
@@ -14,6 +14,7 @@ enum class TokenType {
     STAR,
     SLASH,
     CARET,
+    COLON,
 
     BANG,
     BANG_EQUAL,
@@ -22,6 +23,7 @@ enum class TokenType {
     GREATER_EQUAL,
     LESS,
     LESS_EQUAL,
+    APPROX,
 
     IDENTIFIER,
     NUMBER,
@@ -38,11 +40,11 @@ enum class TokenType {
 
 struct Token {
     const TokenType type;
-    const std::string &lexeme;
+    const std::string lexeme;
     const std::any literal;
 
-    Token(TokenType type, const std::string &lexeme, std::any literal = {})
-        : type(type), lexeme(lexeme), literal(literal) {}
+    Token(TokenType type, std::string lexeme, std::any literal)
+        : type(type), lexeme(std::move(lexeme)), literal(literal) {}
 };
 
 class TokenUtils {

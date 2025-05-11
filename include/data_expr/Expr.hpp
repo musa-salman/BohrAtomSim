@@ -12,25 +12,38 @@ struct Grouping;
 struct Number;
 struct Unary;
 struct Variable;
+struct Trinary;
 
 struct Expr {
     virtual ~Expr() = default;
 
-    template <typename R> struct Visitor {
-        virtual R visitBinaryExpr(const Binary &expr) = 0;
-        virtual R visitCallExpr(const Call &expr) = 0;
-        virtual R visitGroupingExpr(const Grouping &expr) = 0;
-        virtual R visitNumberExpr(const Number &expr) = 0;
-        virtual R visitUnaryExpr(const Unary &expr) = 0;
-        virtual R visitVariableExpr(const Variable &expr) = 0;
+    struct Visitor {
+        virtual void visitTrinaryExpr(const Trinary &expr) = 0;
+        virtual void visitBinaryExpr(const Binary &expr) = 0;
+        virtual void visitCallExpr(const Call &expr) = 0;
+        virtual void visitGroupingExpr(const Grouping &expr) = 0;
+        virtual void visitNumberExpr(const Number &expr) = 0;
+        virtual void visitUnaryExpr(const Unary &expr) = 0;
+        virtual void visitVariableExpr(const Variable &expr) = 0;
 
         virtual ~Visitor() = default;
     };
 
-    template <typename R> R accept(Visitor<R> &visitor);
+    virtual void accept(Visitor &visitor) = 0;
+};
 
-  private:
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
+struct Trinary : Expr {
+    std::shared_ptr<Expr> left;
+    Token op1;
+    std::shared_ptr<Expr> middle;
+    Token op2;
+    std::shared_ptr<Expr> right;
+
+    explicit Trinary(std::shared_ptr<Expr> left, Token op1,
+                     std::shared_ptr<Expr> middle, Token op2,
+                     std::shared_ptr<Expr> right);
+
+    void accept(Visitor &visitor) override;
 };
 
 struct Binary : Expr {
@@ -41,7 +54,7 @@ struct Binary : Expr {
     explicit Binary(std::shared_ptr<Expr> left, Token op,
                     std::shared_ptr<Expr> right);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
+    void accept(Visitor &visitor) override;
 };
 
 struct Unary : Expr {
@@ -50,15 +63,15 @@ struct Unary : Expr {
 
     explicit Unary(Token op, std::shared_ptr<Expr> right);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
+    void accept(Visitor &visitor) override;
 };
 
 struct Number : Expr {
     Token value;
 
-    explicit Number(Token value) : value(value) {}
+    explicit Number(Token value);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
+    void accept(Visitor &visitor) override;
 };
 
 struct Variable : Expr {
@@ -66,7 +79,7 @@ struct Variable : Expr {
 
     explicit Variable(Token name);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
+    void accept(Visitor &visitor) override;
 };
 
 struct Grouping : Expr {
@@ -74,7 +87,7 @@ struct Grouping : Expr {
 
     explicit Grouping(std::shared_ptr<Expr> expression);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
+    void accept(Visitor &visitor) override;
 };
 
 struct Call : Expr {
@@ -83,7 +96,7 @@ struct Call : Expr {
 
     explicit Call(Token callee, std::vector<std::shared_ptr<Expr>> args);
 
-    template <typename R> R acceptImpl(Visitor<R> &visitor) const;
+    void accept(Visitor &visitor) override;
 };
 
 #endif // EXPR_HPP

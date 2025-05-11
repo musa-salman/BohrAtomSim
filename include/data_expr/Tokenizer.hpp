@@ -1,7 +1,6 @@
 #ifndef TOKENIZER_HPP
 #define TOKENIZER_HPP
 
-#include <unordered_map>
 #include <vector>
 
 #include "Token.hpp"
@@ -17,8 +16,6 @@ class Tokenizer {
     std::vector<Token> scanTokens();
 
   private:
-    static const std::unordered_map<std::string_view, TokenType> keywords;
-
     const std::string_view expression;
 
     void scanToken();
