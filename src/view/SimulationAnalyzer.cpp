@@ -1,15 +1,22 @@
+#include <memory>
+
+#include <ImGuiFileDialog.h>
+#include <imgui.h>
+#include <implot.h>
+#include <string>
+
 #include "data_expr/Interpreter.hpp"
 #include "data_expr/Parser.hpp"
 #include "data_expr/Tokenizer.hpp"
 #include "dataset/Dataset.hpp"
-#include "imgui.h"
-#include "implot.h"
+
+#include "exporters/CSVExporter.hpp"
+#include "exporters/HDF5Exporter.hpp"
 
 #include "data_expr/AstPrinter.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "view/SimulationAnalyzer.hpp"
-#include <memory>
 
 SimulationAnalyzer::SimulationAnalyzer(
     const std::shared_ptr<Simulation> simulation)
@@ -259,28 +266,6 @@ void SimulationAnalyzer::renderVisualizer() {
             maxT = t_data.back();
         }
 
-        // if (ImGui::DragFloat("Time Range (Is it needed?)", &currentT, 1.0f,
-        //                      minT, maxT, "%.7e",
-        //                      ImGuiSliderFlags_AlwaysClamp)) {
-        //     auto it = std::lower_bound(t_data.begin(), t_data.end(),
-        //     currentT); if (it != t_data.end())
-        //         currentIndex = std::distance(t_data.begin(), it);
-        //     else
-        //         currentIndex = t_data.size() - 1;
-        // }
-
-        // ImGui::Text(
-        //     "At Time %.3e: position = (%.4e, %.4e), radius = %.5e, r_dot = "
-        //     "%7e, r_ddot = %.7e, phi = %.7e, phi_dot = %.7e, gamma = %.5e",
-        //     currentT, trajectoryData.at("x")[currentIndex],
-        //     trajectoryData.at("y")[currentIndex],
-        //     dataset.get("r")[currentIndex],
-        //     dataset.get("r_dot")[currentIndex],
-        //     dataset.get("r_ddot")[currentIndex],
-        //     dataset.get("phi")[currentIndex],
-        //     dataset.get("phi_dot")[currentIndex],
-        //     dataset.get("gamma")[currentIndex]);
-
         if (plotSelection["trajectories"]) {
             if (ImPlot::BeginPlot("Trajectories")) {
                 ImPlot::SetupAxes("X", "Y");
@@ -475,9 +460,7 @@ void SimulationAnalyzer::renderDatasetsViewer() {
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Export")) {
-        // TODO: Export logic here
-    }
+    renderExportDatasetOptions();
 
     if (!errorMessageExpr.empty()) {
         ImGui::TextColored(ImVec4(1, 0, 0, 1), "Error: %s",
@@ -523,4 +506,40 @@ void SimulationAnalyzer::renderDatasetsViewer() {
     ImGui::EndChild();
 
     ImGui::EndGroup();
+}
+
+void SimulationAnalyzer::renderExportDatasetOptions() {
+    if (ImGui::Button("Export")) {
+        IGFD::FileDialogConfig config;
+        config.path = ".";
+        ImGuiFileDialog::Instance()->OpenDialog(
+            "ChooseFileDlgKey", "Choose File", ".h5,.csv", config);
+    }
+
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+
+            const std::string filePath =
+                ImGuiFileDialog::Instance()->GetCurrentPath() + "/" +
+                ImGuiFileDialog::Instance()->GetCurrentFileName();
+            const std::string extension =
+                ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+            if (extension == ".csv") {
+                std::unique_ptr<Dataset> dataset =
+                    filteredDatasetView.toDataset();
+                auto csvExporter = std::make_unique<CSVExporter>();
+                csvExporter->exportData(filePath, *dataset);
+            } else if (extension == ".h5") {
+                std::unique_ptr<Dataset> dataset =
+                    filteredDatasetView.toDataset();
+                auto hdf5Exporter = std::make_unique<HDF5Exporter>();
+                hdf5Exporter->exportData(filePath, *dataset);
+            } else {
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), "Invalid file type");
+            }
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+    }
 }

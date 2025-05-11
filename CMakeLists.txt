@@ -70,6 +70,13 @@ file(GLOB IMGUI_SOURCES
 )
 include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends)
 
+# Add ImGuiFileDialog
+set(IMGUIFILEDIALOG_DIR ${PROJECT_SOURCE_DIR}/external/ImGuiFileDialog)
+file(GLOB IMGUIFILEDIALOG_SOURCES
+    ${IMGUIFILEDIALOG_DIR}/*.cpp
+)
+include_directories(${IMGUIFILEDIALOG_DIR})
+
 include_directories(${PROJECT_SOURCE_DIR}/external/stb)
 
 # Add GLFW and OpenGL (dependencies for ImGui)
@@ -112,10 +119,9 @@ target_compile_options(bohr_simulation PRIVATE)
 target_link_libraries(bohr_simulation PRIVATE)
 
 # Main C++ executable
-add_executable(bohr_main src/main.cpp ${C_SOURCES} ${CPP_SOURCES} ${HEADERS} ${IMGUI_SOURCES} ${IMPLOT_SOURCES})
+add_executable(bohr_main src/main.cpp ${C_SOURCES} ${CPP_SOURCES} ${HEADERS} ${IMGUI_SOURCES} ${IMPLOT_SOURCES} ${IMGUIFILEDIALOG_SOURCES} ${AWESOME_HEADERS})
 target_compile_options(bohr_main PRIVATE -g)
-target_link_libraries(bohr_main PRIVATE bohr_simulation SQLiteCpp glfw OpenGL::GL Matplot++::matplot  ${HDF5_LIBRARIES}
- ${Boost_LIBRARIES} ${IMPLOT_HEADERS} ${SLEEF_LIBRARIES} ${SQLite3_LIBRARIES})
+target_link_libraries(bohr_main PRIVATE bohr_simulation SQLiteCpp glfw OpenGL::GL Matplot++::matplot ${HDF5_LIBRARIES} ${Boost_LIBRARIES} ${IMPLOT_HEADERS} ${SLEEF_LIBRARIES} ${SQLite3_LIBRARIES} )
 
 # Set output directories
 set_target_properties(bohr_main PROPERTIES

@@ -1,24 +1,17 @@
 #include <H5Cpp.h>
-#include <iostream>
+#include <H5PredType.h>
 #include <stdexcept>
 
-#include "H5PredType.h"
 #include "exporters/HDF5Exporter.hpp"
 
-void HDF5Exporter::exportData(
-    const std::string &path,
-    const std::unordered_map<std::string, std::vector<double>> &datasets) {
+void HDF5Exporter::exportData(const std::string &path,
+                              const Dataset &datasets) {
 
     try {
         H5::H5File file(path, H5F_ACC_TRUNC);
-        for (const auto &pair : datasets) {
-            std::cout << pair.first << " ";
-        }
-        std::cout << std::endl;
 
-        for (const auto &pair : datasets) {
-            const std::string &name = pair.first;
-            const std::vector<double> &data = pair.second;
+        for (const auto &name : datasets.getColumnsNames()) {
+            const auto &data = datasets.get(name);
 
             hsize_t dims[1] = {data.size()};
             H5::DataSpace dataspace(1, dims);

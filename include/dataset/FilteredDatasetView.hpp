@@ -1,6 +1,7 @@
 #ifndef FILTERED_DATASET_VIEW_HPP
 #define FILTERED_DATASET_VIEW_HPP
 
+#include <memory>
 #include <unordered_map>
 
 #include "dataset/BitVector.hpp"
@@ -16,6 +17,8 @@ class FilteredDatasetView {
   public:
     void setBaseDataset(const Dataset &newBaseDataset);
     void setMask(const BitVector &newMask);
+
+    [[nodiscard]] std::unique_ptr<Dataset> toDataset();
 
     [[nodiscard]] const std::vector<std::string> &getColumns() const;
 

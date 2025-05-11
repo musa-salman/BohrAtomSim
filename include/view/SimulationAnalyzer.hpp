@@ -48,6 +48,7 @@ class SimulationAnalyzer : public Component {
     void renderVisualizer();
     void renderPlotter();
     void renderDatasetsViewer();
+    void renderExportDatasetOptions();
 };
 
 #endif // SIMULATION_ANALYZER_HPP

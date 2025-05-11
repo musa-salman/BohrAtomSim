@@ -3,29 +3,26 @@
 
 #include "exporters/CSVExporter.hpp"
 
-void CSVExporter::exportData(
-    const std::string &path,
-    const std::unordered_map<std::string, std::vector<double>> &datasets) {
+void CSVExporter::exportData(const std::string &path, const Dataset &datasets) {
     std::ofstream file(path);
     if (!file.is_open()) {
         return;
     }
 
-    for (auto it = datasets.begin(); it != datasets.end(); ++it) {
-        file << it->first;
-        if (std::next(it) != datasets.end()) {
+    const auto &itNames = datasets.getColumnsNames();
+    const auto &endNames = datasets.getColumnsNames().end();
+    for (auto it = itNames.begin(); it != endNames; ++it) {
+        file << *it;
+        if (std::next(it) != endNames)
             file << ",";
-        }
     }
     file << "\n";
 
-    size_t num_rows = datasets.begin()->second.size();
-    for (size_t i = 0; i < num_rows; ++i) {
-        for (auto it = datasets.begin(); it != datasets.end(); ++it) {
-            file << it->second[i];
-            if (std::next(it) != datasets.end()) {
+    for (size_t i = 0; i < datasets.getRowCount(); ++i) {
+        for (auto it = itNames.begin(); it != endNames; ++it) {
+            file << datasets.get(*it)[i];
+            if (std::next(it) != endNames)
                 file << ",";
-            }
         }
         file << "\n";
     }

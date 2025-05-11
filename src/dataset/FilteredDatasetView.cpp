@@ -1,7 +1,11 @@
 
 #include "dataset/FilteredDatasetView.hpp"
 #include "dataset/BitVector.hpp"
+#include "dataset/Dataset.hpp"
+#include "dataset/DatasetFactory.hpp"
+#include <memory>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 void FilteredDatasetView::setBaseDataset(const Dataset &newBaseDataset) {
@@ -33,6 +37,18 @@ FilteredDatasetView::get(std::string_view column) const {
         cacheEntry.setSource(baseDataset->get(column), *mask);
 
     return cacheEntry.get();
+}
+
+std::unique_ptr<Dataset> FilteredDatasetView::toDataset() {
+    if (!mask)
+        throw std::runtime_error("Mask not set");
+
+    std::unordered_map<std::string, std::vector<double>> filteredData;
+
+    for (const auto &column : baseDataset->getColumnsNames())
+        filteredData[column] = get(column);
+
+    return DatasetFactory::create(std::move(filteredData));
 }
 
 size_t FilteredDatasetView::getRowCount() const {

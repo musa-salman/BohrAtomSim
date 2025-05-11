@@ -2,15 +2,13 @@
 #define SIMULATION_EXPORTER_HPP
 
 #include <string>
-#include <unordered_map>
-#include <vector>
+
+#include "dataset/Dataset.hpp"
 
 class SimulationExporter {
   public:
-    virtual void
-    exportData(const std::string &path,
-               const std::unordered_map<std::string, std::vector<double>>
-                   &datasets) = 0;
+    virtual void exportData(const std::string &path,
+                            const Dataset &datasets) = 0;
 
     virtual ~SimulationExporter() = default;
 };
