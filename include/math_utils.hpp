@@ -2,15 +2,13 @@
 #define MATH_UTILS_HPP
 
 #include <cmath>
-#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>
-polar2cartesian(
-    const std::shared_ptr<std::unordered_map<std::string, std::vector<double>>>
-        &polar_data);
+std::unordered_map<std::string, std::vector<double>>
+polar2cartesian(const std::vector<double> &r_data,
+                const std::vector<double> &phi_data);
 
 double computeAngleVec2D(double u[2], double v[2]);
 

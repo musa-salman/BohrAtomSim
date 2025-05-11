@@ -100,6 +100,18 @@ class VectorOperations {
         return result;
     }
 
+    static BitVector approx(const std::vector<double> &a,
+                            const std::vector<double> &b,
+                            const std::vector<double> &c) {
+        if (a.size() != b.size())
+            throw std::runtime_error("Mismatched vector sizes in approx()");
+
+        BitVector result(a.size());
+        for (size_t i = 0; i < a.size(); ++i)
+            result.set(i, std::abs(a[i] - b[i]) < c[i]);
+        return result;
+    }
+
     static BitVector greater(const std::vector<double> &a,
                              const std::vector<double> &b) {
         if (a.size() != b.size())
