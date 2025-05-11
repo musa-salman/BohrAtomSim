@@ -14,6 +14,6 @@ size_t DatasetImpl::getRowCount() const {
 
 size_t DatasetImpl::getColumnCount() const { return data.size(); }
 
-const std::vector<std::string> &DatasetImpl::getColumns() const {
+const std::vector<std::string> &DatasetImpl::getColumnsNames() const {
     return fieldNames;
 }

@@ -16,7 +16,7 @@ void DatasetSerializer::serialize(const Dataset &dataset,
 
     out.write(reinterpret_cast<const char *>(&header), sizeof(header));
 
-    for (const auto &name : dataset.getColumns()) {
+    for (const auto &name : dataset.getColumnsNames()) {
         uint64_t len = name.size();
         out.write(reinterpret_cast<const char *>(&len), sizeof(len));
         out.write(name.data(), len);

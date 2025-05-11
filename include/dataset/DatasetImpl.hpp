@@ -16,7 +16,9 @@ class DatasetImpl : public Dataset {
 
     size_t getColumnCount() const override;
 
-    const std::vector<std::string> &getColumns() const override;
+    const std::vector<std::string> &getColumnsNames() const override;
+
+    const auto &getData() const { return data; }
 
     friend class DatasetFactory;
     friend class DatasetSerializer;

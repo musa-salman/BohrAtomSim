@@ -23,7 +23,8 @@ struct Dataset {
     [[nodiscard]] virtual size_t getRowCount() const = 0;
     [[nodiscard]] virtual size_t getColumnCount() const = 0;
     [[nodiscard]] virtual const std::vector<std::string> &
-    getColumns() const = 0;
+    getColumnsNames() const = 0;
+    [[nodiscard]] const auto &getData() const;
 };
 
 #endif // DATASET_HPP
