@@ -51,8 +51,8 @@ struct motion_step_2d {
     scalar r_dot;
     scalar r_ddot;
 
-    scalar phi;
-    scalar phi_dot;
+    scalar psi;
+    scalar psi_dot;
 
     scalar gamma;
 };

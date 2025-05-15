@@ -44,8 +44,8 @@ void init_motion_step(struct motion_step_2d *step, scalar r_0, scalar v_0,
         .r_dot = 0,
         .r_ddot = 0,
 
-        .phi = 0,
-        .phi_dot = 0,
+        .psi = 0,
+        .psi_dot = 0,
 
         .gamma = 0,
     };
@@ -53,5 +53,5 @@ void init_motion_step(struct motion_step_2d *step, scalar r_0, scalar v_0,
     step->gamma = compute_gamma(angular_momentum, step->r, step->r_dot);
     step->r_ddot =
         compute_rel_r_ddot(angular_momentum, step->gamma, step->r, step->r_dot);
-    step->phi_dot = POLAR_PHI_DOT_REL(angular_momentum, step->r, step->gamma);
+    step->psi_dot = POLAR_PHI_DOT_REL(angular_momentum, step->r, step->gamma);
 }
