@@ -5,28 +5,34 @@
 #include <sys/stat.h>
 
 #include "service_locator/ServiceLocator.hpp"
+#include "simulation_repositories/SimulationService.hpp"
+#include "simulator_runner/Simulation.hpp"
 #include "view/AddSimulationDialog.hpp"
 #include "view/SimulationExplorer.hpp"
 
 SimulationExplorer::SimulationExplorer()
-    : simulationManager(
-          ServiceLocator::getInstance().get<OngoingSimulationManager>()),
-      simulator(ServiceLocator::getInstance().get<ISimulator>()),
-      simulations(simulationManager->getSimulations()) {
-    add_simulation_interface.setOnSubmit([this](const Simulation &simulation) {
-        try {
-            simulationManager->addSimulation(simulation);
-        } catch (const std::exception &e) {
-            std::cerr << "Error adding simulation: " << e.what() << std::endl;
+    : simulationService(
+          ServiceLocator::getInstance().get<SimulationService>()) {
+    addSimulationWindow.setOnSubmit([](const Simulation &simulation) {
+        size_t id = ServiceLocator::getInstance()
+                        .get<SimulationService>()
+                        .addSimulation(simulation);
+        if (id == 0) {
+            std::cerr << "Failed to create simulation" << std::endl;
+            return;
         }
     });
 
-    this->selected_simulation = nullptr;
+    this->selectedSimulationId = 0;
 
-    if (!simulations.empty())
-        selected_simulation = simulations.begin()->second.get();
-
-    plotSelection.emplace("trajectories", false);
+    if (!simulationService.getOngoingSimulations().empty()) {
+        selectedSimulationId =
+            simulationService.getOngoingSimulations().begin()->first;
+        selectedSimulationStatus = &simulationService.getOngoingSimulations()
+                                        .at(selectedSimulationId)
+                                        ->status;
+        plotSelection.emplace("trajectories", false);
+    }
 }
 
 void SimulationExplorer::render() {
@@ -34,13 +40,17 @@ void SimulationExplorer::render() {
                       ImGuiChildFlags_Borders);
     {
         ImGui::Text("Simulations");
-        add_simulation_interface.render();
+        addSimulationWindow.render();
 
-        for (auto const &[id, simulation] : simulations) {
+        for (const auto &[id, simulation] :
+             simulationService.getOngoingSimulations()) {
             if (ImGui::Selectable(simulation->getName().c_str(),
-                                  selected_simulation != nullptr &&
-                                      selected_simulation->getId() == id)) {
-                selected_simulation = simulation.get();
+                                  selectedSimulationId != 0 &&
+                                      selectedSimulationId ==
+                                          simulation->getId(),
+                                  ImGuiSelectableFlags_SpanAllColumns)) {
+                selectedSimulationId = simulation->getId();
+                selectedSimulationStatus = &simulation->status;
             }
         }
     }
@@ -51,62 +61,60 @@ void SimulationExplorer::render() {
     ImGui::BeginChild("Simulation Details", ImVec2(0, 0),
                       ImGuiChildFlags_Borders);
     {
-        if (selected_simulation == nullptr) {
+        if (selectedSimulationId == 0) {
             ImGui::Text("No simulation selected.");
             ImGui::EndChild();
             return;
         }
 
-        auto opt_monitor =
-            simulationManager->getMonitor(selected_simulation->getId());
-        std::shared_ptr<SimulationResultMonitor> monitor;
-        if (opt_monitor.has_value()) {
-            monitor = opt_monitor.value();
-        }
-        auto datasets = monitor->getDatasets();
-
-        if (selected_simulation->status ==
+        if (*selectedSimulationStatus ==
             Simulation::SimulationStatus::COMPLETED) {
+            selectedSimulationId = 0;
             ImGui::Text("Simulation completed.");
-        } else if (selected_simulation->status ==
+            ImGui::EndChild();
+            return;
+        } else if (*selectedSimulationStatus ==
                    Simulation::SimulationStatus::RUNNING) {
             if (ImGui::Button("Pause Simulation")) {
-                simulator->pauseSimulation(selected_simulation->getId());
+                simulationService.pauseSimulation(selectedSimulationId);
             }
 
             ImGui::SameLine();
             if (ImGui::Button("Stop Simulation")) {
-                simulator->stopSimulation(selected_simulation->getId());
+                simulationService.stopSimulation(selectedSimulationId);
             }
 
             ImGui::Text("Simulation is running...");
-        } else if (selected_simulation->status ==
+        } else if (*selectedSimulationStatus ==
                    Simulation::SimulationStatus::PAUSED) {
             if (ImGui::Button("Resume Simulation")) {
-                simulator->resumeSimulation(selected_simulation->getId());
+                simulationService.resumeSimulation(selectedSimulationId);
             }
 
             ImGui::SameLine();
             if (ImGui::Button("Stop Simulation")) {
-                simulator->stopSimulation(selected_simulation->getId());
+                simulationService.stopSimulation(selectedSimulationId);
             }
             ImGui::Text("Simulation is paused.");
-        } else if (selected_simulation->status ==
+        } else if (*selectedSimulationStatus ==
                    Simulation::SimulationStatus::IDLE) {
             if (ImGui::Button("Run Simulation")) {
-                simulator->simulateOrbit(*selected_simulation, [this]() {
-                    simulationManager->markSimulationAsComplete(
-                        selected_simulation->getId());
-                });
-
-                auto monitor =
-                    simulationManager->getMonitor(selected_simulation->getId());
-                if (monitor.has_value()) {
-                    monitor->get()->startMonitoring();
-                }
+                simulationService.startSimulation(selectedSimulationId);
             }
             ImGui::Text("Simulation is ready to run.");
         }
+
+        auto optMonitor =
+            simulationService.getSimulationMonitor(selectedSimulationId);
+        std::shared_ptr<SimulationResultMonitor> monitor;
+        if (optMonitor.has_value()) {
+            monitor = optMonitor.value();
+        } else {
+            ImGui::Text("No data available for plotting.");
+            ImGui::EndChild();
+            return;
+        }
+        auto datasets = monitor->getDatasets();
 
         if (!datasets->contains("t") || datasets->at("t").empty()) {
             ImGui::Text("No data available for plotting.");
