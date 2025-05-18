@@ -1,7 +1,5 @@
 #include <cstdint>
 #include <cstdio>
-#include <filesystem>
-#include <format>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -11,11 +9,11 @@
 #include "atom/result_recorders.h"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/DataSource.hpp"
-#include "simulation_repositories/SimulationRepository.hpp"
+#include "simulation_repositories/SimulationRepositoryImpl.hpp"
 #include "utils/utils.h"
 
-SimulationRepository::SimulationRepository() {
-    db = ServiceLocator::getInstance().get<DataSource>()->getDB();
+SimulationRepositoryImpl::SimulationRepositoryImpl() {
+    db = ServiceLocator::getInstance().get<DataSource>().getDB();
     if (!db) {
         std::cerr << "Failed to open database." << std::endl;
         return;
@@ -42,7 +40,7 @@ SimulationRepository::SimulationRepository() {
     }
 }
 
-size_t SimulationRepository::add(const Simulation &simulation) {
+size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
     if (!db) {
         std::cerr << "Database not initialized." << std::endl;
         return 0; // Indicate error
@@ -65,24 +63,6 @@ size_t SimulationRepository::add(const Simulation &simulation) {
         query.bind(8, simulation.getThetaRV());
 
         query.exec();
-
-        {
-            char file_name[FILE_PATH_SIZE];
-            format_output_filename(db->getLastInsertRowid(), file_name);
-            FILE *file_bin = fopen(file_name, "wb");
-            if (!file_bin) {
-                std::cerr << "Error opening file for writing: " << file_name
-                          << std::endl;
-                return 0; // Indicate error
-            }
-            const uint8_t field_names_2DR[][MAX_FIELD_NAME] = {
-                "t", "r", "r_dot", "r_ddot", "phi", "phi_dot", "gamma"};
-
-            init_file_header(file_bin, field_names_2DR,
-                             sizeof(field_names_2DR) /
-                                 sizeof(field_names_2DR[0]));
-            fclose(file_bin);
-        }
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error inserting simulation: " << e.what() << std::endl;
         return 0; // Indicate error
@@ -91,7 +71,7 @@ size_t SimulationRepository::add(const Simulation &simulation) {
     return db->getLastInsertRowid();
 }
 
-void SimulationRepository::remove(size_t id) {
+void SimulationRepositoryImpl::remove(size_t id) const {
     if (!db) {
         std::cerr << "Database not initialized." << std::endl;
         return;
@@ -101,16 +81,12 @@ void SimulationRepository::remove(size_t id) {
         SQLite::Statement query(*db, "DELETE FROM Simulations WHERE id = ?;");
         query.bind(1, (int32_t)id);
         query.exec();
-
-        std::string filename =
-            std::format("{}/simulations/{}.bin", DB_PATH, id);
-        std::filesystem::remove(filename);
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error deleting simulation: " << e.what() << std::endl;
     }
 }
 
-void SimulationRepository::markSimulationComplete(size_t id) {
+void SimulationRepositoryImpl::markSimulationComplete(size_t id) const {
     if (!db) {
         std::cerr << "Database not initialized." << std::endl;
         return;
@@ -121,27 +97,27 @@ void SimulationRepository::markSimulationComplete(size_t id) {
             *db, "UPDATE Simulations SET status = 3 WHERE id = ?;");
         query.bind(1, (int32_t)id);
         query.exec();
+
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error updating simulation status: " << e.what()
                   << std::endl;
     }
 }
 
-std::vector<std::shared_ptr<Simulation>> SimulationRepository::getAll() {
-    if (!db) {
-        return {};
-    }
-
-    simulations.clear();
+std::vector<std::unique_ptr<Simulation>>
+SimulationRepositoryImpl::getAll() const {
+    if (!db)
+        throw std::runtime_error("Database not initialized.");
 
     std::string sql = "SELECT id, name, record_interval, total_duration, "
                       "time_interval, status, r_0, v_0, theta_rv "
                       "FROM Simulations;";
 
+    std::vector<std::unique_ptr<Simulation>> simulations;
     try {
         SQLite::Statement query(*db, sql);
         while (query.executeStep()) {
-            auto simulation = std::make_shared<Simulation>();
+            auto simulation = std::make_unique<Simulation>();
 
             simulation->setId(query.getColumn(0).getInt());
             simulation->setName(query.getColumn(1).getText());
@@ -154,7 +130,7 @@ std::vector<std::shared_ptr<Simulation>> SimulationRepository::getAll() {
             simulation->setV0(query.getColumn(7).getDouble());
             simulation->setThetaRV(query.getColumn(8).getDouble());
 
-            simulations.push_back(simulation);
+            simulations.push_back(std::move(simulation));
         }
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error retrieving simulations: " << e.what() << std::endl;

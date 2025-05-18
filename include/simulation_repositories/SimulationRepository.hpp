@@ -1,29 +1,12 @@
 #ifndef SIMULATION_REPOSITORY_HPP
 #define SIMULATION_REPOSITORY_HPP
 
-#include <memory>
-#include <sqlite3.h>
-#include <vector>
-
-#include "SQLiteCpp/Database.h"
-#include "simulation_repositories/ISimulationRepository.hpp"
+#include "simulation_repositories/Repository.hpp"
 #include "simulator_runner/Simulation.hpp"
 
-class SimulationRepository : public ISimulationRepository {
+class SimulationRepository : public Repository<Simulation> {
   public:
-    explicit SimulationRepository();
-
-    void markSimulationComplete(size_t id) override;
-
-    size_t add(const Simulation &simulation) override;
-
-    void remove(size_t id) override;
-
-    std::vector<std::shared_ptr<Simulation>> getAll() override;
-
-  private:
-    std::vector<std::shared_ptr<Simulation>> simulations;
-    std::shared_ptr<SQLite::Database> db;
+    virtual void markSimulationComplete(size_t id) const = 0;
 };
 
 #endif // SIMULATION_REPOSITORY_HPP
