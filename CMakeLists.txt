@@ -89,6 +89,13 @@ file(GLOB IMPLOT_SOURCES
 )
 include_directories(${IMPLOT_DIR})
 
+# Header only library
+set(EXPRTK_DIR ${PROJECT_SOURCE_DIR}/external/exprtk)
+file(GLOB EXPRTK_SOURCES
+    ${EXPRTK_DIR}/*.hpp
+)
+include_directories(${EXPRTK_DIR})
+
 find_package(Matplot++ REQUIRED)
 
 find_package(PkgConfig REQUIRED)
