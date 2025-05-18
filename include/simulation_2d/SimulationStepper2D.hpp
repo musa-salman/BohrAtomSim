@@ -18,8 +18,7 @@ class SimulationStepper2D {
     FILE *file_bin;
     bool isRunning = false;
     bool isFinished = false;
-
-    Simulation::SimulationStatus *status;
+    bool isStopped = false;
 
     std::function<void()> onCompletion;
 
@@ -27,7 +26,7 @@ class SimulationStepper2D {
 
   public:
     SimulationStepper2D(Simulation &simulation,
-                        std::function<void()> onCompletion, FILE *file_bin);
+                        std::function<void()> &&onCompletion, FILE *file_bin);
 
     ~SimulationStepper2D();
 
