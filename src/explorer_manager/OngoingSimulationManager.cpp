@@ -2,46 +2,44 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
-#include <string>
 #include <unordered_map>
 
 #include "explorer_manager/OngoingSimulationManager.hpp"
 #include "utils/iterator.h"
 #include "utils/utils.h"
 
-void OngoingSimulationManager::addSimulation(const Simulation &simulation) {
-    size_t id = this->simulationRepository->add(simulation);
-    if (id == 0) {
-        throw std::runtime_error("Failed to create simulation");
+void OngoingSimulationManager::startMonitoring(size_t id) {
+    if (!monitors.contains(id)) {
+        char filepath[FILE_PATH_SIZE];
+        format_output_filename(id, filepath);
+        auto monitor = std::make_shared<SimulationResultMonitor>(filepath);
+        monitors[id] = monitor;
     }
 
-    auto _simulation = std::make_shared<Simulation>(simulation);
-    _simulation->setId(id);
+    monitors[id]->startMonitoring();
+}
 
-    char output_filename[FILE_PATH_SIZE]; // NOSONAR
-    format_output_filename(id, output_filename);
+void OngoingSimulationManager::pauseMonitoring(size_t id) {
+    if (!monitors.contains(id)) {
+        throw std::runtime_error("Monitor not found");
+    }
 
-    auto _monitor = std::make_shared<SimulationResultMonitor>(
-        std::string(output_filename), &_simulation->status);
+    monitors[id]->pauseMonitoring();
+}
 
-    simulations.try_emplace(_simulation->getId(), _simulation);
-    monitors.try_emplace(_simulation->getId(), _monitor);
+void OngoingSimulationManager::stopMonitoring(size_t id) {
+    if (!monitors.contains(id)) {
+        throw std::runtime_error("Monitor not found");
+    }
+
+    monitors[id]->pauseMonitoring();
+    monitors.erase(id);
 }
 
 std::optional<std::shared_ptr<SimulationResultMonitor>>
 OngoingSimulationManager::getMonitor(size_t id) {
-    if (!monitors.contains(id)) {
-        throw std::invalid_argument("Simulation not found");
-    }
+    if (!monitors.contains(id))
+        return std::nullopt;
 
     return monitors[id];
-}
-
-void OngoingSimulationManager::markSimulationAsComplete(size_t id) {
-    simulationRepository->markSimulationComplete(id);
-}
-
-const std::unordered_map<size_t, std::shared_ptr<Simulation>> &
-OngoingSimulationManager::getSimulations() const {
-    return simulations;
 }
