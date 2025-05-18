@@ -9,9 +9,9 @@ template <typename T> class Repository {
     Repository() = default;
     virtual ~Repository() = default;
 
-    virtual size_t add(const T &item) = 0;
-    virtual void remove(const size_t id) = 0;
-    virtual std::vector<std::shared_ptr<T>> getAll() = 0;
+    virtual size_t add(const T &item) const = 0;
+    virtual void remove(const size_t id) const = 0;
+    virtual std::vector<std::unique_ptr<T>> getAll() const = 0;
 };
 
 #endif // REPOSITORY_HPP

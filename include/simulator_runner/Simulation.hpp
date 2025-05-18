@@ -2,6 +2,7 @@
 #define SIMULATION_HPP
 
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -62,9 +63,30 @@ class Simulation {
         setV0(v_0);
         setThetaRV(theta_rv);
     }
-    Simulation(const std::string &name, size_t id,
-               unsigned short record_interval, float total_duration,
-               double time_interval, double r_0, double v_0, double theta_rv)
+
+    Simulation &operator=(const Simulation &simulation) {
+        if (this != &simulation) {
+            name = simulation.name;
+            id = simulation.id;
+            record_interval = simulation.record_interval;
+            delta_time = simulation.delta_time;
+            total_duration = simulation.total_duration;
+            r_0 = simulation.r_0;
+            v_0 = simulation.v_0;
+            theta_rv = simulation.theta_rv;
+
+            init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
+            setR0(r_0);
+            setV0(v_0);
+            setThetaRV(theta_rv);
+        }
+        return *this;
+    }
+
+    constexpr Simulation(const std::string &name, size_t id,
+                         unsigned short record_interval, float total_duration,
+                         double time_interval, double r_0, double v_0,
+                         double theta_rv)
         : name(name), id(id), record_interval(record_interval),
           delta_time(time_interval), total_duration(total_duration), r_0(r_0),
           v_0(v_0), theta_rv(theta_rv) {
@@ -82,6 +104,13 @@ class Simulation {
         setR0(r_0);
         setV0(v_0);
         setThetaRV(theta_rv);
+    }
+
+    const static std::reference_wrapper<Simulation> defaultSimulation() {
+        static Simulation defaultSim("Default Simulation", 0, 10000, 800.0,
+                                     1e-7, 2.2917960675006309107, 0.87267799625,
+                                     HALF_PI);
+        return std::ref(defaultSim);
     }
 
     void quantize(uint8_t principle, uint8_t azimuthal) {

@@ -2,7 +2,6 @@
 #define SERVICE_LOCATOR_HPP
 
 #include <memory>
-#include <sys/stat.h>
 #include <typeindex>
 #include <unordered_map>
 
@@ -14,12 +13,8 @@ class ServiceLocator {
         services[typeid(T)] = service;
     }
 
-    template <typename T> std::shared_ptr<T> get() {
-        auto it = services.find(typeid(T));
-        if (it != services.end()) {
-            return std::static_pointer_cast<T>(it->second);
-        }
-        return nullptr;
+    template <typename T> T &get() {
+        return *static_cast<T *>(services.at(typeid(T)).get());
     }
 
     static ServiceLocator &getInstance() {
