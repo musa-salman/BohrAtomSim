@@ -1,6 +1,7 @@
 #ifndef SIMULATION_ANALYZER_HPP
 #define SIMULATION_ANALYZER_HPP
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -8,11 +9,15 @@
 
 #include "dataset/BitVector.hpp"
 #include "dataset/FilteredDatasetView.hpp"
+#include "simulation_repositories/SimulationService.hpp"
 #include "simulator_runner/Simulation.hpp"
 #include "view/Component.hpp"
 
 class SimulationAnalyzer : public Component {
-    const std::shared_ptr<Simulation> simulation;
+    const Simulation &simulation;
+    const std::function<void(size_t)> onDeleteCallback;
+
+    SimulationService &simulationService;
 
     std::unordered_map<std::string, std::vector<double>> trajectoryData;
 
@@ -37,9 +42,11 @@ class SimulationAnalyzer : public Component {
     std::unique_ptr<std::vector<double>> yData;
 
   public:
-    SimulationAnalyzer(const std::shared_ptr<Simulation> simulation);
+    SimulationAnalyzer(const Simulation &simulation,
+                       const std::function<void(size_t)> onDeleteCallback);
 
-    std::string getName() const { return simulation->getName(); }
+    std::string getName() const { return simulation.getName(); }
+    size_t getId() const { return simulation.getId(); }
 
     void render() override;
 

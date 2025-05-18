@@ -15,12 +15,15 @@
 
 #include "data_expr/AstPrinter.hpp"
 #include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/ArchivedSimulationManager.hpp"
+#include "simulation_repositories/SimulationService.hpp"
 #include "view/SimulationAnalyzer.hpp"
 
 SimulationAnalyzer::SimulationAnalyzer(
-    const std::shared_ptr<Simulation> simulation)
-    : simulation(simulation) {}
+    const Simulation &simulation,
+    const std::function<void(size_t)> onDeleteCallback)
+    : simulation(simulation), onDeleteCallback(std::move(onDeleteCallback)),
+      simulationService(
+          ServiceLocator::getInstance().get<SimulationService>()) {}
 
 void SimulationAnalyzer::render() {
     ImGui::BeginTabBar("SimulationAnalyzerTabBar", ImGuiTabBarFlags_None);
@@ -45,23 +48,22 @@ void SimulationAnalyzer::render() {
 
 void SimulationAnalyzer::renderSimulationDetails() {
     if (!isInitialized) {
-        const auto &dataset = ServiceLocator::getInstance()
-                                  .get<ArchivedSimulationManager>()
-                                  ->getSimulation(simulation->getId());
+        const auto &dataset =
+            simulationService.getSimulationResult(simulation.getId());
 
         filteredDatasetView.setBaseDataset(dataset);
         bitVector = std::make_unique<BitVector>(dataset.getRowCount());
         bitVector->setAll(true);
         filteredDatasetView.setMask(*bitVector);
 
-        trajectoryData = polar2cartesian(dataset.get("r"), dataset.get("phi"));
+        trajectoryData = polar2cartesian(dataset.get("r"), dataset.get("psi"));
         plotSelection.emplace("trajectories", false);
         isInitialized = true;
     }
 
     ImGui::BeginGroup();
     {
-        Simulation::SimulationStatus status = simulation->status;
+        Simulation::SimulationStatus status = simulation.status;
 
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Simulation Details");
         ImGui::Separator();
@@ -75,13 +77,13 @@ void SimulationAnalyzer::renderSimulationDetails() {
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("ID");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", simulation->getId());
+            ImGui::Text("%zu", simulation.getId());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Name");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s", simulation->getName().c_str());
+            ImGui::Text("%s", simulation.getName().c_str());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
@@ -99,19 +101,19 @@ void SimulationAnalyzer::renderSimulationDetails() {
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Time Step");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.5e", simulation->getDeltaTime());
+            ImGui::Text("%.5e", simulation.getDeltaTime());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Duration");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2f", simulation->getTotalDuration());
+            ImGui::Text("%.2f", simulation.getTotalDuration());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Record Interval");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%hu", simulation->getRecordInterval());
+            ImGui::Text("%hu", simulation.getRecordInterval());
 
             ImGui::EndTable();
         }
@@ -127,40 +129,40 @@ void SimulationAnalyzer::renderSimulationDetails() {
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Position (x, y)");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("(%.2e, %.2e)", simulation->getR0X(),
-                        simulation->getR0Y());
+            ImGui::Text("(%.2e, %.2e)", simulation.getR0X(),
+                        simulation.getR0Y());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Velocity (x, y)");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("(%.2e, %.2e)", simulation->getV0X(),
-                        simulation->getV0Y());
+            ImGui::Text("(%.2e, %.2e)", simulation.getV0X(),
+                        simulation.getV0Y());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Angle θ");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation->getThetaRV());
+            ImGui::Text("%.2e", simulation.getThetaRV());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Radius");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation->getR0());
+            ImGui::Text("%.2e", simulation.getR0());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Velocity Mag.");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation->getV0());
+            ImGui::Text("%.2e", simulation.getV0());
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Angular Momentum");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation->getV0() * simulation->getR0() *
-                                    sin(simulation->getThetaRV()));
+            ImGui::Text("%.2e", simulation.getV0() * simulation.getR0() *
+                                    sin(simulation.getThetaRV()));
 
             ImGui::EndTable();
         }
@@ -173,11 +175,7 @@ void SimulationAnalyzer::renderSimulationDetails() {
         ImGui::TextDisabled("Actions");
         ImGui::BeginGroup();
         if (ImGui::Button("Delete")) {
-            // TODO: Delete logic here
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Export")) {
-            // TODO: Export logic here
+            onDeleteCallback(simulation.getId());
         }
         ImGui::EndGroup();
     }
@@ -185,9 +183,8 @@ void SimulationAnalyzer::renderSimulationDetails() {
 }
 
 void SimulationAnalyzer::renderVisualizer() {
-    const auto &dataset = ServiceLocator::getInstance()
-                              .get<ArchivedSimulationManager>()
-                              ->getSimulation(simulation->getId());
+    const auto &dataset =
+        simulationService.getSimulationResult(simulation.getId());
 
     ImGui::BeginGroup();
     {
@@ -311,9 +308,8 @@ void SimulationAnalyzer::renderPlotter() {
         ImGui::InputText("Y Expression", yExpr, sizeof(yExpr));
         if (ImGui::Button("Apply")) {
             try {
-                const auto &dataset = ServiceLocator::getInstance()
-                                          .get<ArchivedSimulationManager>()
-                                          ->getSimulation(simulation->getId());
+                const auto &dataset =
+                    simulationService.getSimulationResult(simulation.getId());
                 // X expression
                 {
                     Interpreter interpreter(dataset);
@@ -404,9 +400,8 @@ void SimulationAnalyzer::renderPlotter() {
 }
 
 void SimulationAnalyzer::renderDatasetsViewer() {
-    const auto &datasets = ServiceLocator::getInstance()
-                               .get<ArchivedSimulationManager>()
-                               ->getSimulation(simulation->getId());
+    const auto &datasets =
+        simulationService.getSimulationResult(simulation.getId());
 
     ImGui::BeginGroup();
     ImGui::TextColored(ImVec4(1, 1, 0, 1), "Datasets Viewer");
@@ -454,6 +449,7 @@ void SimulationAnalyzer::renderDatasetsViewer() {
         filteredDatasetView.setBaseDataset(datasets);
         bitVector = std::make_unique<BitVector>(datasets.getRowCount());
         bitVector->setAll(true);
+        filter[0] = '\0';
         filteredDatasetView.setMask(*bitVector);
         filterExpr.clear();
         errorMessageExpr.clear();
