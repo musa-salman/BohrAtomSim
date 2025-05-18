@@ -12,7 +12,7 @@ extern "C" {
 
 inline void format_output_filename(size_t id,
                                    char output_filename[FILE_PATH_SIZE]) {
-    snprintf(output_filename, FILE_PATH_SIZE, "%ssimulations/%ld.bin", DB_PATH,
+    snprintf(output_filename, FILE_PATH_SIZE, "%s/simulations/%ld.bin", DB_PATH,
              id);
 }
 
