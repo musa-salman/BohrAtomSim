@@ -47,7 +47,7 @@ Simulator::~Simulator() {
 }
 
 void Simulator::simulateOrbit(Simulation &simulation,
-                              std::function<void()> onCompletion) {
+                              std::function<void()> &&onCompletion) {
 
     char output_filename[FILE_PATH_SIZE]; // NOSONAR
     format_output_filename(simulation.getId(), output_filename);
@@ -56,8 +56,8 @@ void Simulator::simulateOrbit(Simulation &simulation,
     if (file_bin == nullptr)
         throw std::runtime_error("Failed to open file for writing");
 
-    auto ss2d = std::make_shared<SimulationStepper2D>(simulation, onCompletion,
-                                                      file_bin);
+    auto ss2d = std::make_shared<SimulationStepper2D>(
+        simulation, std::move(onCompletion), file_bin);
     steppers[simulation.getId()] = ss2d;
 
     boost::asio::post(ioContext, [ss2d]() { ss2d->run(); });

@@ -17,7 +17,7 @@ class Simulator : public ISimulator {
     ~Simulator();
 
     void simulateOrbit(Simulation &simulation,
-                       std::function<void()> onCompletion);
+                       std::function<void()> &&onCompletion);
 
     void pauseSimulation(size_t id);
 

@@ -11,7 +11,7 @@ class ISimulator {
     virtual ~ISimulator() = default;
 
     virtual void simulateOrbit(Simulation &simulation,
-                               std::function<void()> onCompletion) = 0;
+                               std::function<void()> &&onCompletion) = 0;
 
     virtual void pauseSimulation(size_t id) = 0;
     virtual void resumeSimulation(size_t id) = 0;
