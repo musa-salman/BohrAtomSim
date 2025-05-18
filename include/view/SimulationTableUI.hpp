@@ -1,9 +1,6 @@
-#include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
-#include "simulation_repositories/ISimulationRepository.hpp"
 #include "view/Component.hpp"
 
 class SimulationTableUI : public Component {
@@ -13,9 +10,6 @@ class SimulationTableUI : public Component {
     void render() override;
 
   private:
-    std::shared_ptr<ISimulationRepository> simulationRepository;
-
-    std::vector<std::shared_ptr<Simulation>> simulations;
     std::string searchQuery;
 
     std::optional<size_t> selectedSimulationId;

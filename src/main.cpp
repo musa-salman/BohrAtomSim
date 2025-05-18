@@ -3,6 +3,7 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <iostream>
 
+#include "explorer_manager/OngoingSimulationManager.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -10,12 +11,14 @@
 #include <implot.h>
 
 #include <IconsFontAwesome4.h>
+#include <memory>
 
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/DataSource.hpp"
-#include "simulation_repositories/ISimulationRepository.hpp"
 #include "simulation_repositories/SimulationRepository.hpp"
+#include "simulation_repositories/SimulationRepositoryImpl.hpp"
+#include "simulation_repositories/SimulationServiceImpl.hpp"
 #include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulator.hpp"
 #include "view/SimulationAnalysisManager.hpp"
@@ -70,14 +73,17 @@ int main() {
     ServiceLocator::getInstance().registerService<DataSource>(
         std::make_shared<DataSource>());
 
-    ServiceLocator::getInstance().registerService<ISimulationRepository>(
-        std::make_shared<SimulationRepository>());
+    ServiceLocator::getInstance().registerService<SimulationRepository>(
+        std::make_shared<SimulationRepositoryImpl>());
 
     ServiceLocator::getInstance().registerService<OngoingSimulationManager>(
         std::make_shared<OngoingSimulationManager>());
 
     ServiceLocator::getInstance().registerService<ArchivedSimulationManager>(
         std::make_shared<ArchivedSimulationManager>());
+
+    ServiceLocator::getInstance().registerService<SimulationService>(
+        std::make_shared<SimulationServiceImpl>());
 
     // Initialize UI Components
     SimulationExplorer explorer;

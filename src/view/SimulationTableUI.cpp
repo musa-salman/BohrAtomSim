@@ -4,18 +4,20 @@
 #include <string>
 
 #include "service_locator/ServiceLocator.hpp"
+#include "simulation_repositories/SimulationService.hpp"
 #include "view/SimulationTableUI.hpp"
 
-SimulationTableUI::SimulationTableUI()
-    : simulationRepository(
-          ServiceLocator::getInstance().get<ISimulationRepository>()),
-      simulations(simulationRepository->getAll()), searchQuery("") {}
+SimulationTableUI::SimulationTableUI() : searchQuery("") {}
 
 void SimulationTableUI::render() {
-    renderActionButtons();
-    ImGui::SameLine();
-    renderSearchBar();
-    renderTable();
+    if (ImGui::BeginChild("#simTable")) {
+        renderActionButtons();
+        ImGui::SameLine();
+        renderSearchBar();
+        renderTable();
+    }
+
+    ImGui::EndChild();
 }
 
 void SimulationTableUI::renderSearchBar() {
@@ -26,16 +28,12 @@ void SimulationTableUI::renderSearchBar() {
 }
 
 void SimulationTableUI::renderActionButtons() {
-    if (ImGui::Button("Refresh")) {
-        simulations = simulationRepository->getAll();
-    }
-
-    ImGui::SameLine();
     if (selectedSimulationId.has_value()) {
         if (ImGui::Button("Delete Selected")) {
-            simulationRepository->remove(*selectedSimulationId);
+            ServiceLocator::getInstance()
+                .get<SimulationService>()
+                .removeSimulation(selectedSimulationId.value());
             selectedSimulationId.reset();
-            simulations = simulationRepository->getAll();
         }
     }
 }
@@ -53,7 +51,9 @@ void SimulationTableUI::renderTable() {
         ImGui::TableSetupColumn("Theta");
         ImGui::TableHeadersRow();
 
-        for (const auto &sim : simulations) {
+        for (const auto &[id, sim] : ServiceLocator::getInstance()
+                                         .get<SimulationService>()
+                                         .getCompletedSimulations()) {
             if (!searchQuery.empty() &&
                 sim->getName().find(searchQuery) == std::string::npos &&
                 std::to_string(sim->getId()).find(searchQuery) ==
