@@ -96,6 +96,11 @@ file(GLOB EXPRTK_SOURCES
 )
 include_directories(${EXPRTK_DIR})
 
+set(JSON_DIR ${PROJECT_SOURCE_DIR}/external/json)
+file(GLOB JSON_SOURCES
+    ${JSON_DIR}/single_include/*.hpp
+)
+
 find_package(Matplot++ REQUIRED)
 
 find_package(PkgConfig REQUIRED)

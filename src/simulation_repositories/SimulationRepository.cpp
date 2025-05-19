@@ -5,6 +5,7 @@
 #include <string>
 
 #include <SQLiteCpp/SQLiteCpp.h>
+#include <nlohmann/json.hpp>
 
 #include "atom/result_recorders.h"
 #include "service_locator/ServiceLocator.hpp"
@@ -23,13 +24,9 @@ SimulationRepositoryImpl::SimulationRepositoryImpl() {
         "CREATE TABLE IF NOT EXISTS Simulations ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "name TEXT NOT NULL, "
-        "record_interval INTEGER NOT NULL, "
-        "total_duration REAL NOT NULL, "
-        "time_interval REAL NOT NULL, "
-        "status INTEGER NOT NULL, "
-        "r_0 REAL NOT NULL, "
-        "v_0 REAL NOT NULL, "
-        "theta_rv REAL NOT NULL, "
+        "status INTEGER NOT NULL DEFAULT 0, "
+        "stepper_type INTEGER NOT NULL, "
+        "params TEXT NOT NULL, "
         "timestamp TEXT NOT NULL);";
 
     try {
@@ -48,20 +45,13 @@ size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
 
     try {
         SQLite::Statement query(
-            *db, "INSERT INTO Simulations (name, record_interval, "
-                 "total_duration, time_interval, status, r_0, v_0, theta_rv, "
+            *db, "INSERT INTO Simulations (name, stepper_type, params, "
                  "timestamp) "
-                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'));");
+                 "VALUES (?, ?, ?, datetime('now'));");
 
         query.bind(1, simulation.getName());
-        query.bind(2, simulation.getRecordInterval());
-        query.bind(3, simulation.getTotalDuration());
-        query.bind(4, simulation.getDeltaTime());
-        query.bind(5, (int)simulation.status);
-        query.bind(6, simulation.getR0());
-        query.bind(7, simulation.getV0());
-        query.bind(8, simulation.getThetaRV());
-
+        query.bind(2, static_cast<int32_t>(simulation.getStepperType()));
+        query.bind(3, simulation.serializeParams());
         query.exec();
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error inserting simulation: " << e.what() << std::endl;
@@ -109,8 +99,7 @@ SimulationRepositoryImpl::getAll() const {
     if (!db)
         throw std::runtime_error("Database not initialized.");
 
-    std::string sql = "SELECT id, name, record_interval, total_duration, "
-                      "time_interval, status, r_0, v_0, theta_rv "
+    std::string sql = "SELECT id, name, status, stepper_type, params "
                       "FROM Simulations;";
 
     std::vector<std::unique_ptr<Simulation>> simulations;
@@ -121,14 +110,14 @@ SimulationRepositoryImpl::getAll() const {
 
             simulation->setId(query.getColumn(0).getInt());
             simulation->setName(query.getColumn(1).getText());
-            simulation->setRecordInterval(query.getColumn(2).getInt());
-            simulation->setTotalDuration(query.getColumn(3).getDouble());
-            simulation->setDeltaTime(query.getColumn(4).getDouble());
+
             simulation->setStatus(static_cast<Simulation::SimulationStatus>(
-                query.getColumn(5).getInt()));
-            simulation->setR0(query.getColumn(6).getDouble());
-            simulation->setV0(query.getColumn(7).getDouble());
-            simulation->setThetaRV(query.getColumn(8).getDouble());
+                query.getColumn(2).getInt()));
+            simulation->setStepperType(
+                static_cast<StepperType>(query.getColumn(3).getInt()));
+
+            auto paras = nlohmann::json::parse(query.getColumn(4).getText());
+            simulation->setParams(paras);
 
             simulations.push_back(std::move(simulation));
         }

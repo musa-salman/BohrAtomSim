@@ -21,6 +21,10 @@
 #include "simulation_repositories/SimulationServiceImpl.hpp"
 #include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulator.hpp"
+#include "steppers/SimulationStepper.hpp"
+#include "steppers/SimulationStepper2D.hpp"
+#include "steppers/StepperFactory.hpp"
+#include "steppers/SymbolicPotentialStepper.hpp"
 #include "view/SimulationAnalysisManager.hpp"
 #include "view/SimulationExplorer.hpp"
 #include "view/SimulationTableUI.hpp"
@@ -67,6 +71,29 @@ int main() {
         ImGuiWindowFlags_NoNavFocus;
 
     // Initialize Simulation
+    {
+        auto stepperFactory = std::make_shared<StepperFactory>();
+
+        stepperFactory->registerStepper(
+            StepperType::Stepper2D,
+            [](const std::unordered_map<std::string, ParameterValue> &params,
+               std::function<void()> &&onCompletion, FILE *file_bin) {
+                return std::make_unique<SimulationStepper2D>(
+                    params, std::move(onCompletion), file_bin);
+            });
+
+        stepperFactory->registerStepper(
+            StepperType::SymbolicPotential,
+            [](const std::unordered_map<std::string, ParameterValue> &params,
+               std::function<void()> &&onCompletion, FILE *file_bin) {
+                return std::make_unique<SymbolicPotentialStepper>(
+                    params, std::move(onCompletion), file_bin);
+            });
+
+        ServiceLocator::getInstance().registerService<StepperFactory>(
+            stepperFactory);
+    }
+
     ServiceLocator::getInstance().registerService<ISimulator>(
         std::make_shared<Simulator>(10));
 

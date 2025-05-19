@@ -37,18 +37,13 @@ void SimulationTableUI::renderActionButtons() {
         }
     }
 }
-
 void SimulationTableUI::renderTable() {
-    if (ImGui::BeginTable("SimTable", 8,
+    if (ImGui::BeginTable("SimTable", 4,
                           ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
         ImGui::TableSetupColumn("ID");
         ImGui::TableSetupColumn("Name");
-        ImGui::TableSetupColumn("Record Interval");
-        ImGui::TableSetupColumn("Time Interval");
-        ImGui::TableSetupColumn("Total Duration");
-        ImGui::TableSetupColumn("R0");
-        ImGui::TableSetupColumn("V0");
-        ImGui::TableSetupColumn("Theta");
+        ImGui::TableSetupColumn("Stepper Type");
+        ImGui::TableSetupColumn("Parameters");
         ImGui::TableHeadersRow();
 
         for (const auto &[id, sim] : ServiceLocator::getInstance()
@@ -62,42 +57,25 @@ void SimulationTableUI::renderTable() {
 
             ImGui::TableNextRow();
 
-            for (int column = 0; column < 7; column++) {
-                ImGui::TableSetColumnIndex(column);
-
-                switch (column) {
-                case 0:
-                    if (ImGui::Selectable(
-                            std::to_string(sim->getId()).c_str(),
-                            selectedSimulationId == sim->getId(),
-                            ImGuiSelectableFlags_SpanAllColumns)) {
-                        selectedSimulationId = sim->getId();
-                    }
-                    break;
-                case 1:
-                    ImGui::Text("%s", sim->getName().c_str());
-                    break;
-                case 2:
-                    ImGui::Text("%d", sim->getRecordInterval());
-                    break;
-                case 3:
-                    ImGui::Text("%7e", sim->getDeltaTime());
-                    break;
-                case 4:
-                    ImGui::Text("%.7e", sim->getTotalDuration());
-                    break;
-                case 5:
-                    ImGui::Text("%.7e", sim->getR0());
-                    break;
-                case 6:
-                    ImGui::Text("%.7e", sim->getV0());
-                    break;
-                case 7:
-                    ImGui::Text("%.7e", sim->getThetaRV());
-                    break;
-                }
+            ImGui::TableSetColumnIndex(0);
+            if (ImGui::Selectable(std::to_string(sim->getId()).c_str(),
+                                  selectedSimulationId == sim->getId(),
+                                  ImGuiSelectableFlags_SpanAllColumns)) {
+                selectedSimulationId = sim->getId();
             }
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", sim->getName().c_str());
+
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%d", static_cast<int>(sim->getStepperType()));
+
+            ImGui::TableSetColumnIndex(3);
+            ImGui::PushTextWrapPos(0.0f);
+            ImGui::TextUnformatted(sim->serializeParams().c_str());
+            ImGui::PopTextWrapPos();
         }
+
         ImGui::EndTable();
     }
 }

@@ -14,6 +14,7 @@
 #include "exporters/HDF5Exporter.hpp"
 
 #include "data_expr/AstPrinter.hpp"
+#include "math_utils.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationService.hpp"
 #include "view/SimulationAnalyzer.hpp"
@@ -26,7 +27,8 @@ SimulationAnalyzer::SimulationAnalyzer(
           ServiceLocator::getInstance().get<SimulationService>()) {}
 
 void SimulationAnalyzer::render() {
-    ImGui::BeginTabBar("SimulationAnalyzerTabBar", ImGuiTabBarFlags_None);
+    ImGui::BeginTabBar("##SimulationAnalyzerTabBar", ImGuiTabBarFlags_None);
+
     if (ImGui::BeginTabItem("Details")) {
         renderSimulationDetails();
         ImGui::EndTabItem();
@@ -69,115 +71,28 @@ void SimulationAnalyzer::renderSimulationDetails() {
         ImGui::Separator();
         ImGui::Columns(2, nullptr, false);
 
-        ImGui::BeginGroup();
-        ImGui::TextDisabled("General Info");
-        if (ImGui::BeginTable("GeneralInfoTable", 2,
-                              ImGuiTableFlags_SizingStretchSame)) {
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("ID");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", simulation.getId());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Name");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s", simulation.getName().c_str());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Status");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s", status == Simulation::SimulationStatus::COMPLETED
-                                  ? "Completed"
-                              : status == Simulation::SimulationStatus::RUNNING
-                                  ? "Running"
-                              : status == Simulation::SimulationStatus::PAUSED
-                                  ? "Paused"
-                                  : "Unknown");
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Time Step");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.5e", simulation.getDeltaTime());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Duration");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2f", simulation.getTotalDuration());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Record Interval");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%hu", simulation.getRecordInterval());
-
-            ImGui::EndTable();
-        }
-        ImGui::EndGroup();
-
+        ImGui::Text("ID: %zu", simulation.getId());
         ImGui::NextColumn();
-
-        ImGui::BeginGroup();
-        ImGui::TextDisabled("Initial Conditions");
-        if (ImGui::BeginTable("InitialConditionsTable", 2,
-                              ImGuiTableFlags_SizingStretchSame)) {
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Position (x, y)");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("(%.2e, %.2e)", simulation.getR0X(),
-                        simulation.getR0Y());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Velocity (x, y)");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("(%.2e, %.2e)", simulation.getV0X(),
-                        simulation.getV0Y());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Angle θ");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation.getThetaRV());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Radius");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation.getR0());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Velocity Mag.");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation.getV0());
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Angular Momentum");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2e", simulation.getV0() * simulation.getR0() *
-                                    sin(simulation.getThetaRV()));
-
-            ImGui::EndTable();
-        }
-        ImGui::EndGroup();
+        ImGui::Text("Name: %s", simulation.getName().c_str());
+        ImGui::NextColumn();
+        ImGui::Text("Status: %s",
+                    status == Simulation::SimulationStatus::RUNNING ? "Running"
+                    : status == Simulation::SimulationStatus::COMPLETED
+                        ? "Completed"
+                        : "Unknown");
+        ImGui::NextColumn();
+        ImGui::Text("Stepper Type: %s",
+                    simulation.getStepperType() == StepperType::Stepper2D
+                        ? "2D"
+                        : "Unknown");
+        // const auto &params = simulation.getParams();
 
         ImGui::Columns(1);
-
-        // Buttons
         ImGui::Separator();
         ImGui::TextDisabled("Actions");
-        ImGui::BeginGroup();
         if (ImGui::Button("Delete")) {
             onDeleteCallback(simulation.getId());
         }
-        ImGui::EndGroup();
     }
     ImGui::EndGroup();
 }

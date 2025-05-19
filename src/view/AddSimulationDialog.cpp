@@ -4,20 +4,24 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include "service_locator/ServiceLocator.hpp"
 #include "simulator_runner/Simulation.hpp"
+#include "steppers/SimulationStepper.hpp"
+#include "steppers/StepperFactory.hpp"
 #include "view/AddSimulationDialog.hpp"
 
 AddSimulationDialog::AddSimulationDialog() { simulation = Simulation(); }
 
 void AddSimulationDialog::setOnSubmit(
     const std::function<void(const Simulation &)> &_on_submit) {
-    simulation.initial_motion_step.time = 0;
     this->on_submit = _on_submit;
 }
 
 void AddSimulationDialog::render() {
     static bool is_open = false;
     static time_t t = time(0);
+
+    static StepperType selectedStepper;
 
     if (ImGui::Button("Add Simulation")) {
         is_open = true;
@@ -48,183 +52,76 @@ void AddSimulationDialog::render() {
         simulation.setName(std::string(name));
         ImGui::Separator();
 
-        static double r_0 = simulation.getR0();
-        static double v_0 = simulation.getV0();
-        static double theta_rv = simulation.getThetaRV();
+        // Simulation type combo box
+        ImGui::Text("Simulation Type");
+        const auto &availableSteppers = ServiceLocator::getInstance()
+                                            .get<StepperFactory>()
+                                            .availableSteppers();
+        static const char *stepperNames[] = {"2D", "2D Symbolic Potential"};
 
-        static double vecRadius[2] = {simulation.getR0X(), simulation.getR0Y()};
+        if (ImGui::BeginCombo(
+                "Stepper Type",
+                stepperNames[static_cast<int>(selectedStepper)])) {
+            for (size_t i = 0; i < availableSteppers.size(); ++i) {
+                const char *stepperName = stepperNames[i];
+                bool isSelected =
+                    (selectedStepper == static_cast<StepperType>(i));
+                if (ImGui::Selectable(stepperName, isSelected)) {
+                    selectedStepper = static_cast<StepperType>(i);
+                    auto &params = simulation.getParams();
+                    params.clear();
 
-        static double vecVelocity[2] = {simulation.getV0X(),
-                                        simulation.getV0Y()};
-
-        static unsigned short record_interval = simulation.getRecordInterval();
-        static double total_duration = simulation.getTotalDuration();
-        static double delta_time = simulation.getDeltaTime();
-
-        static double angular_momentum = simulation.getR0() *
-                                         simulation.getV0() *
-                                         sin(simulation.getThetaRV());
-
-        static bool isInitialRadiusChanged = false;
-        static bool isInitialVelocityChanged = false;
-        static bool isInitialAngleChanged = false;
-
-        static bool isRadiusXChanged = false;
-        static bool isRadiusYChanged = false;
-
-        static bool isVelocityXChanged = false;
-        static bool isVelocityYChanged = false;
-
-        static bool isRecordIntervalChanged = false;
-        static bool isTotalDurationChanged = false;
-        static bool isDeltaTimeChanged = false;
-
-        static bool isQuantized = false;
-
-        static bool isPrincipleQuantumNumberChanged = false;
-        static bool isAzimuthalQuantumNumberChanged = false;
-
-        static uint8_t principle_quantum_number = 3;
-        static uint8_t azimuthal_quantum_number = 2;
+                    auto tempStepper =
+                        ServiceLocator::getInstance()
+                            .get<StepperFactory>()
+                            .create(selectedStepper, params, []() {}, nullptr);
+                    const auto &requiredParams =
+                        tempStepper->requiredParameters();
+                    for (const auto &param : requiredParams) {
+                        if (param.type == ParameterType::Double) {
+                            params[param.name] =
+                                std::any_cast<double>(param.defaultValue);
+                        } else if (param.type == ParameterType::Int) {
+                            params[param.name] =
+                                std::any_cast<int>(param.defaultValue);
+                        } else if (param.type == ParameterType::String) {
+                            params[param.name] =
+                                std::any_cast<std::string>(param.defaultValue);
+                        } else if (param.type == ParameterType::Bool) {
+                            params[param.name] =
+                                std::any_cast<bool>(param.defaultValue);
+                        }
+                    }
+                }
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
 
         ImGui::Text("Simulation Parameters");
-        ImGui::Text("Angular Momentum = %.7e", angular_momentum);
 
-        ImGui::Checkbox("Quantized", &isQuantized);
-        if (isQuantized) {
-            ImGui::Text("Quantum Numbers");
-            ImGui::SameLine();
-            uint8_t step = 1;
-            isPrincipleQuantumNumberChanged = ImGui::InputScalar(
-                "n", ImGuiDataType_U8, &principle_quantum_number, &step);
-            ImGui::SameLine();
-            isAzimuthalQuantumNumberChanged = ImGui::InputScalar(
-                "l", ImGuiDataType_U8, &azimuthal_quantum_number, &step);
-            if (isPrincipleQuantumNumberChanged ||
-                isAzimuthalQuantumNumberChanged) {
-                simulation.quantize(principle_quantum_number,
-                                    azimuthal_quantum_number);
-
-                r_0 = simulation.getR0();
-                theta_rv = simulation.getThetaRV();
-                v_0 = simulation.getV0();
-                vecRadius[0] = simulation.getR0X();
-                vecRadius[1] = simulation.getR0Y();
-                vecVelocity[0] = simulation.getV0X();
-                vecVelocity[1] = simulation.getV0Y();
-                angular_momentum = simulation.getR0() * simulation.getV0() *
-                                   sin(simulation.getThetaRV());
+        auto &params = simulation.getParams();
+        for (auto &[key, value] : params) {
+            if (value.type() == typeid(double)) {
+                double &param = std::any_cast<double &>(value);
+                ImGui::InputDouble(key.c_str(), &param);
+            } else if (value.type() == typeid(int)) {
+                int &param = std::any_cast<int &>(value);
+                ImGui::InputInt(key.c_str(), &param);
+            } else if (value.type() == typeid(bool)) {
+                bool &param = std::any_cast<bool &>(value);
+                ImGui::Checkbox(key.c_str(), &param);
+            } else if (value.type() == typeid(std::string)) {
+                std::string &param = std::any_cast<std::string &>(value);
+                static char buffer[200];
+                ImGui::InputText(key.c_str(), buffer, IM_ARRAYSIZE(buffer));
+                if (ImGui::IsItemDeactivatedAfterEdit()) {
+                    param = std::string(buffer);
+                }
             }
         }
 
-        if (isQuantized)
-            ImGui::BeginDisabled();
-        isInitialRadiusChanged = ImGui::InputDouble("Initial Radius", &r_0);
-        if (isInitialRadiusChanged) {
-            simulation.setR0(r_0);
-
-            theta_rv = simulation.getThetaRV();
-            vecRadius[0] = simulation.getR0X();
-            vecRadius[1] = simulation.getR0Y();
-
-            angular_momentum = simulation.getR0() * simulation.getV0() *
-                               sin(simulation.getThetaRV());
-        }
-
-        ImGui::Text("vector (r) =");
-        ImGui::SameLine();
-        isRadiusXChanged = ImGui::InputDouble("x##r", &vecRadius[0]);
-        if (isRadiusXChanged) {
-            simulation.setR0X(vecRadius[0]);
-
-            r_0 = simulation.getR0();
-            theta_rv = simulation.getThetaRV();
-            angular_momentum = simulation.getR0() * simulation.getV0() *
-                               sin(simulation.getThetaRV());
-        }
-        ImGui::SameLine();
-        isRadiusYChanged = ImGui::InputDouble("y##r", &vecRadius[1]);
-        if (isRadiusYChanged) {
-            simulation.setR0Y(vecRadius[1]);
-
-            r_0 = simulation.getR0();
-            theta_rv = simulation.getThetaRV();
-            angular_momentum = simulation.getR0() * simulation.getV0() *
-                               sin(simulation.getThetaRV());
-        }
-
-        isInitialVelocityChanged = ImGui::InputDouble("Initial Velocity", &v_0);
-        if (isInitialVelocityChanged) {
-            simulation.setV0(v_0);
-
-            theta_rv = simulation.getThetaRV();
-            vecVelocity[0] = simulation.getV0X();
-            vecVelocity[1] = simulation.getV0Y();
-            angular_momentum = simulation.getR0() * simulation.getV0() *
-                               sin(simulation.getThetaRV());
-        }
-        ImGui::Text("vector (v) =");
-        ImGui::SameLine();
-        isVelocityXChanged = ImGui::InputDouble("x##v", &vecVelocity[0]);
-        if (isVelocityXChanged) {
-            simulation.setV0X(vecVelocity[0]);
-
-            v_0 = simulation.getV0();
-            theta_rv = simulation.getThetaRV();
-            angular_momentum = simulation.getR0() * simulation.getV0() *
-                               sin(simulation.getThetaRV());
-        }
-
-        ImGui::SameLine();
-        isVelocityYChanged = ImGui::InputDouble("y##v", &vecVelocity[1]);
-        if (isVelocityYChanged) {
-            simulation.setV0Y(vecVelocity[1]);
-
-            v_0 = simulation.getV0();
-            theta_rv = simulation.getThetaRV();
-            angular_momentum = simulation.getR0() * simulation.getV0() *
-                               sin(simulation.getThetaRV());
-        }
-
-        isInitialAngleChanged =
-            ImGui::InputDouble("Initial Angle (theta)", &theta_rv);
-        if (isInitialAngleChanged) {
-            simulation.setThetaRV(theta_rv);
-
-            vecRadius[0] = simulation.getR0X();
-            vecRadius[1] = simulation.getR0Y();
-
-            vecVelocity[0] = simulation.getV0X();
-            vecVelocity[1] = simulation.getV0Y();
-            angular_momentum = simulation.getR0() * simulation.getV0() *
-                               sin(simulation.getThetaRV());
-            theta_rv = simulation.getThetaRV();
-            r_0 = simulation.getR0();
-            v_0 = simulation.getV0();
-        }
-        if (isQuantized)
-            ImGui::EndDisabled();
-        ImGui::Separator();
-
-        ImGui::Text("Simulation Control");
-        isTotalDurationChanged = ImGui::InputDouble(
-            "Total Duration", &total_duration, 10, 100, "%.7e");
-        if (isTotalDurationChanged) {
-            simulation.setTotalDuration(total_duration);
-        }
-        isDeltaTimeChanged =
-            ImGui::InputDouble("Time Interval", &delta_time, 0.01, 0.1, "%.3e");
-        if (isDeltaTimeChanged) {
-            if (delta_time <= 0) {
-                delta_time = simulation.getDeltaTime();
-            }
-            simulation.setDeltaTime(delta_time);
-        }
-        isRecordIntervalChanged = ImGui::InputScalar(
-            "Record Interval", ImGuiDataType_U16, &record_interval);
-        if (isRecordIntervalChanged) {
-            simulation.setRecordInterval(record_interval);
-        }
         ImGui::Separator();
 
         // Submit button

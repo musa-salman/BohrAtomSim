@@ -6,7 +6,6 @@
 #include <thread>
 
 #include "atom/atom_bohr_sim.h"
-#include "simulation_2d/SimulationStepper2D.hpp"
 #include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulation.hpp"
 
@@ -31,7 +30,7 @@ class Simulator : public ISimulator {
         workGuard;
     std::vector<std::jthread> workers;
 
-    std::unordered_map<size_t, std::shared_ptr<SimulationStepper2D>> steppers;
+    std::unordered_map<size_t, std::unique_ptr<SimulationStepper>> steppers;
 };
 
 #endif // SIMULATOR_HPP

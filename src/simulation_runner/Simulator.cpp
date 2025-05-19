@@ -5,8 +5,10 @@
 #include "atom/result_recorders.h"
 #include "simulator_runner/Simulator.hpp"
 
+#include "service_locator/ServiceLocator.hpp"
 #include "simulator_runner/Simulation.hpp"
 
+#include "steppers/StepperFactory.hpp"
 #include "utils/utils.h"
 
 Simulator::Simulator(int numThreads)
@@ -48,17 +50,19 @@ Simulator::~Simulator() {
 
 void Simulator::simulateOrbit(Simulation &simulation,
                               std::function<void()> &&onCompletion) {
-
+    const size_t id = simulation.getId();
     char output_filename[FILE_PATH_SIZE]; // NOSONAR
-    format_output_filename(simulation.getId(), output_filename);
-    FILE *file_bin = fopen(output_filename, "a+b");
+    format_output_filename(id, output_filename);
+    FILE *file_bin = fopen(output_filename, "wb");
 
     if (file_bin == nullptr)
         throw std::runtime_error("Failed to open file for writing");
 
-    auto ss2d = std::make_shared<SimulationStepper2D>(
-        simulation, std::move(onCompletion), file_bin);
-    steppers[simulation.getId()] = ss2d;
+    auto ss2d = ServiceLocator::getInstance().get<StepperFactory>().create(
+        simulation.getStepperType(), simulation.getParams(),
+        std::move(onCompletion), file_bin);
 
-    boost::asio::post(ioContext, [ss2d]() { ss2d->run(); });
+    steppers[id] = std::move(ss2d);
+
+    boost::asio::post(ioContext, [this, id]() { this->steppers[id]->run(); });
 }

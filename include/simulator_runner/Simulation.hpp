@@ -2,211 +2,70 @@
 #define SIMULATION_HPP
 
 #include <cstddef>
-#include <functional>
-#include <stdexcept>
+#include <nlohmann/json.hpp>
 #include <string>
+#include <unordered_map>
 
 #include "atom/atom_bohr_sim.h"
-#include "math_utils.hpp"
 #include "orbital_math.h"
+#include "steppers/SimulationStepper.hpp"
 #include "utils/iterator.h"
 
 class Simulation {
     std::string name;
     size_t id;
+    StepperType stepperType;
 
-    unsigned short record_interval;
-    double delta_time;
-    double total_duration;
-
-    double r_0;
-    double v_0;
-
-    // is the angle between vector r and v
-    double theta_rv;
-
-    double r[2];
-    double v[2];
+    std::unordered_map<std::string, ParameterValue> params;
 
   public:
-    struct motion_step_2d initial_motion_step;
-
     enum class SimulationStatus { IDLE, RUNNING, PAUSED, COMPLETED };
 
     SimulationStatus status = SimulationStatus::IDLE;
 
-    Simulation(const std::string &name, unsigned short record_interval,
-               float total_duration, double time_interval, double r_0,
-               double v_0, double theta_rv)
-        : name(name), record_interval(record_interval),
-          delta_time(time_interval), total_duration(total_duration), r_0(r_0),
-          v_0(v_0), theta_rv(theta_rv) {
+    Simulation() = default;
 
-        if (name.empty()) {
-            throw std::invalid_argument("name cannot be empty");
-        }
-
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-        setR0(r_0);
-        setV0(v_0);
-        setThetaRV(theta_rv);
-    }
+    Simulation(const std::string &name, size_t id,
+               const std::unordered_map<std::string, ParameterValue> &params)
+        : name(name), id(id), params(params) {}
 
     Simulation(const Simulation &simulation)
-        : name(simulation.name), id(simulation.id),
-          record_interval(simulation.record_interval),
-          delta_time(simulation.delta_time),
-          total_duration(simulation.total_duration), r_0(simulation.r_0),
-          v_0(simulation.v_0), theta_rv(simulation.theta_rv) {
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-        setR0(r_0);
-        setV0(v_0);
-        setThetaRV(theta_rv);
+        : name(simulation.name), id(simulation.id) {
+        stepperType = simulation.stepperType;
+        params = simulation.params;
+        status = simulation.status;
     }
 
     Simulation &operator=(const Simulation &simulation) {
         if (this != &simulation) {
             name = simulation.name;
             id = simulation.id;
-            record_interval = simulation.record_interval;
-            delta_time = simulation.delta_time;
-            total_duration = simulation.total_duration;
-            r_0 = simulation.r_0;
-            v_0 = simulation.v_0;
-            theta_rv = simulation.theta_rv;
-
-            init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-            setR0(r_0);
-            setV0(v_0);
-            setThetaRV(theta_rv);
+            status = simulation.status;
+            stepperType = simulation.stepperType;
+            params = simulation.params;
         }
         return *this;
     }
 
-    constexpr Simulation(const std::string &name, size_t id,
-                         unsigned short record_interval, float total_duration,
-                         double time_interval, double r_0, double v_0,
-                         double theta_rv)
-        : name(name), id(id), record_interval(record_interval),
-          delta_time(time_interval), total_duration(total_duration), r_0(r_0),
-          v_0(v_0), theta_rv(theta_rv) {
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-        setR0(r_0);
-        setV0(v_0);
-        setThetaRV(theta_rv);
+    Simulation(Simulation &&simulation) noexcept
+        : name(std::move(simulation.name)), id(simulation.id),
+          stepperType(simulation.stepperType),
+          params(std::move(simulation.params)), status(simulation.status) {}
+
+    template <typename T> void setParam(const std::string &key, T &&value) {
+        params[key] = std::forward<T>(value);
     }
 
-    Simulation()
-        : name(""), record_interval(10000), delta_time(1e-7),
-          total_duration(800.0), r_0(2.2917960675006309107), v_0(0.87267799625),
-          theta_rv(HALF_PI) {
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-        setR0(r_0);
-        setV0(v_0);
-        setThetaRV(theta_rv);
+    template <typename T> T &getParam(const std::string &key) {
+        return std::any_cast<T &>(params.at(key));
     }
 
-    const static std::reference_wrapper<Simulation> defaultSimulation() {
-        static Simulation defaultSim("Default Simulation", 0, 10000, 800.0,
-                                     1e-7, 2.2917960675006309107, 0.87267799625,
-                                     HALF_PI);
-        return std::ref(defaultSim);
+    bool hasParam(const std::string &key) const {
+        return params.find(key) != params.end();
     }
 
-    void quantize(uint8_t principle, uint8_t azimuthal) {
-
-        struct radial_bounds bounds =
-            compute_radial_limits(principle, azimuthal);
-
-        r_0 = bounds.r_min;
-        theta_rv = HALF_PI;
-        v_0 = azimuthal / r_0;
-
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-
-        setR0(r_0);
-        setV0(v_0);
-        setThetaRV(theta_rv);
-    }
-
-    void setR0(double r0) {
-        r_0 = r0;
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-
-        r[0] = r_0 * cos(theta_rv);
-        r[1] = r_0 * sin(theta_rv);
-    }
-
-    void setR0X(double r0_x) {
-        r[0] = r0_x;
-        r_0 = sqrt(r[0] * r[0] + r[1] * r[1]);
-
-        theta_rv = computeAngleVec2D(r, v);
-
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-    }
-
-    void setR0Y(double r0_y) {
-        r[1] = r0_y;
-        r_0 = sqrt(r[0] * r[0] + r[1] * r[1]);
-
-        theta_rv = computeAngleVec2D(r, v);
-
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-    }
-
-    void setV0(double v0) {
-        v_0 = v0;
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-
-        v[0] = v_0 * cos(theta_rv);
-        v[1] = v_0 * sin(theta_rv);
-    }
-
-    void setV0X(double v0_x) {
-        v[0] = v0_x;
-        v_0 = sqrt(v[0] * v[0] + v[1] * v[1]);
-
-        theta_rv = computeAngleVec2D(r, v);
-
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-    }
-
-    void setV0Y(double v0_y) {
-        v[1] = v0_y;
-        v_0 = sqrt(v[0] * v[0] + v[1] * v[1]);
-
-        theta_rv = computeAngleVec2D(r, v);
-
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-    }
-
-    void setThetaRV(double theta_rv) {
-        this->theta_rv = theta_rv;
-        init_motion_step(&initial_motion_step, r_0, v_0, theta_rv);
-
-        r[0] = r_0 * cos(theta_rv);
-        r[1] = r_0 * sin(theta_rv);
-
-        v[0] = v_0 * cos(theta_rv);
-        v[1] = v_0 * sin(theta_rv);
-    }
-
-    void setRecordInterval(unsigned short interval) {
-        record_interval = interval;
-    }
-
-    void setTotalDuration(double duration) {
-        if (duration <= 0) {
-            throw std::invalid_argument("Total duration must be positive");
-        }
-
-        total_duration = duration;
-    }
-
-    void setDeltaTime(double time_interval) {
-        if (time_interval > 0)
-            delta_time = time_interval;
+    std::unordered_map<std::string, ParameterValue> &getParams() {
+        return params;
     }
 
     void setName(const std::string &name) { this->name = name; }
@@ -215,29 +74,50 @@ class Simulation {
 
     void setStatus(SimulationStatus status) { this->status = status; }
 
+    void setStepperType(StepperType stepperType) {
+        this->stepperType = stepperType;
+    }
+
+    void setParams(const std::unordered_map<std::string, ParameterValue> &p) {
+        params = p;
+    }
+
+    void setParams(nlohmann::json &j) {
+        for (auto &[key, value] : j.items()) {
+            if (value.is_number_float()) {
+                params[key] = value.get<double>();
+            } else if (value.is_number_integer()) {
+                params[key] = value.get<int>();
+            } else if (value.is_string()) {
+                params[key] = value.get<std::string>();
+            } else if (value.is_boolean()) {
+                params[key] = value.get<bool>();
+            }
+        }
+    }
+
     std::string getName() const { return name; }
 
     size_t getId() const { return id; }
 
-    unsigned short getRecordInterval() const { return record_interval; }
+    StepperType getStepperType() const { return stepperType; }
 
-    double getDeltaTime() const { return delta_time; }
-
-    double getTotalDuration() const { return total_duration; }
-
-    double getR0() const { return r_0; }
-
-    double getV0() const { return v_0; }
-
-    double getThetaRV() const { return theta_rv; }
-
-    double getR0X() const { return r[0]; }
-
-    double getR0Y() const { return r[1]; }
-
-    double getV0X() const { return v[0]; }
-
-    double getV0Y() const { return v[1]; }
+    std::string serializeParams() const {
+        // Serialize the parameters to a string json use nlohmann::json
+        nlohmann::json j;
+        for (const auto &[key, value] : params) {
+            if (value.type() == typeid(double)) {
+                j[key] = std::any_cast<double>(value);
+            } else if (value.type() == typeid(int)) {
+                j[key] = std::any_cast<int>(value);
+            } else if (value.type() == typeid(std::string)) {
+                j[key] = std::any_cast<std::string>(value);
+            } else if (value.type() == typeid(bool)) {
+                j[key] = std::any_cast<bool>(value);
+            }
+        }
+        return j.dump();
+    }
 };
 
 #endif // SIMULATION_HPP

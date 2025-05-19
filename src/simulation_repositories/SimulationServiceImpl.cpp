@@ -53,21 +53,6 @@ void SimulationServiceImpl::startSimulation(size_t id) {
     if (!ongoingSimulations.contains(id))
         throw std::runtime_error("Simulation not found");
 
-    {
-        char file_name[FILE_PATH_SIZE];
-        format_output_filename(id, file_name);
-        FILE *file_bin = fopen(file_name, "wb");
-        if (!file_bin)
-            throw std::runtime_error("Failed to open file for writing");
-
-        const uint8_t field_names_2DR[][MAX_FIELD_NAME] = {
-            "t", "r", "r_dot", "r_ddot", "psi", "psi_dot", "gamma"};
-
-        init_file_header(file_bin, field_names_2DR,
-                         sizeof(field_names_2DR) / sizeof(field_names_2DR[0]));
-        fclose(file_bin);
-    }
-
     ongoingSimulations.at(id)->status = Simulation::SimulationStatus::RUNNING;
     ongoingSimulationManager.startMonitoring(id);
 
