@@ -8,8 +8,30 @@
 
 SimulationStepper::~SimulationStepper() {
     if (file_bin) {
+        fflush(file_bin);
+        fsync(fileno(file_bin));
         fclose(file_bin);
         file_bin = nullptr;
+    }
+}
+
+void SimulationStepper::run() {
+    if (isFinished || isStopped)
+        return;
+
+    isRunning = true;
+
+    executeSimulationLoop();
+
+    if (it * delta_time >= total_duration || isStopped) {
+        if (file_bin) {
+            fflush(file_bin);
+            fsync(fileno(file_bin));
+            fclose(file_bin);
+            file_bin = nullptr;
+        }
+        onCompletion();
+        isFinished = true;
     }
 }
 

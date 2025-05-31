@@ -1,33 +1,28 @@
 #ifndef SIMULATION_STEPPER_HPP
 #define SIMULATION_STEPPER_HPP
 
-#include <any>
+#include <cmath>
 #include <cstdio>
 #include <functional>
-#include <string>
 
+#include "eom/utils.hpp"
 #include "utils/types.h"
 
-enum class ParameterType {
-    Double,
-    Int,
-    String,
-    Bool,
+struct StepperCommonConfig {
+    scalar delta_time;
+    scalar total_duration;
+    std::function<void()> onCompletion;
+    uint record_interval;
+
+    FILE *file_bin;
 };
-
-using ParameterValue = std::any;
-
-struct ParameterSpec {
-    std::string name;
-    std::string label;
-    ParameterType type;
-    ParameterValue defaultValue;
-};
-
-enum class StepperType { Stepper2D, SymbolicPotential };
 
 class SimulationStepper {
   protected:
+    const scalar delta_time;
+    const scalar total_duration;
+    const uint record_interval;
+
     FILE *file_bin;
     bool isRunning = false;
     bool isFinished = false;
@@ -37,17 +32,17 @@ class SimulationStepper {
 
     size_t it = 0;
 
+    virtual void executeSimulationLoop() = 0;
+
   public:
+    SimulationStepper(const StepperCommonConfig &config)
+        : delta_time(config.delta_time), total_duration(config.total_duration),
+          record_interval(config.record_interval), file_bin(config.file_bin),
+          onCompletion(config.onCompletion){};
+
     virtual ~SimulationStepper();
 
-    virtual const std::vector<ParameterSpec> &requiredParameters() const {
-        static const std::vector<ParameterSpec> empty;
-        return empty;
-    }
-
-    virtual const std::string &getName() const = 0;
-
-    virtual void run() = 0;
+    void run();
 
     void pause();
 
