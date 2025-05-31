@@ -3,7 +3,6 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <iostream>
 
-#include "explorer_manager/OngoingSimulationManager.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -13,18 +12,19 @@
 #include <IconsFontAwesome4.h>
 #include <memory>
 
+#include "explorer_manager/OngoingSimulationManager.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/DataSource.hpp"
+#include "simulation_repositories/PotentialRepository.hpp"
+#include "simulation_repositories/PotentialRepositoryImpl.hpp"
 #include "simulation_repositories/SimulationRepository.hpp"
 #include "simulation_repositories/SimulationRepositoryImpl.hpp"
 #include "simulation_repositories/SimulationServiceImpl.hpp"
 #include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulator.hpp"
-#include "steppers/SimulationStepper.hpp"
-#include "steppers/SimulationStepper2D.hpp"
 #include "steppers/StepperFactory.hpp"
-#include "steppers/SymbolicPotentialStepper.hpp"
+#include "view/PotentialsView.hpp"
 #include "view/SimulationAnalysisManager.hpp"
 #include "view/SimulationExplorer.hpp"
 #include "view/SimulationTableUI.hpp"
@@ -74,22 +74,6 @@ int main() {
     {
         auto stepperFactory = std::make_shared<StepperFactory>();
 
-        stepperFactory->registerStepper(
-            StepperType::Stepper2D,
-            [](const std::unordered_map<std::string, ParameterValue> &params,
-               std::function<void()> &&onCompletion, FILE *file_bin) {
-                return std::make_unique<SimulationStepper2D>(
-                    params, std::move(onCompletion), file_bin);
-            });
-
-        stepperFactory->registerStepper(
-            StepperType::SymbolicPotential,
-            [](const std::unordered_map<std::string, ParameterValue> &params,
-               std::function<void()> &&onCompletion, FILE *file_bin) {
-                return std::make_unique<SymbolicPotentialStepper>(
-                    params, std::move(onCompletion), file_bin);
-            });
-
         ServiceLocator::getInstance().registerService<StepperFactory>(
             stepperFactory);
     }
@@ -99,6 +83,9 @@ int main() {
 
     ServiceLocator::getInstance().registerService<DataSource>(
         std::make_shared<DataSource>());
+
+    ServiceLocator::getInstance().registerService<PotentialRepository>(
+        std::make_shared<PotentialRepositoryImpl>());
 
     ServiceLocator::getInstance().registerService<SimulationRepository>(
         std::make_shared<SimulationRepositoryImpl>());
@@ -118,6 +105,8 @@ int main() {
     SimulationTableUI simulationTableUI;
 
     SimulationAnalysisManager simulationAnalysisManager;
+
+    PotentialsView potentialsView;
 
     // Main Loop
     while (!glfwWindowShouldClose(window)) {
@@ -148,6 +137,11 @@ int main() {
 
             if (ImGui::BeginTabItem("Analysis")) {
                 simulationAnalysisManager.render();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Potentials")) {
+                potentialsView.render();
                 ImGui::EndTabItem();
             }
 

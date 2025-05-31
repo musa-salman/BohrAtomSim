@@ -1,14 +1,10 @@
 #include <boost/asio.hpp>
+#include <memory>
 #include <thread>
 
-#include "atom/atom_bohr_sim.h"
-#include "atom/result_recorders.h"
-#include "simulator_runner/Simulator.hpp"
-
-#include "service_locator/ServiceLocator.hpp"
 #include "simulator_runner/Simulation.hpp"
-
-#include "steppers/StepperFactory.hpp"
+#include "simulator_runner/Simulator.hpp"
+#include "steppers/SimulationStepper.hpp"
 #include "utils/utils.h"
 
 Simulator::Simulator(int numThreads)
@@ -58,11 +54,39 @@ void Simulator::simulateOrbit(Simulation &simulation,
     if (file_bin == nullptr)
         throw std::runtime_error("Failed to open file for writing");
 
-    auto ss2d = ServiceLocator::getInstance().get<StepperFactory>().create(
-        simulation.getStepperType(), simulation.getParams(),
-        std::move(onCompletion), file_bin);
+    StepperCommonConfig commonConfig{
+        .delta_time = simulation.getDeltaTime(),
+        .total_duration = simulation.getTotalDuration(),
+        .onCompletion = std::move(onCompletion),
+        .record_interval = simulation.getRecordInterval(),
+        .file_bin = file_bin,
+    };
 
-    steppers[id] = std::move(ss2d);
+    const bool is3D = simulation.getIs3D();
+    const bool isRel = simulation.getIsRelativistic();
+    const bool isQuant = simulation.getIsQuantized();
+
+    if (is3D) {
+        if (isRel && isQuant) {
+            make_state<true, true, true>(simulation, commonConfig);
+        } else if (isRel && !isQuant) {
+            make_state<true, true, false>(simulation, commonConfig);
+        } else if (!isRel && isQuant) {
+            make_state<true, false, true>(simulation, commonConfig);
+        } else {
+            make_state<true, false, false>(simulation, commonConfig);
+        }
+    } else {
+        if (isRel && isQuant) {
+            make_state<false, true, true>(simulation, commonConfig);
+        } else if (isRel && !isQuant) {
+            make_state<false, true, false>(simulation, commonConfig);
+        } else if (!isRel && isQuant) {
+            make_state<false, false, true>(simulation, commonConfig);
+        } else {
+            make_state<false, false, false>(simulation, commonConfig);
+        }
+    }
 
     boost::asio::post(ioContext, [this, id]() { this->steppers[id]->run(); });
 }

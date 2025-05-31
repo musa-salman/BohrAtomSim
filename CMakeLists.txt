@@ -120,20 +120,43 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(SQLiteCpp)
-
 # Collect source files
 file(GLOB_RECURSE CPP_SOURCES "src/*.cpp")
 file(GLOB_RECURSE C_SOURCES "src/*.c")
 file(GLOB_RECURSE HEADERS "include/*.h")
 list(REMOVE_ITEM CPP_SOURCES "${PROJECT_SOURCE_DIR}/src/main.cpp")
-add_library(bohr_simulation SHARED ${C_SOURCES})
-target_compile_options(bohr_simulation PRIVATE)
-target_link_libraries(bohr_simulation PRIVATE)
 
-# Main C++ executable
+# Create eom library
+add_library(eom STATIC
+    src/eom/utils.cpp
+    src/eom/spherical.cpp
+    src/eom/polar.cpp
+)
+
+list(REMOVE_ITEM CPP_SOURCES
+    ${PROJECT_SOURCE_DIR}/src/eom/utils.cpp
+    ${PROJECT_SOURCE_DIR}/src/eom/spherical.cpp
+    ${PROJECT_SOURCE_DIR}/src/eom/polar.cpp
+)
+
+# Create main executable
 add_executable(bohr_main src/main.cpp ${C_SOURCES} ${CPP_SOURCES} ${HEADERS} ${IMGUI_SOURCES} ${IMPLOT_SOURCES} ${IMGUIFILEDIALOG_SOURCES} ${AWESOME_HEADERS})
 target_compile_options(bohr_main PRIVATE -g)
-target_link_libraries(bohr_main PRIVATE bohr_simulation SQLiteCpp glfw OpenGL::GL Matplot++::matplot ${HDF5_LIBRARIES} ${Boost_LIBRARIES} ${IMPLOT_HEADERS} ${SLEEF_LIBRARIES} ${SQLite3_LIBRARIES} )
+target_compile_features(bohr_main PRIVATE cxx_std_23)
+
+# Now link all dependencies
+target_link_libraries(bohr_main PRIVATE
+    eom
+    SQLiteCpp
+    glfw
+    OpenGL::GL
+    Matplot++::matplot
+    ${HDF5_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${IMPLOT_HEADERS}
+    ${SLEEF_LIBRARIES}
+    ${SQLite3_LIBRARIES}
+)
 
 # Set output directories
 set_target_properties(bohr_main PROPERTIES

@@ -5,12 +5,11 @@
 #include <time.h>
 
 #include "service_locator/ServiceLocator.hpp"
+#include "simulation_repositories/PotentialRepository.hpp"
 #include "simulator_runner/Simulation.hpp"
-#include "steppers/SimulationStepper.hpp"
-#include "steppers/StepperFactory.hpp"
 #include "view/AddSimulationDialog.hpp"
 
-AddSimulationDialog::AddSimulationDialog() { simulation = Simulation(); }
+AddSimulationDialog::AddSimulationDialog() { resetSimulation(); }
 
 void AddSimulationDialog::setOnSubmit(
     const std::function<void(const Simulation &)> &_on_submit) {
@@ -20,8 +19,6 @@ void AddSimulationDialog::setOnSubmit(
 void AddSimulationDialog::render() {
     static bool is_open = false;
     static time_t t = time(0);
-
-    static StepperType selectedStepper;
 
     if (ImGui::Button("Add Simulation")) {
         is_open = true;
@@ -36,9 +33,9 @@ void AddSimulationDialog::render() {
     if (!is_open)
         return;
 
-    ImGui::Begin("Add Simulation", &is_open,
-                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
-    {
+    if (ImGui::Begin("Add Simulation", &is_open,
+                     ImGuiWindowFlags_NoResize |
+                         ImGuiWindowFlags_AlwaysAutoResize)) {
         static char name[200]; // NOSONAR
         static bool auto_name = true;
         // Simulation name
@@ -51,100 +48,220 @@ void AddSimulationDialog::render() {
 
         simulation.setName(std::string(name));
         ImGui::Separator();
+        ImGui::SetNextWindowSize(ImVec2(600, 800), ImGuiCond_FirstUseEver);
 
-        // Simulation type combo box
-        ImGui::Text("Simulation Type");
-        const auto &availableSteppers = ServiceLocator::getInstance()
-                                            .get<StepperFactory>()
-                                            .availableSteppers();
-        static const char *stepperNames[] = {"2D", "2D Symbolic Potential"};
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 6));
+        ImGui::PushStyleColor(ImGuiCol_Header,
+                              ImVec4(0.15f, 0.25f, 0.55f, 0.8f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
+                              ImVec4(0.2f, 0.4f, 0.9f, 0.9f));
 
-        if (ImGui::BeginCombo(
-                "Stepper Type",
-                stepperNames[static_cast<int>(selectedStepper)])) {
-            for (size_t i = 0; i < availableSteppers.size(); ++i) {
-                const char *stepperName = stepperNames[i];
-                bool isSelected =
-                    (selectedStepper == static_cast<StepperType>(i));
-                if (ImGui::Selectable(stepperName, isSelected)) {
-                    selectedStepper = static_cast<StepperType>(i);
-                    auto &params = simulation.getParams();
-                    params.clear();
+        // State Builder Section
+        if (ImGui::CollapsingHeader("State Configuration",
+                                    ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::Text("Initial Conditions");
+            ImGui::BeginDisabled(is_quant);
+            if ((is_3d && ImGui::InputScalarN("Position (r0)",
+                                              ImGuiDataType_Double, r0, 3)) ||
+                (!is_3d && ImGui::InputScalarN("Position (r0)",
+                                               ImGuiDataType_Double, r0, 2))) {
+                stateBuilder.setR0(
+                    eom::Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
+                updateSimulation();
+            }
 
-                    auto tempStepper =
-                        ServiceLocator::getInstance()
-                            .get<StepperFactory>()
-                            .create(selectedStepper, params, []() {}, nullptr);
-                    const auto &requiredParams =
-                        tempStepper->requiredParameters();
-                    for (const auto &param : requiredParams) {
-                        if (param.type == ParameterType::Double) {
-                            params[param.name] =
-                                std::any_cast<double>(param.defaultValue);
-                        } else if (param.type == ParameterType::Int) {
-                            params[param.name] =
-                                std::any_cast<int>(param.defaultValue);
-                        } else if (param.type == ParameterType::String) {
-                            params[param.name] =
-                                std::any_cast<std::string>(param.defaultValue);
-                        } else if (param.type == ParameterType::Bool) {
-                            params[param.name] =
-                                std::any_cast<bool>(param.defaultValue);
+            if ((is_3d && ImGui::InputScalarN("Velocity (v0)",
+                                              ImGuiDataType_Double, v0, 3)) ||
+                (!is_3d && ImGui::InputScalarN("Velocity (v0)",
+                                               ImGuiDataType_Double, v0, 2))) {
+                stateBuilder.setV0(
+                    eom::Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
+                updateSimulation();
+            }
+
+            if (ImGui::InputScalar("Position Magnitude", ImGuiDataType_Double,
+                                   &r0_mag)) {
+                stateBuilder.setR0Magnitude(r0_mag);
+                updateSimulation();
+            }
+            if (ImGui::InputScalar("Velocity Magnitude", ImGuiDataType_Double,
+                                   &v0_mag)) {
+                stateBuilder.setV0Magnitude(v0_mag);
+                updateSimulation();
+            }
+
+            const scalar angular_momentum = stateBuilder.getAngularMomentum();
+            ImGui::Text("Angular Momentum: %.5e", angular_momentum);
+
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            if (ImGui::Checkbox("Relativistic", &is_rel)) {
+                stateBuilder.setRelativistic(is_rel);
+                updateSimulation();
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Quantized", &is_quant)) {
+                stateBuilder.setQuantized(is_quant);
+                updateSimulation();
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Checkbox("3D Enabled", &is_3d)) {
+                stateBuilder.set3D(is_3d);
+                updateSimulation();
+            }
+
+            ImGui::Spacing();
+            if (is_quant) {
+                ImGui::Text("Quantum Numbers");
+                ImGui::Separator();
+                if (ImGui::InputInt("Principal (n)", &principal)) {
+                    stateBuilder.setPrincipalQuantumNumber(
+                        static_cast<quantum_principle>(principal));
+                    updateSimulation();
+                }
+                if (ImGui::InputInt("Angular (k)", &angular)) {
+                    stateBuilder.setAngularQuantumNumber(
+                        static_cast<quantum_angular>(angular));
+                    updateSimulation();
+                }
+                if (is_3d && ImGui::InputInt("Magnetic (m)", &magnetic)) {
+                    stateBuilder.setMagneticQuantumNumber(
+                        static_cast<quantum_magnetic>(magnetic));
+                    updateSimulation();
+                }
+            }
+        }
+        static double delta_time = 1e-7;
+        static double total_duration = 800.0;
+        static int record_interval = 10000;
+
+        if (ImGui::CollapsingHeader("Simulation Configuration",
+                                    ImGuiTreeNodeFlags_DefaultOpen)) {
+
+            ImGui::Text("Simulation Parameters");
+            if (ImGui::InputDouble("Delta Time", &delta_time)) {
+                simulation.setDeltaTime(delta_time);
+            }
+            if (ImGui::InputDouble("Total Duration", &total_duration)) {
+                simulation.setTotalDuration(total_duration);
+            }
+            if (ImGui::InputInt("Record Interval", &record_interval)) {
+                simulation.setRecordInterval(record_interval);
+            }
+        }
+
+        if (ImGui::CollapsingHeader("Potential Configuration",
+                                    ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::Text("Available Potentials");
+            if (potentials.empty()) {
+                ImGui::Text("No potentials available. Please add one first.");
+            } else {
+                for (const auto &potential : potentials) {
+                    ImGui::PushID(potential->getId());
+                    if (ImGui::Selectable(
+                            potential->getName().c_str(),
+                            potential->getId() ==
+                                simulation.getPotential().getId())) {
+                        simulation.setPotential(*potential);
+                    }
+                    ImGui::PopID();
+                }
+
+                // Potential details
+                if (simulation.getPotential().getId() != 0) {
+                    ImGui::Separator();
+                    ImGui::Text("Selected Potential: %s",
+                                simulation.getPotential().getName().c_str());
+
+                    ImGui::Text(
+                        "Expression: %s",
+                        simulation.getPotential().getExpression().c_str());
+
+                    // Display constants editor
+                    ImGui::Text("Constants:");
+                    auto &constants = simulation.getConstantValues();
+                    for (const auto &[key, value] : constants) {
+                        ImGui::PushID(key.c_str());
+                        double val = value;
+                        if (ImGui::InputDouble(key.c_str(), &val)) {
+                            simulation.setConstantValue(key, val);
                         }
+                        ImGui::PopID();
                     }
                 }
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::Text("Simulation Parameters");
-
-        auto &params = simulation.getParams();
-        for (auto &[key, value] : params) {
-            if (value.type() == typeid(double)) {
-                double &param = std::any_cast<double &>(value);
-                ImGui::InputDouble(key.c_str(), &param);
-            } else if (value.type() == typeid(int)) {
-                int &param = std::any_cast<int &>(value);
-                ImGui::InputInt(key.c_str(), &param);
-            } else if (value.type() == typeid(bool)) {
-                bool &param = std::any_cast<bool &>(value);
-                ImGui::Checkbox(key.c_str(), &param);
-            } else if (value.type() == typeid(std::string)) {
-                std::string &param = std::any_cast<std::string &>(value);
-                static char buffer[200];
-                ImGui::InputText(key.c_str(), buffer, IM_ARRAYSIZE(buffer));
-                if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    param = std::string(buffer);
-                }
             }
         }
 
-        ImGui::Separator();
-
-        // Submit button
         if (ImGui::Button("Submit")) {
-            on_submit(simulation);
-            resetSimulation();
             is_open = false;
-            ImGui::CloseCurrentPopup();
+            simulation.setDeltaTime(delta_time);
+            simulation.setTotalDuration(total_duration);
+            simulation.setRecordInterval(record_interval);
+            simulation.setRelativistic(is_rel);
+            simulation.setQuantized(is_quant);
+            simulation.set3D(is_3d);
+            simulation.setR0(eom::Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
+            simulation.setV0(eom::Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
+
+            on_submit(simulation);
         }
 
         ImGui::SameLine();
-
-        // Cancel button
-        if (ImGui::Button("Cancel")) {
-            is_open = false;
+        if (ImGui::Button("Reset")) {
             resetSimulation();
-            ImGui::CloseCurrentPopup();
         }
+        ImGui::SameLine();
+        if (ImGui::Button("Close")) {
+            is_open = false;
+        }
+
+        ImGui::PopStyleColor(2);
+        ImGui::PopStyleVar(2);
+        ImGui::End();
     }
-    ImGui::End();
 }
 
-void AddSimulationDialog::resetSimulation() { simulation = Simulation(); }
+void AddSimulationDialog::resetSimulation() {
+    simulation = Simulation();
+    stateBuilder = StateBuilder();
+    stateBuilder.setQuantized(true);
+    stateBuilder.set3D(true);
+
+    stateBuilder.setPrincipalQuantumNumber(3);
+    stateBuilder.setAngularQuantumNumber(2);
+    stateBuilder.setMagneticQuantumNumber(1);
+
+    stateBuilder.setQuantized(false);
+
+    potentials =
+        ServiceLocator::getInstance().get<PotentialRepository>().getAll();
+
+    updateSimulation();
+}
+
+void AddSimulationDialog::updateSimulation() {
+    const eom::Vector3 default_r0 = stateBuilder.getR0();
+    r0[0] = default_r0.x;
+    r0[1] = default_r0.y;
+    r0[2] = default_r0.z;
+    r0_mag = default_r0.magnitude();
+
+    const eom::Vector3 default_v0 = stateBuilder.getV0();
+    v0[0] = default_v0.x;
+    v0[1] = default_v0.y;
+    v0[2] = default_v0.z;
+    v0_mag = default_v0.magnitude();
+    is_rel = stateBuilder.isRelativistic();
+    is_quant = stateBuilder.isQuantized();
+    is_3d = stateBuilder.is3D();
+    principal = stateBuilder.getPrincipalQuantumNumber();
+    angular = stateBuilder.getAngularQuantumNumber();
+    magnetic = stateBuilder.getMagneticQuantumNumber();
+}
 
 void AddSimulationDialog::formatName(char *name) {
     // randomly generate a name

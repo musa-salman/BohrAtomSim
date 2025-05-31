@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cmath>
 #include <memory>
+#include <unordered_map>
 
 #include "math_utils.hpp"
 #include "simulation_repositories/SimulationResultLoader.hpp"
@@ -30,8 +31,15 @@ void SimulationResultMonitor::startMonitoring() {
                     std::unordered_map<std::string, std::vector<double>>>(
                     accumulated_data);
 
-                auto snapshot_trajectories =
-                    polar2cartesian(snapshot->at("r"), snapshot->at("psi"));
+                std::unordered_map<std::string, std::vector<double>>
+                    snapshot_trajectories;
+                if (snapshot->contains("psi"))
+                    snapshot_trajectories =
+                        polar2cartesian(snapshot->at("r"), snapshot->at("psi"));
+                else
+                    snapshot_trajectories = spherical2cartesian(
+                        snapshot->at("r"), snapshot->at("theta"),
+                        snapshot->at("phi"));
 
                 shared_datasets.store(snapshot);
                 trajectories.store(

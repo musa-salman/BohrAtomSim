@@ -4,11 +4,9 @@
 #include <memory>
 #include <optional>
 
-#include "atom/result_recorders.h"
 #include "explorer_manager/OngoingSimulationManager.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationServiceImpl.hpp"
-#include "utils/iterator.h"
 #include "utils/utils.h"
 
 SimulationServiceImpl::SimulationServiceImpl()

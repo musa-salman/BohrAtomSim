@@ -5,7 +5,6 @@
 #include <unordered_map>
 
 #include "explorer_manager/OngoingSimulationManager.hpp"
-#include "utils/iterator.h"
 #include "utils/utils.h"
 
 void OngoingSimulationManager::startMonitoring(size_t id) {

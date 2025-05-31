@@ -4,9 +4,9 @@
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 
-#include "atom/result_recorders.h"
-#include "orbital_math.h"
+#include "atom/result_recorders.hpp"
 #include "simulation_repositories/SimulationResultLoader.hpp"
 
 template <typename T> static inline void byte_swap_inplace(T &val) {

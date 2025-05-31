@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -7,7 +6,6 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <nlohmann/json.hpp>
 
-#include "atom/result_recorders.h"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/DataSource.hpp"
 #include "simulation_repositories/SimulationRepositoryImpl.hpp"
@@ -20,17 +18,31 @@ SimulationRepositoryImpl::SimulationRepositoryImpl() {
         return;
     }
 
-    const std::string initializeSimulationsTableSQL =
+    constexpr std::string_view initializeSimulationsTableSQL =
         "CREATE TABLE IF NOT EXISTS Simulations ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "name TEXT NOT NULL, "
-        "status INTEGER NOT NULL DEFAULT 0, "
-        "stepper_type INTEGER NOT NULL, "
-        "params TEXT NOT NULL, "
-        "timestamp TEXT NOT NULL);";
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "name TEXT NOT NULL,"
+        "status INTEGER NOT NULL DEFAULT 0,"
+        "is_relativistic INTEGER NOT NULL DEFAULT 1,"
+        "is_quantized INTEGER NOT NULL DEFAULT 1,"
+        "is_3d INTEGER NOT NULL DEFAULT 0,"
+        "r0_x REAL NOT NULL,"
+        "r0_y REAL NOT NULL,"
+        "r0_z REAL NOT NULL,"
+        "v0_x REAL NOT NULL,"
+        "v0_y REAL NOT NULL,"
+        "v0_z REAL NOT NULL,"
+        "delta_time REAL NOT NULL,"
+        "total_duration REAL NOT NULL,"
+        "record_interval INTEGER NOT NULL,"
+        "constants TEXT NOT NULL,"
+        "potential_id INTEGER NOT NULL,"
+        "timestamp TEXT NOT NULL DEFAULT (datetime('now')),"
+        "FOREIGN KEY(potential_id) REFERENCES Potentials(id) ON DELETE "
+        "RESTRICT);";
 
     try {
-        db->exec(initializeSimulationsTableSQL);
+        db->exec(initializeSimulationsTableSQL.data());
     } catch (const SQLite::Exception &e) {
         std::cerr << "[SimulationRepository] Error creating table: " << e.what()
                   << std::endl;
@@ -45,14 +57,38 @@ size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
 
     try {
         SQLite::Statement query(
-            *db, "INSERT INTO Simulations (name, stepper_type, params, "
-                 "timestamp) "
-                 "VALUES (?, ?, ?, datetime('now'));");
+            *db,
+            R"(INSERT INTO Simulations (name, status, is_relativistic,
+                                is_quantized, is_3d, 
+                                r0_x, r0_y, r0_z, v0_x, v0_y, v0_z, 
+                                delta_time, total_duration, record_interval, 
+                                constants, potential_id) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                                ?, ?);)");
 
         query.bind(1, simulation.getName());
-        query.bind(2, static_cast<int32_t>(simulation.getStepperType()));
-        query.bind(3, simulation.serializeParams());
+        query.bind(2, static_cast<int>(simulation.getStatus()));
+        query.bind(3, static_cast<int>(simulation.getIsRelativistic()));
+        query.bind(4, static_cast<int>(simulation.getIsQuantized()));
+        query.bind(5, static_cast<int>(simulation.getIs3D()));
+
+        const auto &r0 = simulation.getR0();
+        const auto &v0 = simulation.getV0();
+
+        query.bind(6, r0.x);
+        query.bind(7, r0.y);
+        query.bind(8, r0.z);
+        query.bind(9, v0.x);
+        query.bind(10, v0.y);
+        query.bind(11, v0.z);
+        query.bind(12, simulation.getDeltaTime());
+        query.bind(13, simulation.getTotalDuration());
+        query.bind(14, simulation.getRecordInterval());
+        query.bind(15, simulation.serializeConstants());
+        query.bind(16, static_cast<int>(simulation.getPotential().getId()));
+
         query.exec();
+
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error inserting simulation: " << e.what() << std::endl;
         return 0; // Indicate error
@@ -69,7 +105,7 @@ void SimulationRepositoryImpl::remove(size_t id) const {
 
     try {
         SQLite::Statement query(*db, "DELETE FROM Simulations WHERE id = ?;");
-        query.bind(1, (int32_t)id);
+        query.bind(1, static_cast<int>(id));
         query.exec();
     } catch (const SQLite::Exception &e) {
         std::cerr << "Error deleting simulation: " << e.what() << std::endl;
@@ -85,7 +121,7 @@ void SimulationRepositoryImpl::markSimulationComplete(size_t id) const {
     try {
         SQLite::Statement query(
             *db, "UPDATE Simulations SET status = 3 WHERE id = ?;");
-        query.bind(1, (int32_t)id);
+        query.bind(1, static_cast<int>(id));
         query.exec();
 
     } catch (const SQLite::Exception &e) {
@@ -99,30 +135,70 @@ SimulationRepositoryImpl::getAll() const {
     if (!db)
         throw std::runtime_error("Database not initialized.");
 
-    std::string sql = "SELECT id, name, status, stepper_type, params "
-                      "FROM Simulations;";
+    constexpr std::string_view sql =
+        R"(SELECT s.id, s.name, s.status, s.is_relativistic, s.is_quantized,
+               s.is_3d,
+               s.r0_x, s.r0_y, s.r0_z,
+               s.v0_x, s.v0_y, s.v0_z,
+               s.delta_time, s.total_duration, s.record_interval,
+               s.constants,
+               p.id AS potential_id, p.name AS potential_name,
+               p.type AS potential_type, p.expression AS potential_expression,
+               p.constants AS potential_constants
+        FROM Simulations s
+        JOIN Potentials p ON s.potential_id = p.id
+        ORDER BY s.id DESC;
+    )";
 
     std::vector<std::unique_ptr<Simulation>> simulations;
     try {
-        SQLite::Statement query(*db, sql);
+        SQLite::Statement query(*db, sql.data());
         while (query.executeStep()) {
             auto simulation = std::make_unique<Simulation>();
 
+            // Simulation fields
             simulation->setId(query.getColumn(0).getInt());
             simulation->setName(query.getColumn(1).getText());
-
             simulation->setStatus(static_cast<Simulation::SimulationStatus>(
                 query.getColumn(2).getInt()));
-            simulation->setStepperType(
-                static_cast<StepperType>(query.getColumn(3).getInt()));
+            simulation->setRelativistic(query.getColumn(3).getInt() != 0);
+            simulation->setQuantized(query.getColumn(4).getInt() != 0);
+            simulation->set3D(query.getColumn(5).getInt() != 0);
 
-            auto paras = nlohmann::json::parse(query.getColumn(4).getText());
-            simulation->setParams(paras);
+            eom::Vector3 r0(query.getColumn(6).getDouble(),
+                            query.getColumn(7).getDouble(),
+                            query.getColumn(8).getDouble());
+            simulation->setR0(r0);
+
+            eom::Vector3 v0(query.getColumn(9).getDouble(),
+                            query.getColumn(10).getDouble(),
+                            query.getColumn(11).getDouble());
+            simulation->setV0(v0);
+
+            simulation->setDeltaTime(query.getColumn(12).getDouble());
+            simulation->setTotalDuration(query.getColumn(13).getDouble());
+            simulation->setRecordInterval(query.getColumn(14).getInt());
+
+            simulation->setConstantValues(query.getColumn(15).getText());
+
+            // Potential fields
+            Potential potential;
+            potential.setId(query.getColumn(16).getInt());
+            potential.setName(query.getColumn(17).getText());
+            potential.setType(
+                static_cast<PotentialType>(query.getColumn(18).getInt()));
+            potential.setExpression(query.getColumn(19).getText());
+            auto constants = nlohmann::json::parse(
+                query.getColumn(20).getText(), nullptr, false);
+            potential.setConstants(constants);
+
+            simulation->setPotential(potential);
 
             simulations.push_back(std::move(simulation));
         }
     } catch (const SQLite::Exception &e) {
-        std::cerr << "Error retrieving simulations: " << e.what() << std::endl;
+        std::cerr << "Error retrieving joined simulations and potentials: "
+                  << e.what() << std::endl;
     }
 
     return simulations;

@@ -68,11 +68,13 @@ void SimulationTableUI::renderTable() {
             ImGui::Text("%s", sim->getName().c_str());
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%d", static_cast<int>(sim->getStepperType()));
+            ImGui::Text("is rel: %b, is quant: %b, is 3d: %b.",
+                        sim->getIsRelativistic(), sim->getIsQuantized(),
+                        sim->getIs3D());
 
             ImGui::TableSetColumnIndex(3);
             ImGui::PushTextWrapPos(0.0f);
-            ImGui::TextUnformatted(sim->serializeParams().c_str());
+            ImGui::TextUnformatted(sim->serializeConstants().c_str());
             ImGui::PopTextWrapPos();
         }
 

@@ -58,7 +58,16 @@ void SimulationAnalyzer::renderSimulationDetails() {
         bitVector->setAll(true);
         filteredDatasetView.setMask(*bitVector);
 
-        trajectoryData = polar2cartesian(dataset.get("r"), dataset.get("psi"));
+        auto hasPsi = dataset.getColumnsNames().end() !=
+                      std::find(dataset.getColumnsNames().begin(),
+                                dataset.getColumnsNames().end(), "psi");
+        if (hasPsi) {
+            trajectoryData =
+                polar2cartesian(dataset.get("r"), dataset.get("psi"));
+        } else {
+            trajectoryData = spherical2cartesian(
+                dataset.get("r"), dataset.get("theta"), dataset.get("phi"));
+        }
         plotSelection.emplace("trajectories", false);
         isInitialized = true;
     }
@@ -81,10 +90,10 @@ void SimulationAnalyzer::renderSimulationDetails() {
                         ? "Completed"
                         : "Unknown");
         ImGui::NextColumn();
-        ImGui::Text("Stepper Type: %s",
-                    simulation.getStepperType() == StepperType::Stepper2D
-                        ? "2D"
-                        : "Unknown");
+        // ImGui::Text("Stepper Type: %s",
+        //             simulation.getStepperType() == StepperType::Stepper2D
+        //                 ? "2D"
+        //                 : "Unknown");
         // const auto &params = simulation.getParams();
 
         ImGui::Columns(1);
