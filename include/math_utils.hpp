@@ -10,6 +10,11 @@ std::unordered_map<std::string, std::vector<double>>
 polar2cartesian(const std::vector<double> &r_data,
                 const std::vector<double> &phi_data);
 
+std::unordered_map<std::string, std::vector<double>>
+spherical2cartesian(const std::vector<double> &r_data,
+                    const std::vector<double> &theta_data,
+                    const std::vector<double> &phi_data);
+
 double computeAngleVec2D(double u[2], double v[2]);
 
 #endif // MATH_UTILS_HPP
