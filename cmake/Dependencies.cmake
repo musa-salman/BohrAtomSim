@@ -1,6 +1,10 @@
 get_filename_component(PROJECT_ROOT "${CMAKE_SOURCE_DIR}" ABSOLUTE)
 
 # System/Package Manager Libraries
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
+
 find_package(Boost 1.83.0 REQUIRED COMPONENTS system)
 find_package(HDF5 REQUIRED COMPONENTS CXX)
 find_package(Matplot++ REQUIRED)
@@ -19,14 +23,16 @@ CPMAddPackage(
     "SQLITECPP_RUN_CPPLINT OFF"
     "SQLITECPP_BUILD_EXAMPLES OFF"
     "SQLITECPP_BUILD_SQLITE3 OFF"
+  GIT_SHALLOW TRUE
 )
 
 # ImGui
 CPMAddPackage(
   NAME imgui
   GITHUB_REPOSITORY ocornut/imgui
-  GIT_TAG v1.90.4
+  GIT_TAG v1.91.9b-docking
   DOWNLOAD_ONLY TRUE
+  GIT_SHALLOW TRUE
 )
 
 add_library(imgui_wrapper STATIC
@@ -49,6 +55,7 @@ CPMAddPackage(
   GITHUB_REPOSITORY epezent/implot
   GIT_TAG v0.16
   DOWNLOAD_ONLY TRUE
+  GIT_SHALLOW TRUE
 )
 
 add_library(implot_wrapper STATIC
@@ -66,6 +73,7 @@ CPMAddPackage(
   GITHUB_REPOSITORY aiekick/ImGuiFileDialog
   GIT_TAG v0.6.7
   DOWNLOAD_ONLY TRUE
+  GIT_SHALLOW TRUE
 )
 
 add_library(imguifiledialog STATIC
@@ -83,7 +91,8 @@ target_link_libraries(imguifiledialog PUBLIC imgui_wrapper)
 CPMAddPackage(
   NAME nlohmann_json
   GITHUB_REPOSITORY nlohmann/json
-  VERSION 3.11.2
+  GIT_TAG v3.12.0
+  GIT_SHALLOW TRUE
 )
 
 # exprtk
@@ -91,6 +100,7 @@ CPMAddPackage(
   NAME exprtk
   GITHUB_REPOSITORY ArashPartow/exprtk
   GIT_TAG master
+  GIT_SHALLOW TRUE
 )
 
 # Font Awesome Headers

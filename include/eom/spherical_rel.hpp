@@ -1,4 +1,3 @@
-
 #ifndef SPHERICAL_REL_EOM_HPP
 #define SPHERICAL_REL_EOM_HPP
 
