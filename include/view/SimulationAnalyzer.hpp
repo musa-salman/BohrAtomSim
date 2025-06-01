@@ -51,6 +51,8 @@ class SimulationAnalyzer : public Component {
     void render() override;
 
   private:
+    std::string formatSimulationExportName() const;
+
     void renderSimulationDetails();
     void renderVisualizer();
     void renderPlotter();

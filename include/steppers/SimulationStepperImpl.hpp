@@ -16,10 +16,13 @@ class SimulationStepperImpl : public SimulationStepper {
 
     void executeSimulationLoop() override {
         while (step.time < total_duration) [[likely]] {
-            const bool mustRecord = step.iterate(delta_time);
-            if (it % record_interval == 0 || mustRecord) [[unlikely]] {
+            const bool isLocalMaxR = step.iterate(delta_time);
+            rLocalMaxCount += static_cast<int>(isLocalMaxR);
+            if (it % record_interval == 0 ||
+                static_cast<int>(isLocalMaxR) * rLocalMaxCount > 1)
+                [[unlikely]] {
                 recordStep();
-                if (!isRunning)
+                if (!isRunning || rLocalMaxCount >= rLocalMaxLimit)
                     break;
             }
             it++;
@@ -29,7 +32,7 @@ class SimulationStepperImpl : public SimulationStepper {
   private:
     State step;
 
-    SIM_INLINE inline void recordStep() {
+    SIM_INLINE inline void recordStep() const noexcept {
         const auto data = step.to_array();
         fwrite(data.data(), sizeof(double), data.size(), file_bin);
     }

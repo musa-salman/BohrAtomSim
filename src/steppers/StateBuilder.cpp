@@ -48,7 +48,10 @@ void StateBuilder::setPrincipalQuantumNumber(quantum_principle principal) {
 
 void StateBuilder::setAngularQuantumNumber(quantum_angular angular) {
     this->angular = angular;
-    quantize();
+    if (!is_3d) {
+        setMagneticQuantumNumber(angular);
+    } else
+        quantize();
 }
 
 void StateBuilder::setMagneticQuantumNumber(quantum_magnetic magnetic) {

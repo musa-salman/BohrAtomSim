@@ -59,6 +59,7 @@ void Simulator::simulateOrbit(Simulation &simulation,
         .total_duration = simulation.getTotalDuration(),
         .onCompletion = std::move(onCompletion),
         .record_interval = simulation.getRecordInterval(),
+        .rLocalMaxLimit = simulation.getRLocalMaxCountLimit(),
         .file_bin = file_bin,
     };
 

@@ -9,7 +9,6 @@
 #include <GLFW/glfw3.h>
 #include <implot.h>
 
-#include <IconsFontAwesome4.h>
 #include <memory>
 
 #include "explorer_manager/OngoingSimulationManager.hpp"
@@ -59,7 +58,7 @@ int main() {
     // Configure ImGui Style
     ImGui::StyleColorsDark();
     ImGuiStyle &style = ImGui::GetStyle();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    if (io.ConfigFlags) {
         style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
@@ -170,9 +169,7 @@ int main() {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // Handle Viewports (for multi-window support)
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
+        if (io.ConfigFlags) {
             glfwMakeContextCurrent(window);
         }
 

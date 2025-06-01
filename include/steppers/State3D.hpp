@@ -22,8 +22,9 @@ struct State3DBase : State {
           p_phi(eom::spherical::compute_p_phi(r0, v0)) {}
 
     template <typename EOM>
-    SIM_INLINE inline void integrate_common(scalar delta_time,
-                                            const PotentialEvaluator &m_du) {
+    SIM_INLINE inline void
+    integrate_common(scalar delta_time,
+                     const PotentialEvaluator &m_du) noexcept {
         time += delta_time;
         r_dot += r_ddot * delta_time;
         r += r_dot * delta_time;
@@ -74,6 +75,8 @@ template <typename Pot> struct State3D<false, false, Pot> : State3DBase {
     }
 
     SIM_CONST SIM_INLINE inline bool iterate(scalar delta_time) noexcept {
+        prev_r_dot = r_dot;
+
         time += delta_time;
         r_dot += r_ddot * delta_time;
         r += r_dot * delta_time;
@@ -89,7 +92,7 @@ template <typename Pot> struct State3D<false, false, Pot> : State3DBase {
         theta_ddot =
             eom_3dnr::compute_theta_ddot(r, r_dot, theta, theta_dot, phi_dot);
 
-        return false;
+        return eom::isLocalMax(prev_r_dot, r_dot);
     }
 
     SIM_CONST SIM_INLINE inline const std::array<double, field_names.size()>
@@ -100,6 +103,7 @@ template <typename Pot> struct State3D<false, false, Pot> : State3DBase {
 
   private:
     Pot m_du;
+    scalar prev_r_dot = 0;
 };
 
 template <typename Pot>
@@ -132,6 +136,7 @@ struct State3D<true, false, Pot> : State3DBase, Relativistic {
     }
 
     SIM_CONST SIM_INLINE inline bool iterate(scalar delta_time) noexcept {
+        prev_r_dot = r_dot;
         time += delta_time;
         r_dot += r_ddot * delta_time;
         r += r_dot * delta_time;
@@ -148,7 +153,7 @@ struct State3D<true, false, Pot> : State3DBase, Relativistic {
         theta_ddot = eom_3dr::compute_theta_ddot(r, r_dot, theta, theta_dot,
                                                  phi_dot, gamma, m_du.dU_dr());
 
-        return false;
+        return eom::isLocalMax(prev_r_dot, r_dot);
     }
 
     SIM_CONST SIM_INLINE inline const std::array<double, field_names.size()>
@@ -159,6 +164,7 @@ struct State3D<true, false, Pot> : State3DBase, Relativistic {
 
   private:
     Pot m_du;
+    scalar prev_r_dot = 0;
 };
 
 template <typename Pot>
@@ -190,7 +196,7 @@ struct State3D<false, true, Pot> : State3DBase, Quantized {
     State3D(const State3D &other)
         : State3DBase(other), m_du(other.m_du.rebind(r)),
           m_theta0(other.m_theta0), prev_r_dot(other.prev_r_dot),
-          is_max(other.is_max), sign(other.sign), theta_flag(other.theta_flag),
+          sign(other.sign), theta_flag(other.theta_flag),
           prev_max_vec(other.prev_max_vec) {}
 
     State3D &operator=(const State3D &other) {
@@ -199,7 +205,6 @@ struct State3D<false, true, Pot> : State3DBase, Quantized {
             m_du = other.m_du.rebind(r);
             m_theta0 = other.m_theta0;
             prev_r_dot = other.prev_r_dot;
-            is_max = other.is_max;
             sign = other.sign;
             theta_flag = other.theta_flag;
             prev_max_vec = other.prev_max_vec;
@@ -208,6 +213,8 @@ struct State3D<false, true, Pot> : State3DBase, Quantized {
     }
 
     SIM_CONST SIM_INLINE inline bool iterate(scalar delta_time) noexcept {
+        prev_r_dot = r_dot;
+
         time += delta_time;
         r_dot += r_ddot * delta_time;
         r += r_dot * delta_time;
@@ -238,25 +245,20 @@ struct State3D<false, true, Pot> : State3DBase, Quantized {
 
         r_ddot = eom_3dnr::compute_r_ddot(r, theta, theta_dot, phi_dot,
                                           m_du.dU_dr());
-        bool isMustRecord = false;
-        if (r_dot * prev_r_dot < 0) { // TODO: try to make this branchless
-            is_max = !is_max;
+        const bool isLocalMaxima = eom::isLocalMax(prev_r_dot, r_dot);
+        if (isLocalMaxima) [[unlikely]] {
+            eom::Vector3 curr_max_vec =
+                eom::spherical_to_cartesian(r, theta, phi);
 
-            if (is_max) {
-                eom::Vector3 curr_max_vec =
-                    eom::spherical_to_cartesian(r, theta, phi);
-
-                if (prev_max_vec) {
-                    delta_psi += eom::compute_angular_distance(*prev_max_vec,
-                                                               curr_max_vec);
-                    isMustRecord = true;
-                }
-
-                prev_max_vec = curr_max_vec;
+            if (prev_max_vec) {
+                delta_psi +=
+                    eom::compute_angular_distance(*prev_max_vec, curr_max_vec);
             }
+
+            prev_max_vec = curr_max_vec;
         }
 
-        return isMustRecord;
+        return isLocalMaxima;
     }
 
     SIM_CONST SIM_INLINE inline std::array<double, field_names.size()>
@@ -269,7 +271,6 @@ struct State3D<false, true, Pot> : State3DBase, Quantized {
     Pot m_du;
     scalar m_theta0;
     scalar prev_r_dot = 0;
-    bool is_max = false;
 
     scalar sign = 1;
     scalar theta_flag = false;
@@ -308,9 +309,9 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
 
     State3D(const State3D &other)
         : State3DBase(other), m_du(other.m_du.rebind(r)),
-          prev_r_dot(other.prev_r_dot), is_max(other.is_max),
-          m_theta0(other.m_theta0), sign(other.sign),
-          theta_flag(other.theta_flag), prev_max_vec(other.prev_max_vec) {}
+          prev_r_dot(other.prev_r_dot), m_theta0(other.m_theta0),
+          sign(other.sign), theta_flag(other.theta_flag),
+          prev_max_vec(other.prev_max_vec) {}
 
     State3D &operator=(const State3D &other) {
         if (this != &other) {
@@ -318,7 +319,6 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
             m_du = other.m_du.rebind(r);
             m_theta0 = other.m_theta0;
             prev_r_dot = other.prev_r_dot;
-            is_max = other.is_max;
             sign = other.sign;
             theta_flag = other.theta_flag;
             prev_max_vec = other.prev_max_vec;
@@ -364,25 +364,20 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
         r_ddot = eom_3dr::compute_r_ddot(r, r_dot, theta, theta_dot, phi_dot,
                                          gamma, m_du.dU_dr());
 
-        bool isMustRecord = false;
-        if (r_dot * prev_r_dot < 0) { // TODO: try to make this branchless
-            is_max = !is_max;
+        const bool isLocalMaxima = eom::isLocalMax(prev_r_dot, r_dot);
+        if (isLocalMaxima) [[unlikely]] { // TODO: try to make this branchless
+            eom::Vector3 curr_max_vec =
+                eom::spherical_to_cartesian(r, theta, phi);
 
-            if (is_max) {
-                eom::Vector3 curr_max_vec =
-                    eom::spherical_to_cartesian(r, theta, phi);
-
-                if (prev_max_vec) {
-                    delta_psi += eom::compute_angular_distance(*prev_max_vec,
-                                                               curr_max_vec);
-                    isMustRecord = true;
-                }
-
-                prev_max_vec = curr_max_vec;
+            if (prev_max_vec) {
+                delta_psi +=
+                    eom::compute_angular_distance(*prev_max_vec, curr_max_vec);
             }
+
+            prev_max_vec = curr_max_vec;
         }
 
-        return isMustRecord;
+        return isLocalMaxima;
     }
 
     SIM_CONST SIM_INLINE inline std::array<double, field_names.size()>
@@ -394,7 +389,6 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
   private:
     Pot m_du;
     scalar prev_r_dot = 0;
-    bool is_max = false;
     scalar m_theta0;
 
     scalar sign = 1;

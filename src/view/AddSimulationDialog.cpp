@@ -146,11 +146,25 @@ void AddSimulationDialog::render() {
             if (ImGui::InputDouble("Delta Time", &delta_time)) {
                 simulation.setDeltaTime(delta_time);
             }
+            if (ImGui::InputInt("Record Interval", &record_interval)) {
+                simulation.setRecordInterval(record_interval);
+            }
             if (ImGui::InputDouble("Total Duration", &total_duration)) {
                 simulation.setTotalDuration(total_duration);
             }
-            if (ImGui::InputInt("Record Interval", &record_interval)) {
-                simulation.setRecordInterval(record_interval);
+
+            static bool isRLocalMaxLimited = false;
+            static int rLocalMaxCountLimit = 10;
+            if (ImGui::Checkbox("Limit R Local Maxima", &isRLocalMaxLimited)) {
+                simulation.setRLocalMaxCountLimit(
+                    isRLocalMaxLimited ? rLocalMaxCountLimit : -1);
+            }
+            if (isRLocalMaxLimited) {
+                ImGui::InputInt("R Local Max Count", &rLocalMaxCountLimit);
+                if (rLocalMaxCountLimit < 1) {
+                    rLocalMaxCountLimit = 1;
+                }
+                simulation.setRLocalMaxCountLimit(rLocalMaxCountLimit);
             }
         }
 

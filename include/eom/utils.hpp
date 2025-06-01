@@ -102,6 +102,11 @@ SIM_CONST SIM_INLINE inline long double sqrt(long double x) noexcept {
     return (long double)Sleef_sqrtd1_u35((double)x);
 }
 
+SIM_CONST SIM_INLINE inline bool isLocalMax(scalar prevVarDot,
+                                            scalar currVarDot) noexcept {
+    return prevVarDot < 0 && currVarDot > 0;
+}
+
 #define SQUARE(x) ((x) * (x))
 
 struct Vector3 {

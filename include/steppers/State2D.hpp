@@ -3,8 +3,7 @@
 
 #include <array>
 #include <cmath>
-#include <iostream>
-#include <ostream>
+#include <string_view>
 
 #include "State.hpp"
 #include "eom/polar.hpp"
@@ -16,11 +15,7 @@ struct State2DBase : State {
         : r(eom::polar::compute_r_0(r0)),
           r_dot(eom::polar::compute_r_dot_0(r0, v0)),
           psi(eom::polar::compute_psi_0(r0)),
-          p_psi(eom::polar::compute_p_psi(r0, v0)) {
-        std::cout << "State2DBase initialized with r = " << r
-                  << ", r_dot = " << r_dot << ", psi = " << psi
-                  << ", p_psi = " << p_psi << std::endl;
-    }
+          p_psi(eom::polar::compute_p_psi(r0, v0)) {}
 
     template <typename EOM, typename Pot>
     SIM_INLINE inline void integrate_common(scalar delta_time,
@@ -67,8 +62,9 @@ template <typename Pot> struct State2D<false, false, Pot> : State2DBase {
     }
 
     SIM_CONST SIM_INLINE inline bool iterate(scalar delta_time) noexcept {
+        prev_r_dot = r_dot;
         integrate_common<eom::polar::non_rel::EOM>(delta_time, m_du);
-        return false; // No quantization, so no need to record
+        return eom::isLocalMax(prev_r_dot, r_dot);
     }
 
     SIM_CONST SIM_INLINE inline const std::array<double, field_names.size()>
@@ -78,6 +74,7 @@ template <typename Pot> struct State2D<false, false, Pot> : State2DBase {
 
   private:
     Pot m_du;
+    scalar prev_r_dot;
 };
 
 template <typename Pot>
@@ -88,7 +85,7 @@ struct State2D<false, true, Pot> : State2DBase, Quantized {
     template <typename Factory>
     State2D(eom::Vector2 r0, eom::Vector2 v0, Factory &&factory)
         : State2DBase(r0, v0), m_du(factory(r)), prev_r_dot((r_dot)),
-          prev_psi_at_r_max(0), is_max(false) {
+          prev_psi_at_r_max(0) {
         namespace eom_2dnr = eom::polar::non_rel;
         eom_2dnr::EOM::update(*this, m_du);
     }
@@ -105,24 +102,19 @@ struct State2D<false, true, Pot> : State2DBase, Quantized {
     }
 
     SIM_CONST SIM_INLINE inline bool iterate(scalar delta_time) noexcept {
-        bool isMustRecord = false;
         prev_r_dot = r_dot;
 
         integrate_common<eom::polar::non_rel::EOM>(delta_time, m_du);
 
-        if (r_dot * prev_r_dot < 0) { // TODO: try to make this branchless
-            is_max = !is_max;
-
-            if (is_max) {
-                if (prev_psi_at_r_max > 1e-10) {
-                    delta_psi += psi - prev_psi_at_r_max;
-                    isMustRecord = true;
-                }
-                prev_psi_at_r_max = psi;
+        const bool isLocalMax = eom::isLocalMax(prev_r_dot, r_dot);
+        if (isLocalMax) {
+            if (prev_psi_at_r_max > 1e-10) {
+                delta_psi += psi - prev_psi_at_r_max;
             }
+            prev_psi_at_r_max = psi;
         }
 
-        return isMustRecord;
+        return isLocalMax;
     }
 
     SIM_CONST SIM_INLINE inline const std::array<scalar, field_names.size()>
@@ -134,7 +126,6 @@ struct State2D<false, true, Pot> : State2DBase, Quantized {
     Pot m_du;
     scalar prev_r_dot;
     scalar prev_psi_at_r_max;
-    bool is_max;
 };
 
 template <typename Pot>
@@ -160,8 +151,9 @@ struct State2D<true, false, Pot> : State2DBase, Relativistic {
     }
 
     bool iterate(scalar delta_time) noexcept {
+        prev_r_dot = r_dot;
         integrate_common<eom::polar::rel::EOM>(delta_time, m_du);
-        return false;
+        return eom::isLocalMax(prev_r_dot, r_dot);
     }
 
     const std::array<scalar, field_names.size()> to_array() const noexcept {
@@ -170,6 +162,7 @@ struct State2D<true, false, Pot> : State2DBase, Relativistic {
 
   private:
     Pot m_du;
+    scalar prev_r_dot;
 };
 
 template <typename Pot>
@@ -180,11 +173,7 @@ struct State2D<true, true, Pot> : State2DBase, Relativistic, Quantized {
     template <typename Factory>
     State2D(eom::Vector2 r0, eom::Vector2 v0, Factory &&factory)
         : State2DBase(r0, v0), m_du(factory(r)), prev_r_dot(r_dot),
-          prev_psi_at_r_max(0), is_max(false) {
-        std::cout << "State2D<true, true> initialized with r = " << r
-                  << ", r_dot = " << r_dot << std::endl;
-        std::cout << "PotentialEvaluator initialized. dU/dr = " << m_du.dU_dr()
-                  << std::endl;
+          prev_psi_at_r_max(0) {
         namespace eom_2dr = eom::polar::rel;
         eom_2dr::EOM::update(*this, m_du);
     }
@@ -205,20 +194,15 @@ struct State2D<true, true, Pot> : State2DBase, Relativistic, Quantized {
 
         integrate_common<eom::polar::rel::EOM>(delta_time, m_du);
 
-        bool isMustRecord = false;
-        if (r_dot * prev_r_dot < 0) { // TODO: try to make this branchless
-            is_max = !is_max;
-
-            if (is_max) {
-                if (prev_psi_at_r_max > 1e-10) {
-                    delta_psi += psi - prev_psi_at_r_max;
-                    isMustRecord = true;
-                }
-                prev_psi_at_r_max = psi;
+        const bool isLocalMaxima = eom::isLocalMax(prev_r_dot, r_dot);
+        if (isLocalMaxima) { // TODO: try to make this branchless
+            if (prev_psi_at_r_max > 1e-10) {
+                delta_psi += psi - prev_psi_at_r_max;
             }
+            prev_psi_at_r_max = psi;
         }
 
-        return isMustRecord;
+        return isLocalMaxima;
     }
 
     SIM_CONST SIM_INLINE inline const std::array<scalar, field_names.size()>
@@ -231,7 +215,6 @@ struct State2D<true, true, Pot> : State2DBase, Relativistic, Quantized {
     Pot m_du;
     scalar prev_r_dot;
     scalar prev_psi_at_r_max;
-    bool is_max;
 };
 
 #endif // STATE2D_HPP

@@ -1,4 +1,3 @@
-#include <IconsFontAwesome4.h>
 #include <imgui.h>
 #include <implot.h>
 #include <iostream>
@@ -37,7 +36,7 @@ SimulationExplorer::SimulationExplorer()
 
 void SimulationExplorer::render() {
     ImGui::BeginChild("Simulations List", ImVec2(200, 0),
-                      ImGuiChildFlags_Borders);
+                      ImGuiChildFlags_Border);
     {
         ImGui::Text("Simulations");
         addSimulationWindow.render();
@@ -59,7 +58,7 @@ void SimulationExplorer::render() {
     ImGui::SameLine();
 
     ImGui::BeginChild("Simulation Details", ImVec2(0, 0),
-                      ImGuiChildFlags_Borders);
+                      ImGuiChildFlags_Border);
     {
         if (selectedSimulationId == 0) {
             ImGui::Text("No simulation selected.");

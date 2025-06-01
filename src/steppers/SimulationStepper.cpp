@@ -54,5 +54,15 @@ void SimulationStepper::stop() {
 
         while (!isFinished)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    } else if (!isFinished) {
+        isStopped = true;
+        isFinished = true;
+        if (file_bin) {
+            fflush(file_bin);
+            fsync(fileno(file_bin));
+            fclose(file_bin);
+            file_bin = nullptr;
+        }
+        onCompletion();
     }
 }
