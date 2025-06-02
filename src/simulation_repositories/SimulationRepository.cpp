@@ -17,7 +17,6 @@ SimulationRepositoryImpl::SimulationRepositoryImpl() {
         std::cerr << "Failed to open database." << std::endl;
         return;
     }
-
     constexpr std::string_view initializeSimulationsTableSQL =
         "CREATE TABLE IF NOT EXISTS Simulations ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -35,6 +34,7 @@ SimulationRepositoryImpl::SimulationRepositoryImpl() {
         "delta_time REAL NOT NULL,"
         "total_duration REAL NOT NULL,"
         "record_interval INTEGER NOT NULL,"
+        "r_local_max_limit,"
         "constants TEXT NOT NULL,"
         "potential_id INTEGER NOT NULL,"
         "timestamp TEXT NOT NULL DEFAULT (datetime('now')),"
@@ -62,8 +62,8 @@ size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
                                 is_quantized, is_3d, 
                                 r0_x, r0_y, r0_z, v0_x, v0_y, v0_z, 
                                 delta_time, total_duration, record_interval, 
-                                constants, potential_id) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                                constants, potential_id, r_local_max_limit) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                                 ?, ?);)");
 
         query.bind(1, simulation.getName());
@@ -86,6 +86,7 @@ size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
         query.bind(14, simulation.getRecordInterval());
         query.bind(15, simulation.serializeConstants());
         query.bind(16, static_cast<int>(simulation.getPotential().getId()));
+        query.bind(17, simulation.getRLocalMaxCountLimit());
 
         query.exec();
 
@@ -137,17 +138,18 @@ SimulationRepositoryImpl::getAll() const {
 
     constexpr std::string_view sql =
         R"(SELECT s.id, s.name, s.status, s.is_relativistic, s.is_quantized,
-               s.is_3d,
-               s.r0_x, s.r0_y, s.r0_z,
-               s.v0_x, s.v0_y, s.v0_z,
-               s.delta_time, s.total_duration, s.record_interval,
-               s.constants,
-               p.id AS potential_id, p.name AS potential_name,
-               p.type AS potential_type, p.expression AS potential_expression,
-               p.constants AS potential_constants
-        FROM Simulations s
-        JOIN Potentials p ON s.potential_id = p.id
-        ORDER BY s.id DESC;
+                  s.is_3d,
+                  s.r0_x, s.r0_y, s.r0_z,
+                  s.v0_x, s.v0_y, s.v0_z,
+                  s.delta_time, s.total_duration, s.record_interval,
+                  s.r_local_max_limit,
+                  s.constants,
+                  p.id AS potential_id, p.name AS potential_name,
+                  p.type AS potential_type, p.expression AS potential_expression,
+                  p.constants AS potential_constants
+           FROM Simulations s
+           JOIN Potentials p ON s.potential_id = p.id
+           ORDER BY s.id DESC;
     )";
 
     std::vector<std::unique_ptr<Simulation>> simulations;
@@ -179,17 +181,20 @@ SimulationRepositoryImpl::getAll() const {
             simulation->setTotalDuration(query.getColumn(13).getDouble());
             simulation->setRecordInterval(query.getColumn(14).getInt());
 
-            simulation->setConstantValues(query.getColumn(15).getText());
+            simulation->setRLocalMaxCountLimit(query.getColumn(15).getInt());
+
+            simulation->setConstantValues(query.getColumn(16).getText());
 
             // Potential fields
             Potential potential;
-            potential.setId(query.getColumn(16).getInt());
-            potential.setName(query.getColumn(17).getText());
+            potential.setId(query.getColumn(17).getInt());
+            potential.setName(query.getColumn(18).getText());
             potential.setType(
-                static_cast<PotentialType>(query.getColumn(18).getInt()));
-            potential.setExpression(query.getColumn(19).getText());
+                static_cast<PotentialType>(query.getColumn(19).getInt()));
+            potential.setExpression(query.getColumn(20).getText());
+
             auto constants = nlohmann::json::parse(
-                query.getColumn(20).getText(), nullptr, false);
+                query.getColumn(21).getText(), nullptr, false);
             potential.setConstants(constants);
 
             simulation->setPotential(potential);

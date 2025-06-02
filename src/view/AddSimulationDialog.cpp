@@ -154,10 +154,12 @@ void AddSimulationDialog::render() {
             }
 
             static bool isRLocalMaxLimited = false;
+            // largest int
             static int rLocalMaxCountLimit = 10;
             if (ImGui::Checkbox("Limit R Local Maxima", &isRLocalMaxLimited)) {
-                simulation.setRLocalMaxCountLimit(
-                    isRLocalMaxLimited ? rLocalMaxCountLimit : -1);
+                simulation.setRLocalMaxCountLimit( isRLocalMaxLimited
+                                                      ? rLocalMaxCountLimit
+                                                      : -1);
             }
             if (isRLocalMaxLimited) {
                 ImGui::InputInt("R Local Max Count", &rLocalMaxCountLimit);

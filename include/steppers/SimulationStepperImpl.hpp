@@ -22,7 +22,7 @@ class SimulationStepperImpl : public SimulationStepper {
                 static_cast<int>(isLocalMaxR) * rLocalMaxCount > 1)
                 [[unlikely]] {
                 recordStep();
-                if (!isRunning || rLocalMaxCount >= rLocalMaxLimit)
+                if (!isRunning || ((rLocalMaxCount >= rLocalMaxLimit) && (rLocalMaxLimit > 0))) 
                     break;
             }
             it++;

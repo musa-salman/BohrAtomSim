@@ -23,7 +23,7 @@ void SimulationStepper::run() {
 
     executeSimulationLoop();
 
-    if (it * delta_time >= total_duration || isStopped) {
+    if (it * delta_time >= total_duration || ((rLocalMaxCount >= rLocalMaxLimit) && (rLocalMaxCount > 0)) || isStopped) {
         if (file_bin) {
             fflush(file_bin);
             fsync(fileno(file_bin));
