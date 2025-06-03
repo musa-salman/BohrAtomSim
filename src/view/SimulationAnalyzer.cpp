@@ -430,38 +430,33 @@ void SimulationAnalyzer::renderDatasetsViewer() {
 }
 
 std::string SimulationAnalyzer::formatSimulationExportName() const {
-    std::string dimensions = simulation.getIs3D() ? "3d" : "2d";
-    std::string model = simulation.getIsRelativistic() ? "rel" : "nr";
+    std::string filename;
+    filename += simulation.getIs3D() ? "3d" : "2d";
+    filename += "_";
+    filename += simulation.getIsRelativistic() ? "rel" : "nr";
+    filename += "_";
 
-    std::string n, k, m;
     if (simulation.getIsQuantized()) {
         StateBuilder stateBuilder;
-        stateBuilder.setRelativistic(simulation.getIsRelativistic());
-        stateBuilder.setQuantized(simulation.getIsQuantized());
         stateBuilder.set3D(simulation.getIs3D());
-        stateBuilder.setR0(simulation.getR0());
-        stateBuilder.setV0(simulation.getV0());
+        stateBuilder.quantizeFromR0V0(simulation.getR0(), simulation.getV0());
 
-        n = static_cast<int>(stateBuilder.getPrincipalQuantumNumber());
-        k = static_cast<int>(stateBuilder.getAngularQuantumNumber());
+        filename += std::to_string(
+            static_cast<int>(stateBuilder.getPrincipalQuantumNumber()));
+        filename += "_";
+        filename += std::to_string(
+            static_cast<int>(stateBuilder.getAngularQuantumNumber()));
+        filename += "_";
 
         if (simulation.getIs3D()) {
-            m = static_cast<int>(stateBuilder.getMagneticQuantumNumber());
+            filename += std::to_string(
+                static_cast<int>(stateBuilder.getMagneticQuantumNumber()));
+            filename += "_";
         }
     }
 
-    std::string additional = "_id" + std::to_string(simulation.getId());
+    filename += "id" + std::to_string(simulation.getId());
 
-    std::string filename = dimensions + "_" + model;
-
-    if (simulation.getIsQuantized()) {
-        filename += "_" + n + "_" + k;
-        if (simulation.getIs3D()) {
-            filename += "_" + m;
-        }
-    }
-
-    filename += "_" + additional + ".csv";
     return filename;
 }
 
@@ -469,9 +464,10 @@ void SimulationAnalyzer::renderExportDatasetOptions() {
     if (ImGui::Button("Export")) {
         IGFD::FileDialogConfig config;
         config.path = ".";
+        config.fileName = formatSimulationExportName();
 
         ImGuiFileDialog::Instance()->OpenDialog(
-            "ChooseFileDlgKey", "Choose File", ".h5,.csv", config);
+            "ChooseFileDlgKey", "Choose File", ".csv,.h5", config);
     }
 
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {

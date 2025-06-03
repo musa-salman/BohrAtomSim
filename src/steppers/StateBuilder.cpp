@@ -1,6 +1,7 @@
 #include "steppers/StateBuilder.hpp"
 #include "eom/spherical.hpp"
 #include "eom/utils.hpp"
+#include <cmath>
 
 void StateBuilder::setR0(const eom::Vector3 &r) { r0 = r; }
 
@@ -77,6 +78,39 @@ quantum_magnetic StateBuilder::getMagneticQuantumNumber() const {
     return magnetic;
 }
 
+void StateBuilder::quantizeFromR0V0(const eom::Vector3 &r0,
+                                    const eom::Vector3 &v0) {
+    const scalar r0_magnitude = r0.magnitude();
+
+    quantum_principle _principal;
+    quantum_angular _angular;
+    quantum_magnetic _magnetic;
+
+    if (is_3d) {
+        if (std::abs(r0.x) > 1e-14) {
+            _magnetic =
+                static_cast<quantum_magnetic>(std::round(v0.y * r0_magnitude));
+            _angular = static_cast<quantum_angular>(
+                std::round(_magnetic * r0_magnitude / r0.x));
+        } else {
+            _magnetic = 0;
+            _angular =
+                static_cast<quantum_angular>(std::round(v0.y * r0_magnitude));
+        }
+    } else {
+        _angular =
+            static_cast<quantum_angular>(std::round(v0.y * r0_magnitude));
+        _magnetic = _angular;
+    }
+
+    _principal = static_cast<quantum_principle>(std::round(
+        r0_magnitude * sqrt(-1 / (SQUARE(_angular) - 2 * r0_magnitude))));
+
+    setPrincipalQuantumNumber(_principal);
+    setAngularQuantumNumber(_angular);
+    setMagneticQuantumNumber(_magnetic);
+}
+
 void StateBuilder::quantize() {
     const eom::radial_bounds bounds =
         eom::compute_radial_limits(principal, angular);
@@ -103,14 +137,17 @@ void StateBuilder::quantize() {
             angular /
                 r0_magnitude, // v0_magnitude * eom::sin(theta_0) * sin(phi_0)
             0});              // v0_magnitude * eom::cos(theta_0)
-        return;
     } else {
-
-        setV0(eom::Vector3{
-            0, // v0_magnitude * eom::sin(theta_0) * cos(phi_0)
-            magnetic /
-                r0_magnitude, // v0_magnitude * eom::sin(theta_0) * sin(phi_0)
-            0});              // v0_magnitude * eom::cos(theta_0)
+        if (magnetic == 0) {
+            setV0(eom::Vector3{
+                0, // v0_magnitude * eom::sin(theta_0) * cos(phi_0)
+                angular / r0_magnitude, 0}); // v0_magnitude * eom::cos(theta_0)
+        } else
+            setV0(eom::Vector3{
+                0, // v0_magnitude * eom::sin(theta_0) * cos(phi_0)
+                magnetic / r0_magnitude, // v0_magnitude * eom::sin(theta_0) *
+                                         // sin(phi_0)
+                0});                     // v0_magnitude * eom::cos(theta_0)
     }
 }
 

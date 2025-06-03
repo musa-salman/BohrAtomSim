@@ -21,6 +21,8 @@ class StateBuilder {
     void quantize();
 
   public:
+    void quantizeFromR0V0(const eom::Vector3 &r0, const eom::Vector3 &v0);
+
     void setR0(const eom::Vector3 &r);
     void setV0(const eom::Vector3 &v);
     void setR0Magnitude(scalar r0_magnitude);
