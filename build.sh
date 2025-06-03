@@ -9,6 +9,7 @@ PLATFORM="${OS}-${ARCH}"
 BUILD_TYPE="debug"
 DO_GENERATE=true
 DO_CLEAN=false
+DO_CLEAN_COMPILED_OBJECTS=false
 DO_BUILD=true
 GENERATOR="Ninja"
 
@@ -30,17 +31,37 @@ while [[ $# -gt 0 ]]; do
       DO_GENERATE=false
       shift
       ;;
+    -C|--clean-compiled-objects)
+      DO_CLEAN_COMPILED_OBJECTS=true
+      shift
+      ;;
     *)
       echo "Unknown argument: $1"
-      echo "Usage: ./build.sh [-d|-r|-c|-b]"
+      echo "Usage: ./build.sh [-d|--debug] [-r|--release] [-c|--clean] [-C|--clean-compiled-objects] [-b|--build-only]"
       exit 1
       ;;
   esac
 done
 
 BUILD_DIR="_build/${PLATFORM}/${BUILD_TYPE}"
-GEN_ARGS="-DCMAKE_BUILD_TYPE=$(echo "$BUILD_TYPE" | tr '[:lower:]' '[:upper:]')"
+
+if [[ "$BUILD_TYPE" == "debug" ]]; then
+  BUILD_TYPE_CMAKE="Debug"
+elif [[ "$BUILD_TYPE" == "release" ]]; then
+  BUILD_TYPE_CMAKE="Release"
+else
+  BUILD_TYPE_CMAKE="$BUILD_TYPE"
+fi
+
+GEN_ARGS="-DCMAKE_BUILD_TYPE=$BUILD_TYPE_CMAKE"
+
 GENERATOR_ARG="-G ${GENERATOR}"
+
+if [ "$DO_CLEAN_COMPILED_OBJECTS" = true ]; then
+  echo "Cleaning compiled objects in: _build/"
+  find "_build" -type f \( -name '*.o' -o -name '*.a' -o -name '*.so' -o -name '*.dll' -o -name '*.exe' -o -name '*.out' \) -delete
+  exit 0
+fi
 
 if [ "$DO_CLEAN" = true ]; then
   echo "Cleaning build directory: $BUILD_DIR"

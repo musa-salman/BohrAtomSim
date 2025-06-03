@@ -14,9 +14,6 @@ endif()
 set(CMAKE_AR llvm-ar)
 set(CMAKE_RANLIB llvm-ranlib)
 
-add_compile_options(-Wall -Wextra -Wpedantic)
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -flto -march=native -mtune=native")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fsanitize=address -DDEBUG")
 
 include(cmake/CPM.cmake)
 include(cmake/Dependencies.cmake)
@@ -46,7 +43,15 @@ add_executable(bohr_main
 set_target_properties(bohr_main PROPERTIES
     CXX_STANDARD 23
     CXX_STANDARD_REQUIRED YES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin"
+
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${PROJECT_SOURCE_DIR}/bin/debug"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_SOURCE_DIR}/bin/release"
+)
+
+target_compile_options(bohr_main BEFORE PRIVATE
+  -Wall -Wextra -Wpedantic
+  $<$<CONFIG:Debug>:-g -O0 -DDEBUG>
+  $<$<CONFIG:Release>:-Og -march=native -mtune=native>
 )
 
 target_include_directories(bohr_main PRIVATE
@@ -84,5 +89,3 @@ target_link_libraries(bohr_main PRIVATE
     ${SLEEF_LIBRARIES}
     ${SQLite3_LIBRARIES}
 )
-
-message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
