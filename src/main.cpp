@@ -78,7 +78,7 @@ int main() {
     }
 
     ServiceLocator::getInstance().registerService<ISimulator>(
-        std::make_shared<Simulator>(10));
+        std::make_shared<Simulator>(4));
 
     ServiceLocator::getInstance().registerService<DataSource>(
         std::make_shared<DataSource>());

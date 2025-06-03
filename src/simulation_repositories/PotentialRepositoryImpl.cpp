@@ -77,8 +77,8 @@ void PotentialRepositoryImpl::remove(const size_t id) const {
 }
 
 void PotentialRepositoryImpl::insertInitialPotentials() const {
-    std::array<Potential, 1> defaults = {
-        Potential(0, "Coulomb Potential", PotentialType::Coulomb, "1/r^2", {})};
+    std::array<Potential, 1> defaults = {Potential(
+        0, "Coulomb Potential", PotentialType::Coulomb, "-1/r^2", {})};
 
     for (const auto &pot : defaults) {
         add(pot);

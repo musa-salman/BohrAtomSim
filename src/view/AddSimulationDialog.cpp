@@ -157,9 +157,8 @@ void AddSimulationDialog::render() {
             // largest int
             static int rLocalMaxCountLimit = 10;
             if (ImGui::Checkbox("Limit R Local Maxima", &isRLocalMaxLimited)) {
-                simulation.setRLocalMaxCountLimit( isRLocalMaxLimited
-                                                      ? rLocalMaxCountLimit
-                                                      : -1);
+                simulation.setRLocalMaxCountLimit(
+                    isRLocalMaxLimited ? rLocalMaxCountLimit : -1);
             }
             if (isRLocalMaxLimited) {
                 ImGui::InputInt("R Local Max Count", &rLocalMaxCountLimit);
@@ -194,19 +193,22 @@ void AddSimulationDialog::render() {
                                 simulation.getPotential().getName().c_str());
 
                     ImGui::Text(
-                        "Expression: %s",
+                        "dU/dr = %s",
                         simulation.getPotential().getExpression().c_str());
 
                     // Display constants editor
-                    ImGui::Text("Constants:");
                     auto &constants = simulation.getConstantValues();
-                    for (const auto &[key, value] : constants) {
-                        ImGui::PushID(key.c_str());
-                        double val = value;
-                        if (ImGui::InputDouble(key.c_str(), &val)) {
-                            simulation.setConstantValue(key, val);
+                    if (!constants.empty()) {
+                        ImGui::Separator();
+                        ImGui::Text("Constants:");
+                        for (const auto &[key, value] : constants) {
+                            ImGui::PushID(key.c_str());
+                            double val = value;
+                            if (ImGui::InputDouble(key.c_str(), &val)) {
+                                simulation.setConstantValue(key, val);
+                            }
+                            ImGui::PopID();
                         }
-                        ImGui::PopID();
                     }
                 }
             }
@@ -226,10 +228,6 @@ void AddSimulationDialog::render() {
             on_submit(simulation);
         }
 
-        ImGui::SameLine();
-        if (ImGui::Button("Reset")) {
-            resetSimulation();
-        }
         ImGui::SameLine();
         if (ImGui::Button("Close")) {
             is_open = false;
@@ -255,6 +253,9 @@ void AddSimulationDialog::resetSimulation() {
 
     potentials =
         ServiceLocator::getInstance().get<PotentialRepository>().getAll();
+
+    simulation.setPotential(potentials.empty() ? Potential()
+                                               : *potentials.front());
 
     updateSimulation();
 }

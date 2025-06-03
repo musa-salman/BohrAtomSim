@@ -12,10 +12,12 @@
 
 struct State2DBase : State {
     State2DBase(const eom::Vector2 &r0, const eom::Vector2 &v0)
-        : r(eom::polar::compute_r_0(r0)),
-          r_dot(eom::polar::compute_r_dot_0(r0, v0)),
-          psi(eom::polar::compute_psi_0(r0)),
-          p_psi(eom::polar::compute_p_psi(r0, v0)) {}
+    : r(eom::polar::compute_r_0(r0)),
+      r_dot(eom::polar::compute_r_dot_0(r0, v0)),
+      r_ddot(0),
+      psi(eom::polar::compute_psi_0(r0)),
+      psi_dot(0), gamma(0), p_psi(eom::polar::compute_p_psi(r0, v0)) {}
+
 
     template <typename EOM, typename Pot>
     SIM_INLINE inline void integrate_common(scalar delta_time,
@@ -45,7 +47,7 @@ template <typename Pot> struct State2D<false, false, Pot> : State2DBase {
 
     template <typename Factory>
     State2D(eom::Vector2 r0, eom::Vector2 v0, Factory &&factory)
-        : State2DBase(r0, v0), m_du(factory(r)) {
+        : State2DBase(r0, v0), m_du(factory(r)), prev_r_dot(r_dot) {
         namespace eom_2dnr = eom::polar::non_rel;
         eom_2dnr::EOM::update(*this, m_du);
     }
