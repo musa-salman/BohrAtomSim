@@ -289,7 +289,6 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
         : State3DBase(r0, v0), m_du(factory(r)) {
         namespace eom_3dr = eom::spherical::rel;
         m_theta0 = eom::sin(theta);
-        gamma = eom_3dr::compute_gamma(r, r_dot, theta, theta_dot, p_phi);
 
         if (std::abs(m_theta0) <= 1e-6) {
             sign = 1;
@@ -297,8 +296,10 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
             phi_dot = 0;
             theta_ddot = 0;
 
+            gamma = eom::polar::rel::compute_gamma(r, r_dot, p_phi);
             theta_dot = eom::polar::rel::compute_psi_dot(r, gamma, p_phi);
         } else {
+            gamma = eom_3dr::compute_gamma(r, r_dot, theta, theta_dot, p_phi);
             phi_dot = eom_3dr::compute_phi_dot(r, theta, gamma, p_phi);
             theta_ddot = eom_3dr::compute_theta_ddot(
                 r, r_dot, theta, theta_dot, phi_dot, gamma, m_du.dU_dr());
@@ -340,9 +341,9 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
         phi -= TWO_PI * static_cast<scalar>(phi >= TWO_PI);
 
         namespace eom_3dr = eom::spherical::rel;
-        gamma = eom_3dr::compute_gamma(r, r_dot, theta, theta_dot, p_phi);
 
         if (std::abs(m_theta0) <= 1e-6) {
+            gamma = eom::polar::rel::compute_gamma(r, r_dot, p_phi);
             theta_dot =
                 sign * eom::polar::rel::compute_psi_dot(r, gamma, p_phi);
 
@@ -357,6 +358,7 @@ struct State3D<true, true, Pot> : State3DBase, Relativistic, Quantized {
                 phi = -phi;
             }
         } else {
+            gamma = eom_3dr::compute_gamma(r, r_dot, theta, theta_dot, p_phi);
             phi_dot = eom_3dr::compute_phi_dot(r, theta, gamma, p_phi);
             theta_ddot = eom_3dr::compute_theta_ddot(
                 r, r_dot, theta, theta_dot, phi_dot, gamma, m_du.dU_dr());
