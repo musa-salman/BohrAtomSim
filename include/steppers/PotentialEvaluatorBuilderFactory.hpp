@@ -12,16 +12,11 @@ auto createPotentialFactory(
     if constexpr (potEval == PotentialType::Coulomb) {
         return [](scalar &r) { return CoulombPotential(r); };
     } else if constexpr (potEval == PotentialType::GeneralExpression) {
-        exprtk::symbol_table<scalar> symbol_table;
-
-        for (auto &pair : constantsValues)
-            symbol_table.add_constant(pair.first, pair.second);
 
         std::string _potential_expression = pot.getExpression();
-        return [symbol_table, _potential_expression](scalar &r) mutable {
-            symbol_table.add_variable("r", r);
-            return GeneralPotentialExpression(_potential_expression,
-                                              symbol_table);
+        return [constantsValues, _potential_expression](scalar &r) {
+            return GeneralPotentialExpression(r, _potential_expression,
+                                              constantsValues);
         };
     }
 

@@ -12,12 +12,10 @@
 
 struct State2DBase : State {
     State2DBase(const eom::Vector2 &r0, const eom::Vector2 &v0)
-    : r(eom::polar::compute_r_0(r0)),
-      r_dot(eom::polar::compute_r_dot_0(r0, v0)),
-      r_ddot(0),
-      psi(eom::polar::compute_psi_0(r0)),
-      psi_dot(0), gamma(0), p_psi(eom::polar::compute_p_psi(r0, v0)) {}
-
+        : r(eom::polar::compute_r_0(r0)),
+          r_dot(eom::polar::compute_r_dot_0(r0, v0)), r_ddot(0),
+          psi(eom::polar::compute_psi_0(r0)), psi_dot(0), gamma(0),
+          p_psi(eom::polar::compute_p_psi(r0, v0)) {}
 
     template <typename EOM, typename Pot>
     SIM_INLINE inline void integrate_common(scalar delta_time,

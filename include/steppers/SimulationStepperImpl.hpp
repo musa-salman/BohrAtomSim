@@ -9,7 +9,7 @@ template <typename State>
 class SimulationStepperImpl : public SimulationStepper {
   public:
     SimulationStepperImpl(const StepperCommonConfig &cfg, State &&state)
-        : SimulationStepper(cfg), step(std::move(state)) {
+        : SimulationStepper(cfg), step(std::forward<State>(state)) {
         const auto &field_names = State::field_names;
         init_file_header(file_bin, std::span{field_names});
     }
@@ -22,7 +22,8 @@ class SimulationStepperImpl : public SimulationStepper {
                 static_cast<int>(isLocalMaxR) * rLocalMaxCount > 1)
                 [[unlikely]] {
                 recordStep();
-                if (!isRunning || ((rLocalMaxCount >= rLocalMaxLimit) && (rLocalMaxLimit > 0))) 
+                if (!isRunning || ((rLocalMaxCount >= rLocalMaxLimit) &&
+                                   (rLocalMaxLimit > 0)))
                     break;
             }
             it++;

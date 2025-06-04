@@ -2,7 +2,6 @@
 #define POTENTIAL_HPP
 
 #include <cstddef>
-#include <iostream>
 #include <nlohmann/json.hpp>
 
 #include "eom/utils.hpp"
@@ -79,57 +78,39 @@ struct CoulombPotential : PotentialEvaluator {
 };
 
 struct GeneralPotentialExpression : PotentialEvaluator {
+
     GeneralPotentialExpression(
-        std::string expression,
-        const exprtk::symbol_table<scalar> &symbol_table) {
+        scalar &r, const std::string &expression,
+        const std::unordered_map<std::string, scalar> &constantsValues)
+        : m_constants_values(constantsValues), m_expression(expression) {
         exprtk::parser<scalar> parser;
-        m_expression = std::move(expression);
-        m_symbol_table = symbol_table;
+
+        exprtk::symbol_table<scalar> m_symbol_table;
+        for (const auto &pair : m_constants_values) {
+            m_symbol_table.add_constant(pair.first, pair.second);
+        }
+        m_symbol_table.add_variable("r", r);
 
         m_du_dr.register_symbol_table(m_symbol_table);
 
         parser.compile(m_expression, m_du_dr);
     }
 
-    GeneralPotentialExpression &
-    operator=(const GeneralPotentialExpression &other) {
-        if (this != &other) {
-            m_expression = other.m_expression;
-            m_symbol_table = other.m_symbol_table;
-            m_du_dr = other.m_du_dr;
-
-            exprtk::parser<scalar> parser;
-            parser.compile(m_expression, m_du_dr);
-        }
-        return *this;
-    }
-
     GeneralPotentialExpression(const GeneralPotentialExpression &other)
-        : m_du_dr(std::move(other.m_du_dr)),
-          m_symbol_table(std::move(other.m_symbol_table)),
-          m_expression(std::move(other.m_expression)) {
-        exprtk::parser<scalar> parser;
-        parser.compile(m_expression, m_du_dr);
-    }
-
-    ~GeneralPotentialExpression() {
-        std::cout << "GeneralPotentialExpression destroyed" << std::endl;
-    }
+        : m_du_dr(other.m_du_dr), m_constants_values(other.m_constants_values),
+          m_expression(other.m_expression) {}
 
     SIM_CONST SIM_INLINE inline scalar dU_dr() const { return m_du_dr.value(); }
 
     GeneralPotentialExpression rebind(scalar &new_r) const {
-        exprtk::symbol_table<scalar> symbol_table = m_symbol_table;
-        exprtk::expression<scalar> du_dr;
-        symbol_table.add_variable("r", new_r);
-        du_dr.register_symbol_table(symbol_table);
-        return GeneralPotentialExpression(m_expression, m_symbol_table);
+        return GeneralPotentialExpression(new_r, m_expression,
+                                          m_constants_values);
     }
 
   private:
     exprtk::expression<scalar> m_du_dr;
-    exprtk::symbol_table<scalar> m_symbol_table;
-    std::string m_expression;
+    const std::unordered_map<std::string, scalar> m_constants_values;
+    const std::string m_expression;
 };
 
 #endif // POTENTIAL_HPP
