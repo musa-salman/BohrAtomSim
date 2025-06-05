@@ -23,10 +23,10 @@
 #include "simulator_runner/ISimulator.hpp"
 #include "simulator_runner/Simulator.hpp"
 #include "steppers/StepperFactory.hpp"
-#include "view/PotentialsView.hpp"
-#include "view/SimulationAnalysisManager.hpp"
-#include "view/SimulationExplorer.hpp"
-#include "view/SimulationTableUI.hpp"
+#include "ui/PotentialsView.hpp"
+#include "ui/SimulationAnalysisManager.hpp"
+#include "ui/SimulationTableUI.hpp"
+#include "ui/active_simulation/ActiveSimulationPanel.hpp"
 
 using namespace boost::interprocess;
 
@@ -99,13 +99,13 @@ int main() {
         std::make_shared<SimulationServiceImpl>());
 
     // Initialize UI Components
-    SimulationExplorer explorer;
+    ui::active_simulation::ActiveSimulationPanel explorer;
 
-    SimulationTableUI simulationTableUI;
+    ui::SimulationTableUI simulationTableUI;
 
-    SimulationAnalysisManager simulationAnalysisManager;
+    ui::SimulationAnalysisManager simulationAnalysisManager;
 
-    PotentialsView potentialsView;
+    ui::PotentialsView potentialsView;
 
     // Main Loop
     while (!glfwWindowShouldClose(window)) {

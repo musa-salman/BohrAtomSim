@@ -4,7 +4,9 @@
 #include <functional>
 #include <string>
 
-#include "view/Component.hpp"
+#include "ui/Component.hpp"
+
+namespace ui {
 
 class ConfirmationDialog : public Component {
   public:
@@ -18,5 +20,6 @@ class ConfirmationDialog : public Component {
     bool isOpen = false;
     std::function<void()> confirmCallback;
 };
+} // namespace ui
 
-#endif // CONFIRMATIONDIALOG_H
+#endif // UI_CONFIRMATION_DIALOG_HPP

@@ -3,9 +3,10 @@
 
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationService.hpp"
-#include "view/SimulationAnalysisManager.hpp"
-#include "view/SimulationAnalyzer.hpp"
+#include "ui/SimulationAnalysisManager.hpp"
+#include "ui/SimulationAnalyzer.hpp"
 
+namespace ui {
 SimulationAnalysisManager::SimulationAnalysisManager() {
     for (const auto &[id, simulation] : ServiceLocator::getInstance()
                                             .get<SimulationService>()
@@ -69,3 +70,4 @@ void SimulationAnalysisManager::render() {
     }
     ImGui::EndChild();
 }
+} // namespace ui

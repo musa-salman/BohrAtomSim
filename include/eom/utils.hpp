@@ -1,5 +1,5 @@
-#ifndef UTILS_EOM_HPP
-#define UTILS_EOM_HPP
+#ifndef EOM_UTILS_HPP
+#define EOM_UTILS_HPP
 
 #include <math.h>
 #include <sleef.h>
@@ -143,4 +143,4 @@ struct Vector3 {
 
 } // namespace eom
 
-#endif // UTILS_EOM_HPP
+#endif // EOM_UTILS_HPP

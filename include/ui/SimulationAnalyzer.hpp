@@ -11,7 +11,9 @@
 #include "dataset/FilteredDatasetView.hpp"
 #include "simulation_repositories/SimulationService.hpp"
 #include "simulator_runner/Simulation.hpp"
-#include "view/Component.hpp"
+#include "ui/Component.hpp"
+
+namespace ui {
 
 class SimulationAnalyzer : public Component {
     const Simulation &simulation;
@@ -59,5 +61,6 @@ class SimulationAnalyzer : public Component {
     void renderDatasetsViewer();
     void renderExportDatasetOptions();
 };
+} // namespace ui
 
 #endif // SIMULATION_ANALYZER_HPP

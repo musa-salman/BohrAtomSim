@@ -5,8 +5,9 @@
 
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationService.hpp"
-#include "view/SimulationTableUI.hpp"
+#include "ui/SimulationTableUI.hpp"
 
+namespace ui {
 SimulationTableUI::SimulationTableUI() : searchQuery("") {}
 
 void SimulationTableUI::render() {
@@ -81,3 +82,5 @@ void SimulationTableUI::renderTable() {
         ImGui::EndTable();
     }
 }
+
+} // namespace ui

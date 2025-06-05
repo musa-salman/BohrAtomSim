@@ -25,11 +25,11 @@ class SimulationService {
     virtual void resumeSimulation(size_t id) = 0;
 
     [[nodiscard]] virtual const std::unordered_map<
-        size_t, std::unique_ptr<Simulation>> &
+        size_t, std::shared_ptr<Simulation>> &
     getOngoingSimulations() const = 0;
 
     [[nodiscard]] virtual const std::unordered_map<
-        size_t, std::unique_ptr<Simulation>> &
+        size_t, std::shared_ptr<Simulation>> &
     getCompletedSimulations() const = 0;
 
     [[nodiscard]] virtual const Dataset &

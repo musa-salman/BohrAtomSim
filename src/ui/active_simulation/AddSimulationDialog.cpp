@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstring>
 #include <imgui.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -7,7 +8,11 @@
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/PotentialRepository.hpp"
 #include "simulator_runner/Simulation.hpp"
-#include "view/AddSimulationDialog.hpp"
+#include "ui/active_simulation/AddSimulationDialog.hpp"
+#include "ui/ui_utils.hpp"
+
+namespace ui {
+namespace active_simulation {
 
 AddSimulationDialog::AddSimulationDialog() { resetSimulation(); }
 
@@ -20,7 +25,7 @@ void AddSimulationDialog::render() {
     static bool is_open = false;
     static time_t t = time(0);
 
-    if (ImGui::Button("Add Simulation")) {
+    if (ImGui::Button("Add")) {
         is_open = true;
         // update date
         t = time(0);
@@ -43,8 +48,13 @@ void AddSimulationDialog::render() {
         ImGui::SameLine();
         ImGui::Checkbox("Auto", &auto_name);
 
-        if (auto_name)
-            formatName(name);
+        if (auto_name) {
+            const std::string formattedSimulationName =
+                createFormattedSimulationName(simulation);
+            std::strncpy(name, formattedSimulationName.c_str(),
+                         sizeof(name) - 1);
+            name[sizeof(name) - 1] = '\0';
+        }
 
         simulation.setName(std::string(name));
         ImGui::Separator();
@@ -214,16 +224,16 @@ void AddSimulationDialog::render() {
             }
         }
 
+        simulation.setDeltaTime(delta_time);
+        simulation.setTotalDuration(total_duration);
+        simulation.setRecordInterval(record_interval);
+        simulation.setRelativistic(is_rel);
+        simulation.setQuantized(is_quant);
+        simulation.set3D(is_3d);
+        simulation.setR0(eom::Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
+        simulation.setV0(eom::Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
         if (ImGui::Button("Submit")) {
             is_open = false;
-            simulation.setDeltaTime(delta_time);
-            simulation.setTotalDuration(total_duration);
-            simulation.setRecordInterval(record_interval);
-            simulation.setRelativistic(is_rel);
-            simulation.setQuantized(is_quant);
-            simulation.set3D(is_3d);
-            simulation.setR0(eom::Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
-            simulation.setV0(eom::Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
 
             on_submit(simulation);
         }
@@ -280,11 +290,5 @@ void AddSimulationDialog::updateSimulation() {
     magnetic = stateBuilder.getMagneticQuantumNumber();
 }
 
-void AddSimulationDialog::formatName(char *name) {
-    // randomly generate a name
-    if (name[0] == '\0') {
-        snprintf(name, 200, "Simulation %s", date);
-    } else {
-        snprintf(name, 200, "%s %s", name, date);
-    }
-}
+} // namespace active_simulation
+} // namespace ui

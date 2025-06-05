@@ -27,11 +27,11 @@ class SimulationServiceImpl : public SimulationService {
     void resumeSimulation(size_t id) override;
 
     [[nodiscard]] const std::unordered_map<size_t,
-                                           std::unique_ptr<Simulation>> &
+                                           std::shared_ptr<Simulation>> &
     getOngoingSimulations() const override;
 
     [[nodiscard]] const std::unordered_map<size_t,
-                                           std::unique_ptr<Simulation>> &
+                                           std::shared_ptr<Simulation>> &
     getCompletedSimulations() const override;
 
     [[nodiscard]] const Dataset &getSimulationResult(size_t id) const override;
@@ -45,9 +45,9 @@ class SimulationServiceImpl : public SimulationService {
     OngoingSimulationManager &ongoingSimulationManager;
     ArchivedSimulationManager &archivedSimulationManager;
 
-    std::unordered_map<size_t, std::unique_ptr<Simulation>> ongoingSimulations;
+    std::unordered_map<size_t, std::shared_ptr<Simulation>> ongoingSimulations;
 
-    std::unordered_map<size_t, std::unique_ptr<Simulation>>
+    std::unordered_map<size_t, std::shared_ptr<Simulation>>
         completedSimulations;
 };
 

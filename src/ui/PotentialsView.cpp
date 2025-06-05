@@ -2,7 +2,9 @@
 
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/PotentialRepository.hpp"
-#include "view/PotentialsView.hpp"
+#include "ui/PotentialsView.hpp"
+
+namespace ui {
 
 PotentialsView::PotentialsView()
     : potentialRepo(ServiceLocator::getInstance().get<PotentialRepository>()) {
@@ -114,3 +116,5 @@ void PotentialsView::renderPotentialForm() {
         ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", errorMessage.c_str());
     }
 }
+
+} // namespace ui

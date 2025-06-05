@@ -1,13 +1,15 @@
-#ifndef ADD_SIMULATION_DIALOG_HPP
-#define ADD_SIMULATION_DIALOG_HPP
+#ifndef UI_ACTIVE_SIMULATION_ADD_SIMULATION_DIALOG_HPP
+#define UI_ACTIVE_SIMULATION_ADD_SIMULATION_DIALOG_HPP
 
 #include <functional>
+
 #include <vector>
 
-#include "Component.hpp"
 #include "simulator_runner/Simulation.hpp"
-#include "steppers/Potential.hpp"
 #include "steppers/StateBuilder.hpp"
+#include "ui/Component.hpp"
+
+namespace ui::active_simulation {
 
 class AddSimulationDialog : public Component {
   public:
@@ -37,8 +39,8 @@ class AddSimulationDialog : public Component {
     void resetSimulation();
 
     void updateSimulation();
-
-    void formatName(char *name);
 };
 
-#endif
+} // namespace ui::active_simulation
+
+#endif // UI_ACTIVE_SIMULATION_ADD_SIMULATION_DIALOG_HPP

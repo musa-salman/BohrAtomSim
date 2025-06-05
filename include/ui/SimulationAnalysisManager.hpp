@@ -1,8 +1,13 @@
 #ifndef SIMULATION_ANALYSIS_MANAGER_HPP
 #define SIMULATION_ANALYSIS_MANAGER_HPP
 
-#include "view/Component.hpp"
-#include "view/SimulationAnalyzer.hpp"
+#include <memory>
+#include <unordered_map>
+
+#include "Component.hpp"
+#include "SimulationAnalyzer.hpp"
+
+namespace ui {
 
 class SimulationAnalysisManager : public Component {
     std::unordered_map<size_t, std::shared_ptr<SimulationAnalyzer>>
@@ -14,5 +19,6 @@ class SimulationAnalysisManager : public Component {
 
     void render() override;
 };
+} // namespace ui
 
 #endif // SIMULATION_ANALYSIS_MANAGER_HPP

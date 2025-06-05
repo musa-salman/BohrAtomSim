@@ -1,7 +1,12 @@
+#ifndef UI_SIMULATION_TABLE_UI
+#define UI_SIMULATION_TABLE_UI
+
 #include <optional>
 #include <string>
 
-#include "view/Component.hpp"
+#include "ui/Component.hpp"
+
+namespace ui {
 
 class SimulationTableUI : public Component {
   public:
@@ -18,3 +23,6 @@ class SimulationTableUI : public Component {
     void renderSearchBar();
     void renderActionButtons();
 };
+} // namespace ui
+
+#endif

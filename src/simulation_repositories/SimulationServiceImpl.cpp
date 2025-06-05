@@ -23,12 +23,12 @@ SimulationServiceImpl::SimulationServiceImpl()
         if (simulation->status == Simulation::SimulationStatus::COMPLETED) {
             completedSimulations.emplace(
                 simulation->getId(),
-                std::make_unique<Simulation>(std::move(*simulation)));
+                std::shared_ptr<Simulation>(std::move(simulation)));
         } else {
             // TODO: Need cleanup the file result
             ongoingSimulations.emplace(
                 simulation->getId(),
-                std::make_unique<Simulation>(std::move(*simulation)));
+                std::shared_ptr<Simulation>(std::move(simulation)));
         }
     }
 }
@@ -42,7 +42,7 @@ size_t SimulationServiceImpl::addSimulation(const Simulation &simulation) {
     _simulation.setId(id);
 
     ongoingSimulations.emplace(
-        id, std::make_unique<Simulation>(std::move(_simulation)));
+        id, std::make_shared<Simulation>(std::move(_simulation)));
 
     return id;
 }
@@ -104,12 +104,12 @@ void SimulationServiceImpl::removeSimulation(size_t id) {
     }
 }
 
-const std::unordered_map<size_t, std::unique_ptr<Simulation>> &
+const std::unordered_map<size_t, std::shared_ptr<Simulation>> &
 SimulationServiceImpl::getOngoingSimulations() const {
     return ongoingSimulations;
 }
 
-const std::unordered_map<size_t, std::unique_ptr<Simulation>> &
+const std::unordered_map<size_t, std::shared_ptr<Simulation>> &
 SimulationServiceImpl::getCompletedSimulations() const {
     return completedSimulations;
 }

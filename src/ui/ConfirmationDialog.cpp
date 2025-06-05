@@ -1,6 +1,8 @@
 #include <imgui.h>
 
-#include "dialogs/ConfirmationDialog.hpp"
+#include "ui/ConfirmationDialog.hpp"
+
+namespace ui {
 
 ConfirmationDialog::ConfirmationDialog(const std::string &message)
     : message(message), isOpen(false), confirmCallback(nullptr) {}
@@ -37,3 +39,4 @@ void ConfirmationDialog::render() {
         ImGui::EndPopup();
     }
 }
+} // namespace ui

@@ -18,7 +18,9 @@
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationService.hpp"
 #include "steppers/StateBuilder.hpp"
-#include "view/SimulationAnalyzer.hpp"
+#include "ui/SimulationAnalyzer.hpp"
+
+namespace ui {
 
 SimulationAnalyzer::SimulationAnalyzer(
     const Simulation &simulation,
@@ -497,3 +499,5 @@ void SimulationAnalyzer::renderExportDatasetOptions() {
         ImGuiFileDialog::Instance()->Close();
     }
 }
+
+} // namespace ui

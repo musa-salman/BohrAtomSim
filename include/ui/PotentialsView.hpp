@@ -1,5 +1,5 @@
-#ifndef POTENTIAL_VIEW_HPP
-#define POTENTIAL_VIEW_HPP
+#ifndef UI_POTENTIAL_VIEW_HPP
+#define UI_POTENTIAL_VIEW_HPP
 
 #include <memory>
 #include <string>
@@ -7,6 +7,8 @@
 
 #include "simulation_repositories/PotentialRepository.hpp"
 #include "steppers/PotentialBuilder.hpp"
+
+namespace ui {
 
 class PotentialsView {
   public:
@@ -29,5 +31,6 @@ class PotentialsView {
     bool showError = false;
     std::string errorMessage;
 };
+} // namespace ui
 
-#endif // POTENTIAL_VIEW_HPP
+#endif // UI_POTENTIAL_VIEW_HPP
