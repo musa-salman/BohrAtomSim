@@ -19,6 +19,7 @@
 #include "simulation_repositories/SimulationService.hpp"
 #include "steppers/StateBuilder.hpp"
 #include "ui/SimulationAnalyzer.hpp"
+#include "ui/components/SimulationOverviewCard.hpp"
 
 namespace ui {
 
@@ -77,29 +78,7 @@ void SimulationAnalyzer::renderSimulationDetails() {
 
     ImGui::BeginGroup();
     {
-        Simulation::SimulationStatus status = simulation.status;
-
-        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Simulation Details");
-        ImGui::Separator();
-        ImGui::Columns(2, nullptr, false);
-
-        ImGui::Text("ID: %zu", simulation.getId());
-        ImGui::NextColumn();
-        ImGui::Text("Name: %s", simulation.getName().c_str());
-        ImGui::NextColumn();
-        ImGui::Text("Status: %s",
-                    status == Simulation::SimulationStatus::RUNNING ? "Running"
-                    : status == Simulation::SimulationStatus::COMPLETED
-                        ? "Completed"
-                        : "Unknown");
-        ImGui::NextColumn();
-        // ImGui::Text("Stepper Type: %s",
-        //             simulation.getStepperType() == StepperType::Stepper2D
-        //                 ? "2D"
-        //                 : "Unknown");
-        // const auto &params = simulation.getParams();
-
-        ImGui::Columns(1);
+        ui::components::SimulationOverviewCard::render(simulation);
         ImGui::Separator();
         ImGui::TextDisabled("Actions");
         if (ImGui::Button("Delete")) {

@@ -103,6 +103,14 @@ CPMAddPackage(
   GIT_SHALLOW TRUE
 )
 
+# magic_enum
+CPMAddPackage(
+  NAME magic_enum
+  GITHUB_REPOSITORY Neargye/magic_enum
+  GIT_TAG v0.9.7
+  GIT_SHALLOW TRUE
+)
+
 # Font Awesome Headers
 set(AWESOME_DIR ${PROJECT_ROOT}/external/icons)
 file(GLOB AWESOME_HEADERS ${AWESOME_DIR}/*.h ${AWESOME_DIR}/*.hpp)

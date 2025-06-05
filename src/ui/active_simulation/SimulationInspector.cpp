@@ -4,6 +4,7 @@
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationService.hpp"
 #include "ui/active_simulation/SimulationInspectorPanel.hpp"
+#include "ui/components/SimulationOverviewCard.hpp"
 
 namespace ui::active_simulation {
 
@@ -16,17 +17,19 @@ void SimulationInspectorPanel::render() {
     ImGui::BeginChild("Simulation Details", ImVec2(0, 0),
                       ImGuiChildFlags_Border);
 
-    auto simPtr = simulation.lock();
-    if (!simPtr) {
+    const auto sim = simulation.lock();
+    if (!sim) {
         ImGui::Text("No simulation selected.");
         ImGui::EndChild();
         return;
     }
 
+    ui::components::SimulationOverviewCard::render(*sim);
+
     SimulationService &simulationService =
         ServiceLocator::getInstance().get<SimulationService>();
-    size_t simId = simPtr->getId();
-    const auto &status = simPtr->status;
+    size_t simId = sim->getId();
+    const auto &status = sim->status;
 
     if (status == Simulation::SimulationStatus::COMPLETED) {
         ImGui::Text("Simulation completed.");
