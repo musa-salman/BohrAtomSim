@@ -14,7 +14,7 @@ class ISimulator {
                                std::function<void()> &&onCompletion) = 0;
 
     virtual void pauseSimulation(size_t id) = 0;
-    virtual void resumeSimulation(size_t id) = 0;
+    virtual void resumeSimulation(Simulation &simulation) = 0;
     virtual void stopSimulation(size_t id) = 0;
 };
 

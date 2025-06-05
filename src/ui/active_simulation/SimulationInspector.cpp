@@ -53,7 +53,7 @@ void SimulationInspectorPanel::render() {
             simulationService.stopSimulation(simId);
         }
         ImGui::Text("Simulation is paused.");
-    } else if (status == Simulation::SimulationStatus::IDLE) {
+    } else if (status == Simulation::SimulationStatus::READY) {
         if (ImGui::Button("Run Simulation")) {
             simulationService.startSimulation(simId);
         }

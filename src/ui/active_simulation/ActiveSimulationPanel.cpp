@@ -37,6 +37,38 @@ ActiveSimulationPanel::ActiveSimulationPanel()
 }
 
 void ActiveSimulationPanel::render() {
+    if (ImGui::BeginChild("Simulation Statistics", ImVec2(0, 70),
+                          ImGuiChildFlags_Border)) {
+
+        int readyCount = 0, runningCount = 0, pausedCount = 0, queuedCount = 0;
+
+        for (const auto &[id, sim] :
+             simulationService.getOngoingSimulations()) {
+            switch (sim->getStatus()) {
+            case Simulation::SimulationStatus::READY:
+                ++readyCount;
+                break;
+            case Simulation::SimulationStatus::RUNNING:
+                ++runningCount;
+                break;
+            case Simulation::SimulationStatus::PAUSED:
+                ++pausedCount;
+                break;
+            case Simulation::SimulationStatus::QUEUED:
+                ++queuedCount;
+                break;
+            case Simulation::SimulationStatus::COMPLETED:
+                break;
+            }
+        }
+
+        ImGui::Text("Simulation Statistics");
+        ImGui::Separator();
+        ImGui::Text("Ready: %d    Queued: %d    Running: %d    Paused: %d",
+                    readyCount, queuedCount, runningCount, pausedCount);
+    }
+    ImGui::EndChild();
+
     ImGui::BeginChild("Simulations List", ImVec2(270, 0),
                       ImGuiChildFlags_Border);
     listPanel.render();

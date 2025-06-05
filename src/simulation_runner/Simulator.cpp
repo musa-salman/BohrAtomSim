@@ -21,10 +21,17 @@ void Simulator::pauseSimulation(size_t id) {
         it->second->pause();
 }
 
-void Simulator::resumeSimulation(size_t id) {
+void Simulator::resumeSimulation(Simulation &simulation) {
+    const size_t id = simulation.getId();
     auto it = steppers.find(id);
-    if (it != steppers.end())
-        boost::asio::post(ioContext, [it]() { it->second->resume(); });
+    if (it != steppers.end()) {
+        simulation.setStatus(Simulation::SimulationStatus::QUEUED);
+
+        boost::asio::post(ioContext, [it, &simulation]() {
+            simulation.setStatus(Simulation::SimulationStatus::RUNNING);
+            it->second->resume();
+        });
+    }
 }
 
 void Simulator::stopSimulation(size_t id) {
@@ -89,5 +96,9 @@ void Simulator::simulateOrbit(Simulation &simulation,
         }
     }
 
-    boost::asio::post(ioContext, [this, id]() { this->steppers[id]->run(); });
+    simulation.setStatus(Simulation::SimulationStatus::QUEUED);
+    boost::asio::post(ioContext, [this, &simulation]() {
+        simulation.status = Simulation::SimulationStatus::RUNNING;
+        this->steppers[simulation.getId()]->run();
+    });
 }

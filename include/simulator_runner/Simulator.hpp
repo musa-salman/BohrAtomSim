@@ -21,13 +21,13 @@ class Simulator : public ISimulator {
     ~Simulator();
 
     void simulateOrbit(Simulation &simulation,
-                       std::function<void()> &&onCompletion);
+                       std::function<void()> &&onCompletion) override;
 
-    void pauseSimulation(size_t id);
+    void pauseSimulation(size_t id) override;
 
-    void resumeSimulation(size_t id);
+    void resumeSimulation(Simulation &simulation) override;
 
-    void stopSimulation(size_t id);
+    void stopSimulation(size_t id) override;
 
     template <bool Is3D, bool IsRel, bool IsQuant, typename... Tags>
     void dispatch_by_potential_type(const Simulation &sim,

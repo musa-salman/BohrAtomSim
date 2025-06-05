@@ -28,9 +28,9 @@ class Simulation {
     bool is3D = true;
 
   public:
-    enum class SimulationStatus { IDLE, RUNNING, PAUSED, COMPLETED };
+    enum class SimulationStatus { READY, RUNNING, PAUSED, COMPLETED, QUEUED };
 
-    SimulationStatus status = SimulationStatus::IDLE;
+    SimulationStatus status = SimulationStatus::READY;
 
     Simulation() = default;
 
@@ -44,7 +44,7 @@ class Simulation {
           total_duration(total_duration), rLocalMaxCountLimit(rLocalMaxCount),
           record_interval(record_interval), potential(std::move(potential)),
           isRelativistic(isRelativistic), isQuantized(isQuantized), is3D(is3D),
-          status(SimulationStatus::IDLE) {}
+          status(SimulationStatus::READY) {}
 
     Simulation(const Simulation &other) : name(other.name), id(other.id) {
         r0 = other.r0;

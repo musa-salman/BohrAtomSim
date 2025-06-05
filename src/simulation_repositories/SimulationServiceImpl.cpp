@@ -51,7 +51,6 @@ void SimulationServiceImpl::startSimulation(size_t id) {
     if (!ongoingSimulations.contains(id))
         throw std::runtime_error("Simulation not found");
 
-    ongoingSimulations.at(id)->status = Simulation::SimulationStatus::RUNNING;
     ongoingSimulationManager.startMonitoring(id);
 
     simulator.simulateOrbit(*ongoingSimulations[id], [this, id]() {
@@ -83,9 +82,8 @@ void SimulationServiceImpl::resumeSimulation(size_t id) {
     if (!ongoingSimulations.contains(id))
         throw std::runtime_error("Simulation not found");
 
-    simulator.resumeSimulation(id);
+    simulator.resumeSimulation(*ongoingSimulations.at(id));
     ongoingSimulationManager.startMonitoring(id);
-    ongoingSimulations.at(id)->status = Simulation::SimulationStatus::RUNNING;
 }
 
 void SimulationServiceImpl::removeSimulation(size_t id) {
