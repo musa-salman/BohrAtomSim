@@ -24,23 +24,11 @@ class SimulationDB:
         query = "SELECT * FROM Simulations"
         return pd.read_sql_query(query, self.conn)
 
-    def filter_by_type(self, sim_type: int):
-        return self.df[self.df['type'] == sim_type]
-    
-    def filter_by_revolutions(self, revolutions: float):
-        return self.df[self.df['revolutions'] >= revolutions]
-
-    def filter_by_time_interval(self, interval: float):
-        return self.df[self.df['time_interval'] == interval] # TODO this is meaningless
-
     def filter_recent(self, limit=5):
         return self.df.sort_values(by='timestamp', ascending=False).head(limit)
-
-    def list_running(self):
-        return self.df[self.df['status'] == 'running']
-
-    def list_completed(self):
-        return self.df[self.df['status'] == 'completed']
+    
+    def contains_simulation_id(self, sim_id: int):
+        return sim_id in self.df['id'].values
 
     def get_by_id(self, sim_id: int):
         return self.df[self.df['id'] == sim_id].squeeze()
@@ -55,11 +43,7 @@ class SimulationDB:
         else:
             raise FileNotFoundError(f"No simulation data found at {path}")
 
-    def show(self, max_rows=10):
-        return self.df.head(max_rows)
-
     def show_all(self):
-        print('2DNR: 0, 2DR: 1, 3DNR: 2, 3DR: 3, 3DRS: 4')
         return self.df
 
     def __del__(self):

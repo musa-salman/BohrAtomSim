@@ -1,18 +1,17 @@
 import struct
 import numpy as np
 import pandas as pd
+import sys
 
 def load_simulation_data(filepath):
     with open(filepath, "rb") as f:
-        # Read header
-        header_bytes = f.read(9)
-        magic, version, field_count, endianness, scalar_type = struct.unpack("5sBBBb", header_bytes)
+        header_struct = struct.Struct("<5sBBB")
+        header_bytes = f.read(header_struct.size)
+        magic, version, field_count, endianness = header_struct.unpack(header_bytes)
 
-        # Validate magic
         if magic != b'ATOM\x89':
             raise ValueError(f"Invalid magic word: {magic}")
 
-        # Read field names
         MAX_FIELD_NAME = 16
         field_names_raw = f.read(field_count * MAX_FIELD_NAME)
         field_names = [
@@ -20,21 +19,22 @@ def load_simulation_data(filepath):
             for i in range(field_count)
         ]
 
-        # Read rest of file
+        dtype = np.float64
+
+        # Adjust for endianness
+        file_endian = chr(endianness)
+        sys_endian = '<' if sys.byteorder == 'little' else '>'
+        if file_endian != sys_endian:
+            dtype = np.dtype(dtype).newbyteorder(file_endian)
+
         raw = f.read()
-        scalar_size = np.dtype(np.float64).itemsize
-        row_size = field_count * scalar_size
+        row_size = field_count * np.dtype(dtype).itemsize
         usable_size = (len(raw) // row_size) * row_size
         trimmed = raw[:usable_size]
 
-        # Parse into array
-        data = np.frombuffer(trimmed, dtype=np.float64)
-        data = data.reshape((-1, field_count))
+        data = np.frombuffer(trimmed, dtype=dtype).reshape((-1, field_count))
 
-        df = pd.DataFrame(data, columns=field_names)
-
-        return df
-
+        return pd.DataFrame(data, columns=field_names)
 
 SPEED_OF_LIGHT = 137.03599917697012268 # in atomic units
 
