@@ -1,5 +1,7 @@
 
+#include <ImGuiFileDialog.h>
 #include <implot.h>
+#include <matplot/matplot.h>
 
 #include "dataset/expression_utils.hpp"
 #include "service_locator/ServiceLocator.hpp"
@@ -63,7 +65,15 @@ void CustomPlotterPanel::render() {
 
         ImGui::SameLine();
         if (ImGui::Button("Export")) {
-            // TODO
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.fileName = "plot.png"; // Default file name
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+
+            ImGuiFileDialog::Instance()->OpenDialog(
+                "Export Plot As", "Export Plot As", ".png,.svg,.pdf,.eps",
+                config);
         }
 
         if (!m_errorMessageExpr.empty()) {
@@ -99,6 +109,41 @@ void CustomPlotterPanel::render() {
     }
 
     ImGui::EndGroup();
+
+    if (ImGuiFileDialog::Instance()->Display("Export Plot As")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            const std::string filePath =
+                ImGuiFileDialog::Instance()->GetCurrentPath() + "/" +
+                ImGuiFileDialog::Instance()->GetCurrentFileName();
+
+            if (!m_xData->empty() && !m_yData->empty()) {
+                try {
+                    using namespace matplot;
+
+                    std::vector<double> xVec, yVec;
+                    const auto &ranges = m_filteredDatasetView->ranges();
+                    for (const auto &range : ranges) {
+                        for (size_t i = range.start; i < range.end; ++i) {
+                            xVec.push_back((*m_xData)[i]);
+                            yVec.push_back((*m_yData)[i]);
+                        }
+                    }
+
+                    auto fig = figure(true);
+                    plot(xVec, yVec);
+                    xlabel(xExpr);
+                    ylabel(yExpr);
+
+                    save(filePath);
+                } catch (const std::exception &e) {
+                    errorMessagePlot = e.what();
+                }
+            } else {
+                errorMessagePlot = "No data to export.";
+            }
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
 }
 
 } // namespace ui::analysis::components

@@ -7,7 +7,6 @@ endif()
 
 find_package(Boost 1.83.0 REQUIRED COMPONENTS system)
 find_package(HDF5 REQUIRED COMPONENTS CXX)
-find_package(Matplot++ REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -117,6 +116,13 @@ CPMAddPackage(
   GITHUB_REPOSITORY microsoft/GSL
   GIT_TAG v4.2.0
   GIT_SHALLOW TRUE
+)
+
+CPMAddPackage(
+    NAME matplotplusplus
+    GITHUB_REPOSITORY alandefreitas/matplotplusplus
+    GIT_TAG origin/master
+    GIT_SHALLOW TRUE
 )
 
 # Font Awesome Headers

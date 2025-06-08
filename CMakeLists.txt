@@ -83,7 +83,7 @@ target_link_libraries(bohr_main PRIVATE
     nlohmann_json::nlohmann_json
     glfw
     OpenGL::GL
-    Matplot++::matplot
+    matplot
     magic_enum
     GSL
     ${Boost_LIBRARIES}
