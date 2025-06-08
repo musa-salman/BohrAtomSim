@@ -6,7 +6,8 @@
 
 class HDF5Exporter : public SimulationExporter {
   public:
-    void exportData(const std::string &path, const Dataset &datasets) override;
+    void exportData(const std::string &path,
+                    const dataset::Dataset &datasets) override;
 };
 
 #endif // HDF5_EXPORTER_HPP

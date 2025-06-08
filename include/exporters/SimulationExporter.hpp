@@ -8,7 +8,7 @@
 class SimulationExporter {
   public:
     virtual void exportData(const std::string &path,
-                            const Dataset &datasets) = 0;
+                            const dataset::Dataset &datasets) = 0;
 
     virtual ~SimulationExporter() = default;
 };

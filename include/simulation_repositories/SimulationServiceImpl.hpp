@@ -34,7 +34,8 @@ class SimulationServiceImpl : public SimulationService {
                                            std::shared_ptr<Simulation>> &
     getCompletedSimulations() const override;
 
-    [[nodiscard]] const Dataset &getSimulationResult(size_t id) const override;
+    [[nodiscard]] const dataset::Dataset &
+    getSimulationResult(size_t id) const override;
 
     [[nodiscard]] std::optional<std::shared_ptr<SimulationResultMonitor>>
     getSimulationMonitor(size_t id) const override;

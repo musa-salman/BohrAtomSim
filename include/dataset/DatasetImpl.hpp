@@ -1,9 +1,10 @@
-#ifndef DATASET_IMPL_HPP
-#define DATASET_IMPL_HPP
+#pragma once
 
 #include <unordered_map>
 
 #include "Dataset.hpp"
+
+namespace dataset {
 
 class DatasetImpl : public Dataset {
     std::vector<std::string> fieldNames;
@@ -24,5 +25,4 @@ class DatasetImpl : public Dataset {
     friend class DatasetSerializer;
     friend class DatasetDeserializer;
 };
-
-#endif // DATASET_IMPL_HPP
+} // namespace dataset

@@ -32,7 +32,7 @@ class SimulationService {
         size_t, std::shared_ptr<Simulation>> &
     getCompletedSimulations() const = 0;
 
-    [[nodiscard]] virtual const Dataset &
+    [[nodiscard]] virtual const dataset::Dataset &
     getSimulationResult(size_t id) const = 0;
 
     [[nodiscard]] virtual std::optional<

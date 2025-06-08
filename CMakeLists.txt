@@ -85,6 +85,7 @@ target_link_libraries(bohr_main PRIVATE
     OpenGL::GL
     Matplot++::matplot
     magic_enum
+    GSL
     ${Boost_LIBRARIES}
     ${HDF5_LIBRARIES}
     ${SLEEF_LIBRARIES}

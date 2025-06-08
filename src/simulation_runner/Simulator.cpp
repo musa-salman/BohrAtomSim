@@ -5,7 +5,7 @@
 #include "simulator_runner/Simulation.hpp"
 #include "simulator_runner/Simulator.hpp"
 #include "steppers/SimulationStepper.hpp"
-#include "utils/utils.h"
+#include "utils/utils.hpp"
 
 Simulator::Simulator(int numThreads)
     : ioContext(numThreads),
@@ -54,9 +54,8 @@ Simulator::~Simulator() {
 void Simulator::simulateOrbit(Simulation &simulation,
                               std::function<void()> &&onCompletion) {
     const size_t id = simulation.getId();
-    char output_filename[FILE_PATH_SIZE]; // NOSONAR
-    format_output_filename(id, output_filename);
-    FILE *file_bin = fopen(output_filename, "wb");
+    const std::string outputFilename = utils::formatOutputFilename(id);
+    FILE *file_bin = fopen(outputFilename.c_str(), "wb");
 
     if (file_bin == nullptr)
         throw std::runtime_error("Failed to open file for writing");

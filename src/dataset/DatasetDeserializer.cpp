@@ -4,6 +4,8 @@
 #include "dataset/DatasetDeserializer.hpp"
 #include "dataset/DatasetImpl.hpp"
 
+namespace dataset {
+
 std::unique_ptr<Dataset>
 DatasetDeserializer::deserialize(const std::string &filename) {
     std::ifstream in(filename, std::ios::binary);
@@ -37,3 +39,4 @@ DatasetDeserializer::deserialize(const std::string &filename) {
 
     return dataset;
 }
+} // namespace dataset

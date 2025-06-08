@@ -1,10 +1,8 @@
-#ifndef UI_ACTIVE_SIMULATION_ACTIVE_SIMULATION_PANEL_HPP
-#define UI_ACTIVE_SIMULATION_ACTIVE_SIMULATION_PANEL_HPP
+#pragma once
 
-#include "AddSimulationDialog.hpp"
-#include "SimulationInspectorPanel.hpp"
-#include "SimulationListPanel.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "components/AddSimulationDialog.hpp"
+#include "ui/active_simulation/components/SimulationInspectorPanel.hpp"
+#include "ui/active_simulation/components/SimulationListPanel.hpp"
 
 namespace ui::active_simulation {
 
@@ -17,13 +15,9 @@ class ActiveSimulationPanel {
   private:
     size_t selectedSimulationId = 0;
 
-    AddSimulationDialog addSimulationWindow;
-    SimulationListPanel listPanel;
-    SimulationInspectorPanel inspectorPanel;
-
-    SimulationService &simulationService;
+    components::AddSimulationDialog addSimulationWindow;
+    components::SimulationListPanel listPanel;
+    components::SimulationInspectorPanel inspectorPanel;
 };
 
 } // namespace ui::active_simulation
-
-#endif // UI_ACTIVE_SIMULATION_ACTIVE_SIMULATION_PANEL_HPP

@@ -1,6 +1,9 @@
 
-#include "dataset/DatasetImpl.hpp"
 #include <string>
+
+#include "dataset/DatasetImpl.hpp"
+
+namespace dataset {
 
 const std::vector<double> &DatasetImpl::get(std::string_view fieldName) const {
     return data.at(std::string(fieldName));
@@ -17,3 +20,4 @@ size_t DatasetImpl::getColumnCount() const { return data.size(); }
 const std::vector<std::string> &DatasetImpl::getColumnsNames() const {
     return fieldNames;
 }
+} // namespace dataset

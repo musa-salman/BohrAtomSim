@@ -1,38 +1,52 @@
-#include "ui/active_simulation/ActiveSimulationPanel.hpp"
-
-#include "service_locator/ServiceLocator.hpp"
 #include <imgui.h>
 #include <iostream>
+
+#include "service_locator/ServiceLocator.hpp"
+#include "simulation_repositories/SimulationService.hpp"
+#include "ui/active_simulation/ActiveSimulationPanel.hpp"
 
 namespace ui::active_simulation {
 
 ActiveSimulationPanel::ActiveSimulationPanel()
-    : listPanel(addSimulationWindow),
-      simulationService(
-          ServiceLocator::getInstance().get<SimulationService>()) {
+    : listPanel(addSimulationWindow) {
 
     addSimulationWindow.setOnSubmit([this](const Simulation &simulation) {
-        size_t id = simulationService.addSimulation(simulation);
+        size_t id = ServiceLocator::getInstance()
+                        .get<SimulationService>()
+                        .addSimulation(simulation);
         if (id == 0) {
             std::cerr << "Failed to create simulation" << std::endl;
             return;
         }
         selectedSimulationId = id;
-        inspectorPanel.setSimulation(
-            simulationService.getOngoingSimulations().at(id));
+        inspectorPanel.setSimulation(ServiceLocator::getInstance()
+                                         .get<SimulationService>()
+                                         .getOngoingSimulations()
+                                         .at(id));
     });
 
     listPanel.setOnSelect([this](size_t id) {
         selectedSimulationId = id;
-        inspectorPanel.setSimulation(
-            simulationService.getOngoingSimulations().at(id));
+        inspectorPanel.setSimulation(ServiceLocator::getInstance()
+                                         .get<SimulationService>()
+                                         .getOngoingSimulations()
+                                         .at(id));
     });
 
-    if (!simulationService.getOngoingSimulations().empty()) {
-        selectedSimulationId =
-            simulationService.getOngoingSimulations().begin()->first;
-        inspectorPanel.setSimulation(
-            simulationService.getOngoingSimulations().begin()->second);
+    if (!ServiceLocator::getInstance()
+             .get<SimulationService>()
+             .getOngoingSimulations()
+             .empty()) {
+        selectedSimulationId = ServiceLocator::getInstance()
+                                   .get<SimulationService>()
+                                   .getOngoingSimulations()
+                                   .begin()
+                                   ->first;
+        inspectorPanel.setSimulation(ServiceLocator::getInstance()
+                                         .get<SimulationService>()
+                                         .getOngoingSimulations()
+                                         .begin()
+                                         ->second);
     }
 }
 
@@ -42,8 +56,9 @@ void ActiveSimulationPanel::render() {
 
         int readyCount = 0, runningCount = 0, pausedCount = 0, queuedCount = 0;
 
-        for (const auto &[id, sim] :
-             simulationService.getOngoingSimulations()) {
+        for (const auto &[id, sim] : ServiceLocator::getInstance()
+                                         .get<SimulationService>()
+                                         .getOngoingSimulations()) {
             switch (sim->getStatus()) {
             case Simulation::SimulationStatus::READY:
                 ++readyCount;

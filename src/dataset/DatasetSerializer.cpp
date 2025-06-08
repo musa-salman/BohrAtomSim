@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "dataset/DatasetSerializer.hpp"
+namespace dataset {
 
 void DatasetSerializer::serialize(const Dataset &dataset,
                                   const std::string &filename) {
@@ -26,3 +27,4 @@ void DatasetSerializer::serialize(const Dataset &dataset,
                   sizeof(double) * column.size());
     }
 }
+} // namespace dataset

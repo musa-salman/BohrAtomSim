@@ -13,7 +13,7 @@ class ServiceLocator {
         services[typeid(T)] = service;
     }
 
-    template <typename T> T &get() {
+    template <typename T> constexpr inline T &get() noexcept {
         return *static_cast<T *>(services.at(typeid(T)).get());
     }
 

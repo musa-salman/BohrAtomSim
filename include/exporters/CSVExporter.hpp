@@ -6,7 +6,8 @@
 
 class CSVExporter : public SimulationExporter {
   public:
-    void exportData(const std::string &path, const Dataset &datasets) override;
+    void exportData(const std::string &path,
+                    const dataset::Dataset &datasets) override;
 };
 
 #endif // CSVEXPORTER_HPP

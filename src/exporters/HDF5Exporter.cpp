@@ -5,7 +5,7 @@
 #include "exporters/HDF5Exporter.hpp"
 
 void HDF5Exporter::exportData(const std::string &path,
-                              const Dataset &datasets) {
+                              const dataset::Dataset &datasets) {
 
     try {
         H5::H5File file(path, H5F_ACC_TRUNC);

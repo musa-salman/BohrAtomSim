@@ -9,6 +9,8 @@
 #define ATOM_MAGIC 0x44535444
 #define ATOM_VERSION 1
 
+namespace dataset {
+
 struct DatasetHeader {
     const uint32_t magic = ATOM_MAGIC;
     const uint8_t version = ATOM_VERSION;
@@ -26,5 +28,6 @@ struct Dataset {
     getColumnsNames() const = 0;
     [[nodiscard]] const auto &getData() const;
 };
+} // namespace dataset
 
 #endif // DATASET_HPP

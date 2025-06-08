@@ -5,13 +5,13 @@
 #include <unordered_map>
 
 #include "explorer_manager/OngoingSimulationManager.hpp"
-#include "utils/utils.h"
+#include "utils/utils.hpp"
 
 void OngoingSimulationManager::startMonitoring(size_t id) {
     if (!monitors.contains(id)) {
-        char filepath[FILE_PATH_SIZE];
-        format_output_filename(id, filepath);
-        auto monitor = std::make_shared<SimulationResultMonitor>(filepath);
+
+        auto monitor = std::make_shared<SimulationResultMonitor>(
+            utils::formatOutputFilename(id, DB_PATH));
         monitors[id] = monitor;
     }
 

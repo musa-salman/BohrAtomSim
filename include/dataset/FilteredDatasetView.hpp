@@ -1,32 +1,37 @@
-#ifndef FILTERED_DATASET_VIEW_HPP
-#define FILTERED_DATASET_VIEW_HPP
+#pragma once
 
-#include <memory>
-#include <unordered_map>
+#include <boost/dynamic_bitset.hpp>
+#include <cstddef>
+#include <vector>
 
-#include "dataset/BitVector.hpp"
-#include "dataset/Dataset.hpp"
-#include "dataset/MaskedColumnCache.hpp"
+namespace dataset {
 
-class FilteredDatasetView {
-    const Dataset *baseDataset = nullptr;
-    const BitVector *mask = nullptr;
+struct Range {
+    size_t start;
+    size_t end; // exclusive
 
-    mutable std::unordered_map<std::string, MaskedColumnCache> cache;
-
-  public:
-    void setBaseDataset(const Dataset &newBaseDataset);
-    void setMask(const BitVector &newMask);
-
-    [[nodiscard]] std::unique_ptr<Dataset> toDataset();
-
-    [[nodiscard]] const std::vector<std::string> &getColumns() const;
-
-    [[nodiscard]] const std::vector<double> &get(std::string_view column) const;
-
-    [[nodiscard]] size_t getRowCount() const;
-
-    size_t getColumnCount() const { return baseDataset->getColumnCount(); }
+    inline size_t size() const noexcept { return end - start; }
 };
 
-#endif // FILTERED_DATASET_VIEW_HPP
+class FilteredDatasetView {
+  public:
+    explicit FilteredDatasetView(size_t rowCount = 0);
+
+    void updateMask(const boost::dynamic_bitset<> &mask);
+
+    void includeAllRows(size_t totalRowCount);
+
+    [[nodiscard]] std::optional<size_t>
+    mapFilteredIndex(size_t filteredIndex) const;
+
+    [[nodiscard]] const std::vector<Range> &ranges() const;
+
+    [[nodiscard]] size_t rowCount() const;
+
+  private:
+    size_t m_rowCount;
+    std::vector<Range> m_ranges;
+    std::vector<size_t> m_rangeRowOffsets;
+};
+
+} // namespace dataset

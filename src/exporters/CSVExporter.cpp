@@ -3,7 +3,8 @@
 
 #include "exporters/CSVExporter.hpp"
 
-void CSVExporter::exportData(const std::string &path, const Dataset &datasets) {
+void CSVExporter::exportData(const std::string &path,
+                             const dataset::Dataset &datasets) {
     std::ofstream file(path);
     if (!file.is_open()) {
         return;

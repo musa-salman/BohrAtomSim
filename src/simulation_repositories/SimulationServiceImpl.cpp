@@ -7,7 +7,6 @@
 #include "explorer_manager/OngoingSimulationManager.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationServiceImpl.hpp"
-#include "utils/utils.h"
 
 SimulationServiceImpl::SimulationServiceImpl()
     : simulationRepository(
@@ -112,7 +111,8 @@ SimulationServiceImpl::getCompletedSimulations() const {
     return completedSimulations;
 }
 
-const Dataset &SimulationServiceImpl::getSimulationResult(size_t id) const {
+const dataset::Dataset &
+SimulationServiceImpl::getSimulationResult(size_t id) const {
     if (ongoingSimulations.contains(id))
         throw std::runtime_error("Simulation is still running");
 

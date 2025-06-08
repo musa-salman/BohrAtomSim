@@ -9,7 +9,6 @@
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/DataSource.hpp"
 #include "simulation_repositories/SimulationRepositoryImpl.hpp"
-#include "utils/utils.h"
 
 SimulationRepositoryImpl::SimulationRepositoryImpl() {
     db = ServiceLocator::getInstance().get<DataSource>().getDB();

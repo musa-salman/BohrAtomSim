@@ -24,9 +24,8 @@
 #include "simulator_runner/Simulator.hpp"
 #include "steppers/StepperFactory.hpp"
 #include "ui/PotentialsView.hpp"
-#include "ui/SimulationAnalysisManager.hpp"
-#include "ui/SimulationTableUI.hpp"
 #include "ui/active_simulation/ActiveSimulationPanel.hpp"
+#include "ui/analysis/SimulationAnalysisManager.hpp"
 
 using namespace boost::interprocess;
 
@@ -101,9 +100,7 @@ int main() {
     // Initialize UI Components
     ui::active_simulation::ActiveSimulationPanel explorer;
 
-    ui::SimulationTableUI simulationTableUI;
-
-    ui::SimulationAnalysisManager simulationAnalysisManager;
+    ui::analysis::SimulationAnalysisManager simulationAnalysisManager;
 
     ui::PotentialsView potentialsView;
 
@@ -126,11 +123,6 @@ int main() {
 
             if (ImGui::BeginTabItem(" Simulations")) {
                 explorer.render();
-                ImGui::EndTabItem();
-            }
-
-            if (ImGui::BeginTabItem("Archived Simulations")) {
-                simulationTableUI.render();
                 ImGui::EndTabItem();
             }
 

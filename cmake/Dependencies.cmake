@@ -111,6 +111,14 @@ CPMAddPackage(
   GIT_SHALLOW TRUE
 )
 
+# GSL
+CPMAddPackage(
+  NAME gsl 
+  GITHUB_REPOSITORY microsoft/GSL
+  GIT_TAG v4.2.0
+  GIT_SHALLOW TRUE
+)
+
 # Font Awesome Headers
 set(AWESOME_DIR ${PROJECT_ROOT}/external/icons)
 file(GLOB AWESOME_HEADERS ${AWESOME_DIR}/*.h ${AWESOME_DIR}/*.hpp)

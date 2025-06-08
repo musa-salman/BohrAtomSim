@@ -5,7 +5,7 @@
 #include "simulation_repositories/ArchivedSimulationManager.hpp"
 #include "simulation_repositories/SimulationResultLoader.hpp"
 
-const Dataset &ArchivedSimulationManager::getSimulation(size_t id) {
+const dataset::Dataset &ArchivedSimulationManager::getSimulation(size_t id) {
     if (!simulationsResult.contains(id)) {
         auto archivedResults =
             std::unordered_map<std::string, std::vector<double>>();
@@ -15,7 +15,7 @@ const Dataset &ArchivedSimulationManager::getSimulation(size_t id) {
 
         SimulationResultLoader::loadSimulation(filepath, archivedResults);
         simulationsResult[id] =
-            DatasetFactory::create(std::move(archivedResults));
+            dataset::DatasetFactory::create(std::move(archivedResults));
     }
 
     return *simulationsResult[id];

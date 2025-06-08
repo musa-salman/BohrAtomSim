@@ -1,65 +1,75 @@
 
-#include "dataset/FilteredDatasetView.hpp"
-#include "dataset/BitVector.hpp"
-#include "dataset/Dataset.hpp"
-#include "dataset/DatasetFactory.hpp"
-#include <memory>
-#include <stdexcept>
-#include <unordered_map>
 #include <vector>
 
-void FilteredDatasetView::setBaseDataset(const Dataset &newBaseDataset) {
-    baseDataset = &newBaseDataset;
+#include "dataset/FilteredDatasetView.hpp"
 
-    for (auto &[_, columnCache] : cache)
-        columnCache.setSource(nullptr, nullptr);
+namespace dataset {
+
+FilteredDatasetView::FilteredDatasetView(size_t rowCount)
+    : m_rowCount(rowCount) {
+    if (rowCount > 0) {
+        m_ranges.reserve(10);
+        m_ranges.push_back({0, rowCount});
+        m_rangeRowOffsets.reserve(10);
+        m_rangeRowOffsets.push_back(0);
+    }
 }
 
-void FilteredDatasetView::setMask(const BitVector &newMask) {
-    mask = &newMask;
+void FilteredDatasetView::updateMask(const boost::dynamic_bitset<> &mask) {
+    m_ranges.clear();
+    m_rangeRowOffsets.clear();
+    m_rowCount = 0;
 
-    for (auto &[_, columnCache] : cache)
-        columnCache.setSource(nullptr, nullptr);
-}
+    m_ranges.reserve(mask.size() / 2);
+    m_rangeRowOffsets.reserve(mask.size() / 2);
 
-const std::vector<std::string> &FilteredDatasetView::getColumns() const {
-    return baseDataset->getColumnsNames();
-}
+    size_t i = 0;
+    const size_t n = mask.size();
+    while (i < n) {
+        i = mask.find_next(i);
+        if (i == boost::dynamic_bitset<>::npos)
+            break;
 
-const std::vector<double> &
-FilteredDatasetView::get(std::string_view column) const {
-    if (!mask)
-        throw std::runtime_error("Mask not set");
+        size_t start = i;
+        while (i < n && mask[i])
+            ++i;
 
-    auto &cacheEntry = cache[std::string(column)];
-
-    if (cacheEntry.getSource() == nullptr)
-        cacheEntry.setSource(baseDataset->get(column), *mask);
-
-    return cacheEntry.get();
-}
-
-std::unique_ptr<Dataset> FilteredDatasetView::toDataset() {
-    if (!mask)
-        throw std::runtime_error("Mask not set");
-
-    std::unordered_map<std::string, std::vector<double>> filteredData;
-
-    for (const auto &column : baseDataset->getColumnsNames())
-        filteredData[column] = get(column);
-
-    return DatasetFactory::create(std::move(filteredData));
-}
-
-size_t FilteredDatasetView::getRowCount() const {
-    if (!mask)
-        return 0;
-    size_t count = 0;
-    for (size_t i = 0; i < mask->bitSize(); ++i) {
-        if (mask->get(i)) {
-            ++count;
-        }
+        m_ranges.push_back({start, i});
+        m_rangeRowOffsets.push_back(m_rowCount);
+        m_rowCount += (i - start);
     }
 
-    return count;
+    m_ranges.shrink_to_fit();
+    m_rangeRowOffsets.shrink_to_fit();
 }
+
+void FilteredDatasetView::includeAllRows(size_t totalRowCount) {
+    m_ranges = {{0, totalRowCount}};
+    m_rangeRowOffsets = {0};
+    m_rowCount = totalRowCount;
+
+    m_ranges.shrink_to_fit();
+    m_rangeRowOffsets.shrink_to_fit();
+}
+
+std::optional<size_t>
+FilteredDatasetView::mapFilteredIndex(size_t filteredIndex) const {
+    if (filteredIndex >= m_rowCount)
+        return std::nullopt;
+
+    auto it = std::upper_bound(m_rangeRowOffsets.begin(),
+                               m_rangeRowOffsets.end(), filteredIndex);
+
+    size_t rangeIdx = std::distance(m_rangeRowOffsets.begin(), it) - 1;
+
+    const auto &r = m_ranges[rangeIdx];
+    size_t offset = filteredIndex - m_rangeRowOffsets[rangeIdx];
+    return r.start + offset;
+}
+
+const std::vector<Range> &FilteredDatasetView::ranges() const {
+    return m_ranges;
+}
+
+size_t FilteredDatasetView::rowCount() const { return m_rowCount; }
+} // namespace dataset
