@@ -1,12 +1,13 @@
 
 #include <filesystem>
-#include <format>
+#include <gsl/assert>
 #include <memory>
 #include <optional>
 
 #include "explorer_manager/OngoingSimulationManager.hpp"
 #include "service_locator/ServiceLocator.hpp"
 #include "simulation_repositories/SimulationServiceImpl.hpp"
+#include "utils/utils.hpp"
 
 SimulationServiceImpl::SimulationServiceImpl()
     : simulationRepository(
@@ -24,7 +25,6 @@ SimulationServiceImpl::SimulationServiceImpl()
                 simulation->getId(),
                 std::shared_ptr<Simulation>(std::move(simulation)));
         } else {
-            // TODO: Need cleanup the file result
             ongoingSimulations.emplace(
                 simulation->getId(),
                 std::shared_ptr<Simulation>(std::move(simulation)));
@@ -55,7 +55,7 @@ void SimulationServiceImpl::startSimulation(size_t id) {
     simulator.simulateOrbit(*ongoingSimulations[id], [this, id]() {
         ongoingSimulations[id]->status =
             Simulation::SimulationStatus::COMPLETED;
-        simulationRepository.markSimulationComplete(id);
+        simulationRepository.completeSimulation(id);
 
         completedSimulations.emplace(id, std::move(ongoingSimulations[id]));
         ongoingSimulations.erase(id);
@@ -65,8 +65,7 @@ void SimulationServiceImpl::startSimulation(size_t id) {
 }
 
 void SimulationServiceImpl::pauseSimulation(size_t id) {
-    if (!ongoingSimulations.contains(id))
-        throw std::runtime_error("Simulation not found");
+    Expects(ongoingSimulations.contains(id));
 
     simulator.pauseSimulation(id);
     ongoingSimulationManager.pauseMonitoring(id);
@@ -78,27 +77,21 @@ void SimulationServiceImpl::stopSimulation(size_t id) {
 }
 
 void SimulationServiceImpl::resumeSimulation(size_t id) {
-    if (!ongoingSimulations.contains(id))
-        throw std::runtime_error("Simulation not found");
+    Expects(ongoingSimulations.contains(id));
 
     simulator.resumeSimulation(*ongoingSimulations.at(id));
     ongoingSimulationManager.startMonitoring(id);
 }
 
 void SimulationServiceImpl::removeSimulation(size_t id) {
-    if (ongoingSimulations.contains(id))
-        return;
+    Expects(!ongoingSimulations.contains(id) &&
+            completedSimulations.contains(id));
 
-    if (completedSimulations.contains(id)) {
+    completedSimulations.erase(id);
 
-        completedSimulations.erase(id);
+    simulationRepository.remove(id);
 
-        simulationRepository.remove(id);
-
-        std::string filename =
-            std::format("{}/simulations/{}.bin", DB_PATH, id);
-        std::filesystem::remove(filename);
-    }
+    std::filesystem::remove(utils::formatOutputFilename(id));
 }
 
 const std::unordered_map<size_t, std::shared_ptr<Simulation>> &
@@ -113,13 +106,10 @@ SimulationServiceImpl::getCompletedSimulations() const {
 
 const dataset::Dataset &
 SimulationServiceImpl::getSimulationResult(size_t id) const {
-    if (ongoingSimulations.contains(id))
-        throw std::runtime_error("Simulation is still running");
+    Expects(!ongoingSimulations.contains(id) ||
+            completedSimulations.contains(id));
 
-    if (completedSimulations.contains(id))
-        return archivedSimulationManager.getSimulation(id);
-
-    throw std::runtime_error("Simulation not found");
+    return archivedSimulationManager.getSimulation(id);
 }
 
 std::optional<std::shared_ptr<SimulationResultMonitor>>

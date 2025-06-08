@@ -4,6 +4,7 @@
 #include <string>
 
 #include <SQLiteCpp/SQLiteCpp.h>
+#include <gsl/assert>
 #include <nlohmann/json.hpp>
 
 #include "service_locator/ServiceLocator.hpp"
@@ -12,10 +13,8 @@
 
 SimulationRepositoryImpl::SimulationRepositoryImpl() {
     db = ServiceLocator::getInstance().get<DataSource>().getDB();
-    if (!db) {
-        std::cerr << "Failed to open database." << std::endl;
-        return;
-    }
+    Expects(db);
+
     constexpr std::string_view initializeSimulationsTableSQL =
         "CREATE TABLE IF NOT EXISTS Simulations ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -49,11 +48,6 @@ SimulationRepositoryImpl::SimulationRepositoryImpl() {
 }
 
 size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
-    if (!db) {
-        std::cerr << "Database not initialized." << std::endl;
-        return 0; // Indicate error
-    }
-
     try {
         SQLite::Statement query(
             *db,
@@ -98,11 +92,6 @@ size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
 }
 
 void SimulationRepositoryImpl::remove(size_t id) const {
-    if (!db) {
-        std::cerr << "Database not initialized." << std::endl;
-        return;
-    }
-
     try {
         SQLite::Statement query(*db, "DELETE FROM Simulations WHERE id = ?;");
         query.bind(1, static_cast<int>(id));
@@ -112,12 +101,7 @@ void SimulationRepositoryImpl::remove(size_t id) const {
     }
 }
 
-void SimulationRepositoryImpl::markSimulationComplete(size_t id) const {
-    if (!db) {
-        std::cerr << "Database not initialized." << std::endl;
-        return;
-    }
-
+void SimulationRepositoryImpl::completeSimulation(size_t id) const {
     try {
         SQLite::Statement query(
             *db, "UPDATE Simulations SET status = 3 WHERE id = ?;");
@@ -132,9 +116,6 @@ void SimulationRepositoryImpl::markSimulationComplete(size_t id) const {
 
 std::vector<std::unique_ptr<Simulation>>
 SimulationRepositoryImpl::getAll() const {
-    if (!db)
-        throw std::runtime_error("Database not initialized.");
-
     constexpr std::string_view sql =
         R"(SELECT s.id, s.name, s.status, s.is_relativistic, s.is_quantized,
                   s.is_3d,

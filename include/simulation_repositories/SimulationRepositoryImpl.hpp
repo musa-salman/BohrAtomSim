@@ -1,6 +1,7 @@
 #ifndef SIMULATION_REPOSITORY_IMPL_HPP
 #define SIMULATION_REPOSITORY_IMPL_HPP
 
+#include <cstddef>
 #include <memory>
 #include <sqlite3.h>
 #include <vector>
@@ -13,7 +14,7 @@ class SimulationRepositoryImpl : public SimulationRepository {
   public:
     explicit SimulationRepositoryImpl();
 
-    void markSimulationComplete(size_t id) const override;
+    void completeSimulation(size_t id) const override;
 
     size_t add(const Simulation &simulation) const override;
 

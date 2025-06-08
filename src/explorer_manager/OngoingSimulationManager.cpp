@@ -11,7 +11,7 @@ void OngoingSimulationManager::startMonitoring(size_t id) {
     if (!monitors.contains(id)) {
 
         auto monitor = std::make_shared<SimulationResultMonitor>(
-            utils::formatOutputFilename(id, DB_PATH));
+            utils::formatOutputFilename(id));
         monitors[id] = monitor;
     }
 

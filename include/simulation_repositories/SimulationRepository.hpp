@@ -6,7 +6,7 @@
 
 class SimulationRepository : public Repository<Simulation> {
   public:
-    virtual void markSimulationComplete(size_t id) const = 0;
+    virtual void completeSimulation(size_t id) const = 0;
 };
 
 #endif // SIMULATION_REPOSITORY_HPP
