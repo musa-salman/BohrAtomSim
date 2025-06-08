@@ -1,4 +1,5 @@
 
+#include <format>
 #include <gsl/pointers>
 #include <imgui.h>
 #include <memory>
@@ -41,10 +42,7 @@ void SimulationAnalysisManager::render() {
                                                .get<SimulationService>()
                                                .getCompletedSimulations();
         if (completedSimulations.size() != simulationAnalyzers.size()) {
-            for (auto const &[id, simulation] :
-                 ServiceLocator::getInstance()
-                     .get<SimulationService>()
-                     .getCompletedSimulations()) {
+            for (auto const &[id, simulation] : completedSimulations) {
                 auto analyzer = std::make_unique<SimulationAnalyzerTabs>(
                     gsl::not_null<const Simulation *>(simulation.get()),
                     [this](size_t id) {
@@ -57,11 +55,17 @@ void SimulationAnalysisManager::render() {
                     });
                 simulationAnalyzers[simulation->getId()] = std::move(analyzer);
             }
+
+            if (!simulationAnalyzers.empty())
+                selectedAnalyzer = simulationAnalyzers.begin()->second.get();
         }
 
         for (auto const &[id, analyzer] : simulationAnalyzers) {
             if (ImGui::Selectable(
-                    analyzer->getSimulation().getName().c_str(),
+                    std::format("{}##{}", analyzer->getSimulation().getName(),
+                                id)
+                        .c_str(),
+
                     selectedAnalyzer &&
                         selectedAnalyzer.value()->getSimulation().getId() ==
                             analyzer.get()->getSimulation().getId())) {

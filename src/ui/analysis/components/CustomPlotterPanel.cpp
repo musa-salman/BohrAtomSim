@@ -91,7 +91,7 @@ void CustomPlotterPanel::render() {
             ImPlot::SetupAxisLimits(ImAxis_X1, -20, 20, ImGuiCond_Once);
             ImPlot::SetupAxisLimits(ImAxis_Y1, -20, 20, ImGuiCond_Once);
 
-            if (!m_xData->empty() && !m_yData->empty()) {
+            if (m_xData.has_value() && m_yData.has_value()) {
                 const auto &ranges = m_filteredDatasetView->ranges();
                 for (const auto &range : ranges) {
                     if (range.end <= m_xData->size() &&
