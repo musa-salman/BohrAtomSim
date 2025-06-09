@@ -18,9 +18,9 @@ class DatasetVisualizerPanel {
     std::string m_errorMessageExpr;
 
     utils::Lazy<std::unordered_map<std::string, std::vector<double>>>
-        trajectoryData;
+        m_trajectoryData;
     utils::Lazy<dataset::FilteredDatasetView> m_filteredDatasetView;
-    std::unordered_map<std::string, bool> plotSelection;
+    std::unordered_map<std::string, bool> m_plotSelection;
 };
 
 } // namespace ui::analysis::components

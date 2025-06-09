@@ -26,7 +26,7 @@ class SimulationAnalyzerTabs {
 
     std::function<void(size_t)> m_onDeleteCallback;
 
-    void renderSimulationDetails();
+    void _renderSimulationDetails();
 };
 
 } // namespace ui::analysis

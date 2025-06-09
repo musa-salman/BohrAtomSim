@@ -18,32 +18,33 @@ SimulationAnalyzerTabs::SimulationAnalyzerTabs(
       m_onDeleteCallback(std::move(onDeleteCallback)) {}
 
 void SimulationAnalyzerTabs::render() {
-    ImGui::BeginTabBar("##SimulationAnalyzerTabBar", ImGuiTabBarFlags_None);
+    if (ImGui::BeginTabBar("##SimulationAnalyzerTabBar",
+                           ImGuiTabBarFlags_None)) {
+        if (ImGui::BeginTabItem("Details")) {
+            _renderSimulationDetails();
+            ImGui::EndTabItem();
+        }
 
-    if (ImGui::BeginTabItem("Details")) {
-        renderSimulationDetails();
-        ImGui::EndTabItem();
-    }
+        if (ImGui::BeginTabItem("Custom Plotter")) {
+            m_customPlotterPanel.render();
+            ImGui::EndTabItem();
+        }
 
-    if (ImGui::BeginTabItem("Custom Plotter")) {
-        m_customPlotterPanel.render();
-        ImGui::EndTabItem();
-    }
+        if (ImGui::BeginTabItem("Dataset Visualizer")) {
+            m_datasetVisualizerPanel.render();
+            ImGui::EndTabItem();
+        }
 
-    if (ImGui::BeginTabItem("Dataset Visualizer")) {
-        m_datasetVisualizerPanel.render();
-        ImGui::EndTabItem();
-    }
-
-    if (ImGui::BeginTabItem("Dataset Viewer")) {
-        m_datasetViewerPanel.render();
-        ImGui::EndTabItem();
+        if (ImGui::BeginTabItem("Dataset Viewer")) {
+            m_datasetViewerPanel.render();
+            ImGui::EndTabItem();
+        }
     }
 
     ImGui::EndTabBar();
 }
 
-void SimulationAnalyzerTabs::renderSimulationDetails() {
+void SimulationAnalyzerTabs::_renderSimulationDetails() {
     ImGui::BeginGroup();
     {
         ui::components::SimulationOverviewCard::render(*m_simulation);

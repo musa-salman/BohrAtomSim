@@ -13,7 +13,7 @@ namespace ui::analysis::components {
 
 DatasetVisualizerPanel::DatasetVisualizerPanel(size_t simulationId)
     : m_simulationId(simulationId),
-      trajectoryData(
+      m_trajectoryData(
           utils::Lazy<std::unordered_map<std::string, std::vector<double>>>(
               [&]() {
                   const auto &dataset =
@@ -38,7 +38,7 @@ DatasetVisualizerPanel::DatasetVisualizerPanel(size_t simulationId)
                                     .getSimulationResult(m_simulationId);
           return dataset::FilteredDatasetView(dataset.getRowCount());
       })) {
-    plotSelection.emplace("trajectories", false);
+    m_plotSelection.emplace("trajectories", false);
 }
 
 void DatasetVisualizerPanel::render() {
@@ -74,15 +74,15 @@ void DatasetVisualizerPanel::render() {
             if (name == "t")
                 continue;
 
-            if (!plotSelection.contains(name)) {
-                plotSelection[name] = false;
+            if (!m_plotSelection.contains(name)) {
+                m_plotSelection[name] = false;
             }
 
             ImGui::SameLine();
-            ImGui::Checkbox(name.c_str(), &plotSelection[name]);
+            ImGui::Checkbox(name.c_str(), &m_plotSelection[name]);
         }
         ImGui::SameLine();
-        ImGui::Checkbox("Show Trajectories", &plotSelection["trajectories"]);
+        ImGui::Checkbox("Show Trajectories", &m_plotSelection["trajectories"]);
         ImGui::PopID();
 
         const auto &t_column = dataset.get("t");
@@ -109,22 +109,22 @@ void DatasetVisualizerPanel::render() {
         }
 
         // Plot trajectories
-        if (plotSelection["trajectories"]) {
+        if (m_plotSelection["trajectories"]) {
             if (ImPlot::BeginPlot("Trajectories")) {
                 ImPlot::SetupAxes("X", "Y");
                 ImPlot::SetupAxisLimits(ImAxis_X1, -20, 20, ImGuiCond_Once);
                 ImPlot::SetupAxisLimits(ImAxis_Y1, -20, 20, ImGuiCond_Once);
 
-                ImPlot::PlotLine("Trajectory", trajectoryData->at("x").data(),
-                                 trajectoryData->at("y").data(),
-                                 trajectoryData->at("x").size());
+                ImPlot::PlotLine("Trajectory", m_trajectoryData->at("x").data(),
+                                 m_trajectoryData->at("y").data(),
+                                 m_trajectoryData->at("x").size());
 
                 ImPlot::EndPlot();
             }
         }
 
         for (const auto &name : dataset.getColumnsNames()) {
-            if (name == "t" || !plotSelection[name])
+            if (name == "t" || !m_plotSelection[name])
                 continue;
 
             const auto &col = dataset.get(name);

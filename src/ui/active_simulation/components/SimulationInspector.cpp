@@ -60,6 +60,22 @@ void SimulationInspectorPanel::render() {
         ImGui::Text("Simulation is ready to run.");
     }
 
+    ImGui::SameLine();
+    if (status == Simulation::SimulationStatus::RUNNING ||
+        status == Simulation::SimulationStatus::QUEUED) {
+        ImGui::BeginDisabled();
+    }
+    if (ImGui::Button("Delete Simulation")) {
+        simulationService.removeSimulation(simId);
+        simulation.reset();
+        ImGui::EndChild();
+        return;
+    }
+    if (status == Simulation::SimulationStatus::RUNNING ||
+        status == Simulation::SimulationStatus::QUEUED) {
+        ImGui::EndDisabled();
+    }
+
     auto optMonitor = simulationService.getSimulationMonitor(simId);
     if (!optMonitor.has_value()) {
         ImGui::Text("No data available for plotting.");

@@ -1,10 +1,10 @@
 #ifndef SIMULATION_SERVICE_HPP
 #define SIMULATION_SERVICE_HPP
 
+#include <boost/container/flat_map.hpp>
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <unordered_map>
 
 #include "dataset/Dataset.hpp"
 #include "simulation_repositories/SimulationResultMonitor.hpp"
@@ -24,12 +24,12 @@ class SimulationService {
     virtual void stopSimulation(size_t id) = 0;
     virtual void resumeSimulation(size_t id) = 0;
 
-    [[nodiscard]] virtual const std::unordered_map<
-        size_t, std::shared_ptr<Simulation>> &
+    [[nodiscard]] virtual const boost::container::flat_map<
+        size_t, std::shared_ptr<Simulation>, std::greater<size_t>> &
     getOngoingSimulations() const = 0;
 
-    [[nodiscard]] virtual const std::unordered_map<
-        size_t, std::shared_ptr<Simulation>> &
+    [[nodiscard]] virtual const boost::container::flat_map<
+        size_t, std::shared_ptr<Simulation>, std::greater<size_t>> &
     getCompletedSimulations() const = 0;
 
     [[nodiscard]] virtual const dataset::Dataset &

@@ -1,9 +1,10 @@
 #ifndef SIMULATION_SERVICE_IMPL_HPP
 #define SIMULATION_SERVICE_IMPL_HPP
 
+#include <boost/container/flat_map.hpp>
 #include <cstddef>
+#include <functional>
 #include <memory>
-#include <unordered_map>
 
 #include "dataset/Dataset.hpp"
 #include "explorer_manager/OngoingSimulationManager.hpp"
@@ -26,12 +27,13 @@ class SimulationServiceImpl : public SimulationService {
     void stopSimulation(size_t id) override;
     void resumeSimulation(size_t id) override;
 
-    [[nodiscard]] const std::unordered_map<size_t,
-                                           std::shared_ptr<Simulation>> &
+    [[nodiscard]] const boost::container::flat_map<
+        size_t, std::shared_ptr<Simulation>, std::greater<size_t>> &
     getOngoingSimulations() const override;
 
-    [[nodiscard]] const std::unordered_map<size_t,
-                                           std::shared_ptr<Simulation>> &
+    [[nodiscard]]
+    const boost::container::flat_map<size_t, std::shared_ptr<Simulation>,
+                                     std::greater<size_t>> &
     getCompletedSimulations() const override;
 
     [[nodiscard]] const dataset::Dataset &
@@ -46,9 +48,12 @@ class SimulationServiceImpl : public SimulationService {
     OngoingSimulationManager &ongoingSimulationManager;
     ArchivedSimulationManager &archivedSimulationManager;
 
-    std::unordered_map<size_t, std::shared_ptr<Simulation>> ongoingSimulations;
+    boost::container::flat_map<size_t, std::shared_ptr<Simulation>,
+                               std::greater<size_t>>
+        ongoingSimulations;
 
-    std::unordered_map<size_t, std::shared_ptr<Simulation>>
+    boost::container::flat_map<size_t, std::shared_ptr<Simulation>,
+                               std::greater<size_t>>
         completedSimulations;
 };
 

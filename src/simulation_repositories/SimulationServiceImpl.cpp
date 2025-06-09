@@ -84,8 +84,13 @@ void SimulationServiceImpl::resumeSimulation(size_t id) {
 }
 
 void SimulationServiceImpl::removeSimulation(size_t id) {
-    Expects(!ongoingSimulations.contains(id) &&
+    Expects(ongoingSimulations.contains(id) ||
             completedSimulations.contains(id));
+
+    if (ongoingSimulations.contains(id)) {
+        stopSimulation(id);
+        ongoingSimulations.erase(id);
+    }
 
     completedSimulations.erase(id);
 
@@ -94,12 +99,14 @@ void SimulationServiceImpl::removeSimulation(size_t id) {
     std::filesystem::remove(utils::formatOutputFilename(id));
 }
 
-const std::unordered_map<size_t, std::shared_ptr<Simulation>> &
+const boost::container::flat_map<size_t, std::shared_ptr<Simulation>,
+                                 std::greater<size_t>> &
 SimulationServiceImpl::getOngoingSimulations() const {
     return ongoingSimulations;
 }
 
-const std::unordered_map<size_t, std::shared_ptr<Simulation>> &
+const boost::container::flat_map<size_t, std::shared_ptr<Simulation>,
+                                 std::greater<size_t>> &
 SimulationServiceImpl::getCompletedSimulations() const {
     return completedSimulations;
 }
