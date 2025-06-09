@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cstddef>
+
 #include "components/CustomPlotterPanel.hpp"
 #include "components/DatasetViewerPanel.hpp"
 #include "components/DatasetVisualizerPanel.hpp"
 #include "simulator_runner/Simulation.hpp"
-#include <cstddef>
 
 namespace ui::analysis {
 

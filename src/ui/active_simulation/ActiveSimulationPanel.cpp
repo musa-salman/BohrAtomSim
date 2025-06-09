@@ -8,7 +8,20 @@
 namespace ui::active_simulation {
 
 ActiveSimulationPanel::ActiveSimulationPanel()
-    : listPanel(addSimulationWindow) {
+    : listPanel(
+          [this](size_t id) {
+              selectedSimulationId = id;
+              inspectorPanel.setSimulation(ServiceLocator::getInstance()
+                                               .get<SimulationService>()
+                                               .getOngoingSimulations()
+                                               .at(id));
+          },
+          []() {
+              return ServiceLocator::getInstance()
+                  .get<SimulationService>()
+                  .getOngoingSimulations();
+          },
+          _renderSimulationCard) {
 
     addSimulationWindow.setOnSubmit([this](const Simulation &simulation) {
         size_t id = ServiceLocator::getInstance()
@@ -18,14 +31,6 @@ ActiveSimulationPanel::ActiveSimulationPanel()
             std::cerr << "Failed to create simulation" << std::endl;
             return;
         }
-        selectedSimulationId = id;
-        inspectorPanel.setSimulation(ServiceLocator::getInstance()
-                                         .get<SimulationService>()
-                                         .getOngoingSimulations()
-                                         .at(id));
-    });
-
-    listPanel.setOnSelect([this](size_t id) {
         selectedSimulationId = id;
         inspectorPanel.setSimulation(ServiceLocator::getInstance()
                                          .get<SimulationService>()
@@ -86,6 +91,11 @@ void ActiveSimulationPanel::render() {
 
     ImGui::BeginChild("Simulations List", ImVec2(270, 0),
                       ImGuiChildFlags_Border);
+
+    ImGui::Text("Simulations");
+    ImGui::SameLine();
+    addSimulationWindow.render();
+    ImGui::Separator();
     listPanel.render();
     ImGui::EndChild();
 
@@ -97,4 +107,29 @@ void ActiveSimulationPanel::render() {
     ImGui::EndChild();
 }
 
+bool ActiveSimulationPanel::_renderSimulationCard(const Simulation &simulation,
+                                                  bool isSelected) noexcept {
+    ImGui::PushID(simulation.getId());
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(40, 40, 40, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
+    ImGui::BeginGroup();
+    {
+        if (ImGui::Selectable(simulation.getName().c_str(), isSelected, 0,
+                              ImVec2(0, 20))) {
+            return true;
+        }
+        std::string dimension = simulation.getIs3D() ? "3D" : "2D";
+        std::string modelType = simulation.getIsRelativistic()
+                                    ? "Relativistic"
+                                    : "Non-relativistic";
+        ImGui::TextDisabled("Dim: %s   Model: %s", dimension.c_str(),
+                            modelType.c_str());
+    }
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
+    ImGui::EndGroup();
+    ImGui::Spacing();
+    ImGui::PopID();
+    return false;
+}
 } // namespace ui::active_simulation
