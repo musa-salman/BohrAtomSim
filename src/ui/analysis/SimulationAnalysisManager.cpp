@@ -36,7 +36,7 @@ void SimulationAnalysisManager::render() {
         _loadCompletedSimulations(kCompletedSimulations);
     }
 
-    if (ImGui::BeginChild("Simulations List", ImVec2(270, 0), true)) {
+    if (ImGui::BeginChild("Simulations List", ImVec2(300, 0), true)) {
         ImGui::Text("Simulations");
         m_simulationListPanel.render();
     }

@@ -89,7 +89,7 @@ void ActiveSimulationPanel::render() {
     }
     ImGui::EndChild();
 
-    ImGui::BeginChild("Simulations List", ImVec2(270, 0),
+    ImGui::BeginChild("Simulations List", ImVec2(300, 0),
                       ImGuiChildFlags_Border);
 
     ImGui::Text("Simulations");
