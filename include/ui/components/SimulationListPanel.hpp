@@ -51,19 +51,19 @@ class SimulationListPanel {
         const simulation::model::Simulation &simulation) const noexcept {
         return (m_filters.dimension == DimensionFilter::All ||
                 (m_filters.dimension == DimensionFilter::D2 &&
-                 !simulation.getIs3D()) ||
+                 !simulation.is3D()) ||
                 (m_filters.dimension == DimensionFilter::D3 &&
-                 simulation.getIs3D())) &&
+                 simulation.is3D())) &&
                (m_filters.relativity == RelativityFilter::All ||
                 (m_filters.relativity == RelativityFilter::Relativistic &&
-                 simulation.getIsRelativistic()) ||
+                 simulation.isRelativistic()) ||
                 (m_filters.relativity == RelativityFilter::NonRelativistic &&
-                 !simulation.getIsRelativistic())) &&
+                 !simulation.isRelativistic())) &&
                (m_filters.quantization == QuantizationFilter::All ||
                 (m_filters.quantization == QuantizationFilter::Quantized &&
-                 simulation.getIsQuantized()) ||
+                 simulation.isQuantized()) ||
                 (m_filters.quantization == QuantizationFilter::NonQuantized &&
-                 !simulation.getIsQuantized())) &&
+                 !simulation.isQuantized())) &&
                (m_filters.nameQuery[0] == '\0' ||
                 simulation.getName().find(m_filters.nameQuery) !=
                     std::string::npos);

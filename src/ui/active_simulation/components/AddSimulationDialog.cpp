@@ -3,7 +3,6 @@
 #include <imgui.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <time.h>
 
 #include "physics/math/Vector3.hpp"
 #include "physics/math/VectorOps.hpp"
@@ -22,52 +21,47 @@ using namespace physics::math;
 using namespace utils;
 using namespace storage::persistence;
 
-AddSimulationDialog::AddSimulationDialog() { resetSimulation(); }
+AddSimulationDialog::AddSimulationDialog() : m_isDialogOpen(false) {}
 
 void AddSimulationDialog::setOnSubmit(
-    const std::function<void(const Simulation &)> &_on_submit) {
-    this->on_submit = _on_submit;
+    std::function<void(const Simulation &)> &&onSubmit) {
+    this->m_onSubmit = std::move(onSubmit);
 }
 
 void AddSimulationDialog::render() {
-    static bool is_open = false;
-    static time_t t = time(0);
-
     if (ImGui::Button("Add")) {
-        is_open = true;
-        // update date
-        t = time(0);
-        struct tm *now = localtime(&t);
-        strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", now);
-
+        m_isDialogOpen = true;
         ImGui::OpenPopup("Add Simulation");
     }
 
-    if (!is_open)
+    if (!m_isDialogOpen)
         return;
 
-    if (ImGui::Begin("Add Simulation", &is_open,
+    if (ImGui::Begin("Add Simulation", &m_isDialogOpen,
                      ImGuiWindowFlags_NoResize |
                          ImGuiWindowFlags_AlwaysAutoResize)) {
-        static char name[200]; // NOSONAR
+        char name[200]; // NOSONAR
+        std::strncpy(name, m_simulationBuilder.getName().c_str(),
+                     sizeof(name) - 1);
+        name[sizeof(name) - 1] = '\0';
         static bool auto_name = true;
-        // Simulation name
+
         ImGui::InputText("Name", name, IM_ARRAYSIZE(name));
         ImGui::SameLine();
         ImGui::Checkbox("Auto", &auto_name);
 
         if (auto_name) {
             const std::string formattedSimulationName =
-                createFormattedSimulationName(simulation);
+                createFormattedSimulationName(
+                    m_simulationBuilder.getSimulation());
             std::strncpy(name, formattedSimulationName.c_str(),
                          sizeof(name) - 1);
             name[sizeof(name) - 1] = '\0';
         }
+        m_simulationBuilder.setName(std::string(name));
 
-        simulation.setName(std::string(name));
         ImGui::Separator();
         ImGui::SetNextWindowSize(ImVec2(600, 800), ImGuiCond_FirstUseEver);
-
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 6));
         ImGui::PushStyleColor(ImGuiCol_Header,
@@ -75,178 +69,18 @@ void AddSimulationDialog::render() {
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
                               ImVec4(0.2f, 0.4f, 0.9f, 0.9f));
 
-        // State Builder Section
-        if (ImGui::CollapsingHeader("State Configuration",
-                                    ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::Text("Initial Conditions");
-            ImGui::BeginDisabled(is_quant);
-            if ((is_3d && ImGui::InputScalarN("Position (r0)",
-                                              ImGuiDataType_Double, r0, 3)) ||
-                (!is_3d && ImGui::InputScalarN("Position (r0)",
-                                               ImGuiDataType_Double, r0, 2))) {
-                stateBuilder.setR0(Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
-                updateSimulation();
-            }
+        _renderStateConfiguration();
+        _renderSimulationConfiguration();
+        _renderPotentialConfiguration();
 
-            if ((is_3d && ImGui::InputScalarN("Velocity (v0)",
-                                              ImGuiDataType_Double, v0, 3)) ||
-                (!is_3d && ImGui::InputScalarN("Velocity (v0)",
-                                               ImGuiDataType_Double, v0, 2))) {
-                stateBuilder.setV0(Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
-                updateSimulation();
-            }
-
-            if (ImGui::InputScalar("Position Magnitude", ImGuiDataType_Double,
-                                   &r0_mag)) {
-                stateBuilder.setR0Magnitude(r0_mag);
-                updateSimulation();
-            }
-            if (ImGui::InputScalar("Velocity Magnitude", ImGuiDataType_Double,
-                                   &v0_mag)) {
-                stateBuilder.setV0Magnitude(v0_mag);
-                updateSimulation();
-            }
-
-            const scalar angular_momentum = stateBuilder.getAngularMomentum();
-            ImGui::Text("Angular Momentum: %.5e", angular_momentum);
-
-            ImGui::EndDisabled();
-
-            ImGui::Spacing();
-            if (ImGui::Checkbox("Relativistic", &is_rel)) {
-                stateBuilder.setRelativistic(is_rel);
-                updateSimulation();
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Checkbox("Quantized", &is_quant)) {
-                stateBuilder.setQuantized(is_quant);
-                updateSimulation();
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Checkbox("3D Enabled", &is_3d)) {
-                stateBuilder.set3D(is_3d);
-                updateSimulation();
-            }
-
-            ImGui::Spacing();
-            if (is_quant) {
-                ImGui::Text("Quantum Numbers");
-                ImGui::Separator();
-                if (ImGui::InputInt("Principal (n)", &principal)) {
-                    stateBuilder.setPrincipalQuantumNumber(
-                        static_cast<quantum_principle>(principal));
-                    updateSimulation();
-                }
-                if (ImGui::InputInt("Angular (k)", &angular)) {
-                    stateBuilder.setAngularQuantumNumber(
-                        static_cast<quantum_angular>(angular));
-                    updateSimulation();
-                }
-                if (is_3d && ImGui::InputInt("Magnetic (m)", &magnetic)) {
-                    stateBuilder.setMagneticQuantumNumber(
-                        static_cast<quantum_magnetic>(magnetic));
-                    updateSimulation();
-                }
-            }
-        }
-        static double delta_time = 1e-7;
-        static double total_duration = 800.0;
-        static int record_interval = 10000;
-
-        if (ImGui::CollapsingHeader("Simulation Configuration",
-                                    ImGuiTreeNodeFlags_DefaultOpen)) {
-
-            ImGui::Text("Simulation Parameters");
-            if (ImGui::InputDouble("Delta Time", &delta_time, 0, 0, "%.5e")) {
-                simulation.setDeltaTime(delta_time);
-            }
-            if (ImGui::InputInt("Record Interval", &record_interval)) {
-                simulation.setRecordInterval(record_interval);
-            }
-            if (ImGui::InputDouble("Total Duration", &total_duration)) {
-                simulation.setTotalDuration(total_duration);
-            }
-
-            static bool isRLocalMaxLimited = false;
-            // largest int
-            static int rLocalMaxCountLimit = 10;
-            if (ImGui::Checkbox("Limit R Local Maxima", &isRLocalMaxLimited)) {
-                simulation.setRLocalMaxCountLimit(
-                    isRLocalMaxLimited ? rLocalMaxCountLimit : -1);
-            }
-            if (isRLocalMaxLimited) {
-                ImGui::InputInt("R Local Max Count", &rLocalMaxCountLimit);
-                if (rLocalMaxCountLimit < 1) {
-                    rLocalMaxCountLimit = 1;
-                }
-                simulation.setRLocalMaxCountLimit(rLocalMaxCountLimit);
-            }
-        }
-
-        if (ImGui::CollapsingHeader("Potential Configuration",
-                                    ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::Text("Available Potentials");
-            if (potentials.empty()) {
-                ImGui::Text("No potentials available. Please add one first.");
-            } else {
-                for (const auto &potential : potentials) {
-                    ImGui::PushID(potential->getId());
-                    if (ImGui::Selectable(
-                            potential->getName().c_str(),
-                            potential->getId() ==
-                                simulation.getPotential().getId())) {
-                        simulation.setPotential(*potential);
-                    }
-                    ImGui::PopID();
-                }
-
-                // Potential details
-                if (simulation.getPotential().getId() != 0) {
-                    ImGui::Separator();
-                    ImGui::Text("Selected Potential: %s",
-                                simulation.getPotential().getName().c_str());
-
-                    ImGui::Text(
-                        "dU/dr = %s",
-                        simulation.getPotential().getExpression().c_str());
-
-                    // Display constants editor
-                    auto &constants = simulation.getConstantValues();
-                    if (!constants.empty()) {
-                        ImGui::Separator();
-                        ImGui::Text("Constants:");
-                        for (const auto &[key, value] : constants) {
-                            ImGui::PushID(key.c_str());
-                            double val = value;
-                            if (ImGui::InputDouble(key.c_str(), &val)) {
-                                simulation.setConstantValue(key, val);
-                            }
-                            ImGui::PopID();
-                        }
-                    }
-                }
-            }
-        }
-
-        simulation.setDeltaTime(delta_time);
-        simulation.setTotalDuration(total_duration);
-        simulation.setRecordInterval(record_interval);
-        simulation.setRelativistic(is_rel);
-        simulation.setQuantized(is_quant);
-        simulation.set3D(is_3d);
-        simulation.setR0(Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
-        simulation.setV0(Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
         if (ImGui::Button("Submit")) {
-            is_open = false;
-
-            on_submit(simulation);
+            m_isDialogOpen = false;
+            m_onSubmit(m_simulationBuilder.build());
         }
 
         ImGui::SameLine();
         if (ImGui::Button("Close")) {
-            is_open = false;
+            m_isDialogOpen = false;
         }
 
         ImGui::PopStyleColor(2);
@@ -255,45 +89,172 @@ void AddSimulationDialog::render() {
     }
 }
 
-void AddSimulationDialog::resetSimulation() {
-    simulation = Simulation();
-    stateBuilder = StateBuilder();
-    stateBuilder.setQuantized(true);
-    stateBuilder.set3D(true);
+void AddSimulationDialog::_renderStateConfiguration() {
+    if (!ImGui::CollapsingHeader("State Configuration",
+                                 ImGuiTreeNodeFlags_DefaultOpen))
+        return;
 
-    stateBuilder.setPrincipalQuantumNumber(3);
-    stateBuilder.setAngularQuantumNumber(2);
-    stateBuilder.setMagneticQuantumNumber(1);
+    ImGui::Text("Initial Conditions");
+    bool kIsQuant = m_simulationBuilder.isQuantized();
+    bool kIs3d = m_simulationBuilder.is3D();
+    double r0[3] = {m_simulationBuilder.getR0().x,
+                    m_simulationBuilder.getR0().y,
+                    m_simulationBuilder.getR0().z};
+    ImGui::BeginDisabled(kIsQuant);
+    if ((kIs3d &&
+         ImGui::InputScalarN("Position (r0)", ImGuiDataType_Double, r0, 3)) ||
+        (!kIs3d &&
+         ImGui::InputScalarN("Position (r0)", ImGuiDataType_Double, r0, 2))) {
+        m_simulationBuilder.setR0(Vector3{r0[0], r0[1], r0[2]});
+    }
 
-    stateBuilder.setQuantized(false);
+    double v0[3] = {m_simulationBuilder.getV0().x,
+                    m_simulationBuilder.getV0().y,
+                    m_simulationBuilder.getV0().z};
+    if ((kIs3d &&
+         ImGui::InputScalarN("Velocity (v0)", ImGuiDataType_Double, v0, 3)) ||
+        (!kIs3d &&
+         ImGui::InputScalarN("Velocity (v0)", ImGuiDataType_Double, v0, 2))) {
+        m_simulationBuilder.setV0(Vector3{v0[0], v0[1], kIs3d ? v0[2] : 0.0});
+    }
 
-    potentials =
+    double r0_mag =
+        physics::math::computeMagnitude(m_simulationBuilder.getR0());
+    if (ImGui::InputScalar("Position Magnitude", ImGuiDataType_Double,
+                           &r0_mag)) {
+        m_simulationBuilder.setR0Magnitude(r0_mag);
+    }
+
+    double v0_mag =
+        physics::math::computeMagnitude(m_simulationBuilder.getV0());
+    if (ImGui::InputScalar("Velocity Magnitude", ImGuiDataType_Double,
+                           &v0_mag)) {
+        m_simulationBuilder.setV0Magnitude(v0_mag);
+    }
+
+    ImGui::Text("Angular Momentum: %.5e",
+                m_simulationBuilder.getAngularMomentum());
+    ImGui::EndDisabled();
+
+    ImGui::Spacing();
+    bool kIsRel = m_simulationBuilder.isRelativistic();
+    if (ImGui::Checkbox("Relativistic", &kIsRel))
+        m_simulationBuilder.setRelativistic(kIsRel);
+    ImGui::SameLine();
+    if (ImGui::Checkbox("Quantized", &kIsQuant))
+        m_simulationBuilder.setQuantized(kIsQuant);
+    ImGui::SameLine();
+    if (ImGui::Checkbox("3D Enabled", &kIs3d))
+        m_simulationBuilder.set3D(kIs3d);
+
+    ImGui::Spacing();
+    if (kIsQuant) {
+        ImGui::Text("Quantum Numbers");
+        ImGui::Separator();
+
+        int principal =
+            static_cast<int>(m_simulationBuilder.getPrincipalQuantumNumber());
+        if (ImGui::InputInt("Principal (n)", &principal))
+            m_simulationBuilder.setPrincipalQuantumNumber(
+                static_cast<quantum_principle>(principal));
+
+        int angular =
+            static_cast<int>(m_simulationBuilder.getAngularQuantumNumber());
+        if (ImGui::InputInt("Angular (k)", &angular))
+            m_simulationBuilder.setAngularQuantumNumber(
+                static_cast<quantum_angular>(angular));
+
+        int magnetic =
+            static_cast<int>(m_simulationBuilder.getMagneticQuantumNumber());
+        if (kIs3d && ImGui::InputInt("Magnetic (m)", &magnetic))
+            m_simulationBuilder.setMagneticQuantumNumber(
+                static_cast<quantum_magnetic>(magnetic));
+    }
+}
+
+void AddSimulationDialog::_renderSimulationConfiguration() {
+    if (!ImGui::CollapsingHeader("Simulation Configuration",
+                                 ImGuiTreeNodeFlags_DefaultOpen))
+        return;
+
+    ImGui::Text("Simulation Parameters");
+    double deltaTime = m_simulationBuilder.getDeltaTime();
+    if (ImGui::InputDouble("Delta Time", &deltaTime, 0, 0, "%.5e")) {
+        m_simulationBuilder.setDeltaTime(deltaTime);
+    }
+
+    int recordInterval = m_simulationBuilder.getRecordInterval();
+    if (ImGui::InputInt("Record Interval", &recordInterval)) {
+        m_simulationBuilder.setRecordInterval(recordInterval);
+    }
+
+    double totalDuration = m_simulationBuilder.getTotalDuration();
+    if (ImGui::InputDouble("Total Duration", &totalDuration)) {
+        m_simulationBuilder.setTotalDuration(totalDuration);
+    }
+
+    int rLocalMaxCountLimit = m_simulationBuilder.getRLocalMaxCountLimit();
+    bool isRLocalMaxLimited = (rLocalMaxCountLimit > 0);
+    if (ImGui::Checkbox("Limit R Local Maxima", &isRLocalMaxLimited)) {
+        m_simulationBuilder.setRLocalMaxCountLimit(
+            isRLocalMaxLimited ? rLocalMaxCountLimit : -1);
+    }
+
+    if (isRLocalMaxLimited) {
+        ImGui::InputInt("R Local Max Count", &rLocalMaxCountLimit);
+        if (rLocalMaxCountLimit < 1) {
+            m_simulationBuilder.setNotLimitedRLocalMaxCount();
+        }
+        m_simulationBuilder.setRLocalMaxCountLimit(rLocalMaxCountLimit);
+    }
+}
+
+void AddSimulationDialog::_renderPotentialConfiguration() {
+    if (!ImGui::CollapsingHeader("Potential Configuration",
+                                 ImGuiTreeNodeFlags_DefaultOpen))
+        return;
+
+    ImGui::Text("Available Potentials");
+    _loadPotentials();
+
+    for (const auto &potential : m_potentials) {
+        ImGui::PushID(potential->getId());
+        if (ImGui::Selectable(potential->getName().c_str(),
+                              potential->getId() ==
+                                  m_simulationBuilder.getPotential().getId())) {
+            m_simulationBuilder.setPotential(*potential);
+        }
+        ImGui::PopID();
+    }
+
+    if (m_simulationBuilder.getPotential().getId() != 0) {
+        ImGui::Separator();
+        ImGui::Text("Selected Potential: %s",
+                    m_simulationBuilder.getPotential().getName().c_str());
+        ImGui::Text("dU/dr = %s",
+                    m_simulationBuilder.getPotential().getExpression().c_str());
+
+        const auto &constants = m_simulationBuilder.getConstantValues();
+        if (!constants.empty()) {
+            ImGui::Separator();
+            ImGui::Text("Constants:");
+            for (const auto &[key, value] : constants) {
+                ImGui::PushID(key.c_str());
+                double val = value;
+                if (ImGui::InputDouble(key.c_str(), &val)) {
+                    m_simulationBuilder.setConstantValue(key, val);
+                }
+                ImGui::PopID();
+            }
+        }
+    }
+}
+
+void AddSimulationDialog::_loadPotentials() {
+    auto potentials =
         ServiceLocator::getInstance().get<PotentialRepository>().getAll();
-
-    simulation.setPotential(potentials.empty() ? Potential()
-                                               : *potentials.front());
-
-    updateSimulation();
+    if (potentials.size() != this->m_potentials.size()) {
+        this->m_potentials = std::move(potentials);
+    }
 }
-
-void AddSimulationDialog::updateSimulation() {
-    const Vector3 default_r0 = stateBuilder.getR0();
-    r0[0] = default_r0.x;
-    r0[1] = default_r0.y;
-    r0[2] = default_r0.z;
-    r0_mag = magnitude(default_r0);
-
-    const Vector3 default_v0 = stateBuilder.getV0();
-    v0[0] = default_v0.x;
-    v0[1] = default_v0.y;
-    v0[2] = default_v0.z;
-    v0_mag = magnitude(default_v0);
-    is_rel = stateBuilder.isRelativistic();
-    is_quant = stateBuilder.isQuantized();
-    is_3d = stateBuilder.is3D();
-    principal = stateBuilder.getPrincipalQuantumNumber();
-    angular = stateBuilder.getAngularQuantumNumber();
-    magnetic = stateBuilder.getMagneticQuantumNumber();
-}
-
 } // namespace ui::active_simulation::components

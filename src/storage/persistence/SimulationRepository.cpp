@@ -67,9 +67,9 @@ size_t SimulationRepositoryImpl::add(const Simulation &simulation) const {
 
         query.bind(1, simulation.getName());
         query.bind(2, static_cast<int>(simulation.getStatus()));
-        query.bind(3, static_cast<int>(simulation.getIsRelativistic()));
-        query.bind(4, static_cast<int>(simulation.getIsQuantized()));
-        query.bind(5, static_cast<int>(simulation.getIs3D()));
+        query.bind(3, static_cast<int>(simulation.isRelativistic()));
+        query.bind(4, static_cast<int>(simulation.isQuantized()));
+        query.bind(5, static_cast<int>(simulation.is3D()));
 
         const auto &r0 = simulation.getR0();
         const auto &v0 = simulation.getV0();

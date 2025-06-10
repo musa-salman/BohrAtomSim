@@ -1,11 +1,10 @@
-#ifndef UI_ACTIVE_SIMULATION_ADD_SIMULATION_DIALOG_HPP
-#define UI_ACTIVE_SIMULATION_ADD_SIMULATION_DIALOG_HPP
+#pragma once
 
 #include <functional>
 
 #include <vector>
 
-#include "simulation/factories/StateBuilder.hpp"
+#include "simulation/factories/SimulationBuilder.hpp"
 #include "simulation/model/Potential.hpp"
 #include "simulation/model/Simulation.hpp"
 #include "ui/components/Component.hpp"
@@ -16,34 +15,24 @@ class AddSimulationDialog : public ui::components::Component {
   public:
     explicit AddSimulationDialog();
 
-    void
-    setOnSubmit(const std::function<void(const simulation::model::Simulation &)>
-                    &on_submit);
+    void setOnSubmit(
+        std::function<void(const simulation::model::Simulation &)> &&onSubmit);
 
     void render() override;
 
   private:
-    std::function<void(const simulation::model::Simulation &)> on_submit;
-    char date[20];
-    simulation::model::Simulation simulation;
+    bool m_isDialogOpen;
+    std::function<void(const simulation::model::Simulation &)> m_onSubmit;
 
-    double r0[3] = {1.0, 0.0, 0.0};
-    double v0[3] = {0.0f, 1.0f, 0.0f};
-    double r0_mag = 1.0f;
-    double v0_mag = 1.0f;
+    simulation::factories::SimulationBuilder m_simulationBuilder;
 
-    bool is_rel = false, is_quant = true, is_3d = true;
-    int principal = 1, angular = 0, magnetic = 0;
+    std::vector<std::unique_ptr<simulation::model::Potential>> m_potentials;
 
-    simulation::factories::StateBuilder stateBuilder;
+    void _loadPotentials();
 
-    std::vector<std::unique_ptr<simulation::model::Potential>> potentials;
-
-    void resetSimulation();
-
-    void updateSimulation();
+    void _renderStateConfiguration();
+    void _renderPotentialConfiguration();
+    void _renderSimulationConfiguration();
 };
 
 } // namespace ui::active_simulation::components
-
-#endif // UI_ACTIVE_SIMULATION_ADD_SIMULATION_DIALOG_HPP

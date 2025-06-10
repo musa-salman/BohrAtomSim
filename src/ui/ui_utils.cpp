@@ -1,7 +1,7 @@
 
 #include <string>
 
-#include "simulation/factories/StateBuilder.hpp"
+#include "simulation/factories/SimulationBuilder.hpp"
 #include "simulation/model/Simulation.hpp"
 #include "ui/ui_utils.hpp"
 
@@ -11,26 +11,27 @@ using namespace simulation::model;
 
 std::string createFormattedSimulationName(const Simulation &simulation) {
     std::string filename;
-    filename += simulation.getIs3D() ? "3d" : "2d";
+    filename += simulation.is3D() ? "3d" : "2d";
     filename += "_";
-    filename += simulation.getIsRelativistic() ? "rel" : "nr";
+    filename += simulation.isRelativistic() ? "rel" : "nr";
 
-    if (simulation.getIsQuantized()) {
-        StateBuilder stateBuilder;
-        stateBuilder.set3D(simulation.getIs3D());
-        stateBuilder.quantizeFromR0V0(simulation.getR0(), simulation.getV0());
+    if (simulation.isQuantized()) {
+        SimulationBuilder simulationBuilder;
+        simulationBuilder.set3D(simulation.is3D());
+        simulationBuilder.quantizeFromR0V0(simulation.getR0(),
+                                           simulation.getV0());
 
         filename += "_";
         filename += std::to_string(
-            static_cast<int>(stateBuilder.getPrincipalQuantumNumber()));
+            static_cast<int>(simulationBuilder.getPrincipalQuantumNumber()));
         filename += "_";
         filename += std::to_string(
-            static_cast<int>(stateBuilder.getAngularQuantumNumber()));
+            static_cast<int>(simulationBuilder.getAngularQuantumNumber()));
 
-        if (simulation.getIs3D()) {
+        if (simulation.is3D()) {
             filename += "_";
             filename += std::to_string(
-                static_cast<int>(stateBuilder.getMagneticQuantumNumber()));
+                static_cast<int>(simulationBuilder.getMagneticQuantumNumber()));
         }
     }
 

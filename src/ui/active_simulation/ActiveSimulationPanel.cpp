@@ -120,10 +120,9 @@ bool ActiveSimulationPanel::_renderSimulationCard(const Simulation &simulation,
                               ImVec2(0, 20))) {
             return true;
         }
-        std::string dimension = simulation.getIs3D() ? "3D" : "2D";
-        std::string modelType = simulation.getIsRelativistic()
-                                    ? "Relativistic"
-                                    : "Non-relativistic";
+        std::string dimension = simulation.is3D() ? "3D" : "2D";
+        std::string modelType =
+            simulation.isRelativistic() ? "Relativistic" : "Non-relativistic";
         ImGui::TextDisabled("Dim: %s   Model: %s", dimension.c_str(),
                             modelType.c_str());
     }

@@ -11,25 +11,6 @@
 namespace simulation::model {
 
 class Simulation {
-    std::string name;
-    size_t id;
-
-    physics::math::Vector3 r0;
-    physics::math::Vector3 v0;
-
-    physics::math::scalar delta_time;
-    physics::math::scalar total_duration;
-    int rLocalMaxCountLimit;
-    uint record_interval;
-
-    Potential potential;
-
-    std::unordered_map<std::string, physics::math::scalar> constantValues;
-
-    bool isRelativistic = false;
-    bool isQuantized = true;
-    bool is3D = true;
-
   public:
     enum class SimulationStatus { READY, RUNNING, PAUSED, COMPLETED, QUEUED };
 
@@ -88,12 +69,32 @@ class Simulation {
     int getRLocalMaxCountLimit() const;
     void setRLocalMaxCountLimit(int count);
 
-    bool getIsRelativistic() const;
-    bool getIsQuantized() const;
-    bool getIs3D() const;
+    bool isRelativistic() const;
+    bool isQuantized() const;
+    bool is3D() const;
     void setRelativistic(bool is_rel);
     void setQuantized(bool is_quant);
     void set3D(bool is_3d);
+
+  private:
+    std::string m_name;
+    size_t m_id;
+
+    physics::math::Vector3 m_r0;
+    physics::math::Vector3 m_v0;
+
+    physics::math::scalar m_deltaTime;
+    physics::math::scalar m_totalDuration;
+    int m_rLocalMaxCountLimit;
+    uint m_recordInterval;
+
+    Potential m_potential;
+
+    std::unordered_map<std::string, physics::math::scalar> m_constantValues;
+
+    bool m_isRelativistic = false;
+    bool m_isQuantized = true;
+    bool m_is3D = true;
 };
 
 } // namespace simulation::model

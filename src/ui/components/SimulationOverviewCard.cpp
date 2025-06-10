@@ -21,9 +21,9 @@ void SimulationOverviewCard::render(const Simulation &sim) {
     ImGui::Text("v0: [%.3f, %.3f, %.3f]", v0.x, v0.y, v0.z);
 
     ImGui::NextColumn();
-    ImGui::Text("Dimensions: %s", sim.getIs3D() ? "3D" : "2D");
-    ImGui::Text("Relativistic: %s", sim.getIsRelativistic() ? "Yes" : "No");
-    ImGui::Text("Quantized: %s", sim.getIsQuantized() ? "Yes" : "No");
+    ImGui::Text("Dimensions: %s", sim.is3D() ? "3D" : "2D");
+    ImGui::Text("Relativistic: %s", sim.isRelativistic() ? "Yes" : "No");
+    ImGui::Text("Quantized: %s", sim.isQuantized() ? "Yes" : "No");
 
     ImGui::NextColumn();
     ImGui::Text("dt: %.3e", sim.getDeltaTime());

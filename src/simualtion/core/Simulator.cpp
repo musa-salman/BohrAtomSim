@@ -75,9 +75,9 @@ void Simulator::simulateOrbit(Simulation &simulation,
         .file_bin = file_bin,
     };
 
-    const bool is3D = simulation.getIs3D();
-    const bool isRel = simulation.getIsRelativistic();
-    const bool isQuant = simulation.getIsQuantized();
+    const bool is3D = simulation.is3D();
+    const bool isRel = simulation.isRelativistic();
+    const bool isQuant = simulation.isQuantized();
 
     if (is3D) {
         if (isRel && isQuant) {

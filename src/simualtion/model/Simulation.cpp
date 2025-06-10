@@ -11,172 +11,173 @@ Simulation::Simulation(std::string name, size_t id, bool isRelativistic,
                        Potential potential, scalar delta_time,
                        uint record_interval, scalar total_duration,
                        int rLocalMaxCount)
-    : name(std::move(name)), id(id), r0(r0), v0(v0), delta_time(delta_time),
-      total_duration(total_duration), rLocalMaxCountLimit(rLocalMaxCount),
-      record_interval(record_interval), potential(std::move(potential)),
-      isRelativistic(isRelativistic), isQuantized(isQuantized), is3D(is3D),
-      status(SimulationStatus::READY) {}
+    : status(SimulationStatus::READY), m_name(std::move(name)), m_id(id),
+      m_r0(std::move(r0)), m_v0(std::move(v0)), m_deltaTime(delta_time),
+      m_totalDuration(total_duration), m_rLocalMaxCountLimit(rLocalMaxCount),
+      m_recordInterval(record_interval), m_potential(std::move(potential)),
+      m_isRelativistic(isRelativistic), m_isQuantized(isQuantized),
+      m_is3D(is3D) {}
 
 Simulation::Simulation(const Simulation &other)
-    : name(other.name), id(other.id) {
-    r0 = other.r0;
-    v0 = other.v0;
-    potential = other.potential;
+    : m_name(other.m_name), m_id(other.m_id) {
+    m_r0 = other.m_r0;
+    m_v0 = other.m_v0;
+    m_potential = other.m_potential;
     status = other.status;
-    total_duration = other.total_duration;
-    delta_time = other.delta_time;
-    record_interval = other.record_interval;
-    constantValues = other.constantValues;
-    isRelativistic = other.isRelativistic;
-    isQuantized = other.isQuantized;
-    is3D = other.is3D;
-    rLocalMaxCountLimit = other.rLocalMaxCountLimit;
+    m_totalDuration = other.m_totalDuration;
+    m_deltaTime = other.m_deltaTime;
+    m_recordInterval = other.m_recordInterval;
+    m_constantValues = other.m_constantValues;
+    m_isRelativistic = other.m_isRelativistic;
+    m_isQuantized = other.m_isQuantized;
+    m_is3D = other.m_is3D;
+    m_rLocalMaxCountLimit = other.m_rLocalMaxCountLimit;
 }
 
 Simulation &Simulation::operator=(const Simulation &other) {
     if (this != &other) {
-        name = other.name;
-        id = other.id;
-        potential = other.potential;
+        m_name = other.m_name;
+        m_id = other.m_id;
+        m_potential = other.m_potential;
         status = other.status;
-        r0 = other.r0;
-        v0 = other.v0;
-        delta_time = other.delta_time;
-        total_duration = other.total_duration;
-        record_interval = other.record_interval;
-        constantValues = other.constantValues;
-        isRelativistic = other.isRelativistic;
-        isQuantized = other.isQuantized;
-        is3D = other.is3D;
-        rLocalMaxCountLimit = other.rLocalMaxCountLimit;
+        m_r0 = other.m_r0;
+        m_v0 = other.m_v0;
+        m_deltaTime = other.m_deltaTime;
+        m_totalDuration = other.m_totalDuration;
+        m_recordInterval = other.m_recordInterval;
+        m_constantValues = other.m_constantValues;
+        m_isRelativistic = other.m_isRelativistic;
+        m_isQuantized = other.m_isQuantized;
+        m_is3D = other.m_is3D;
+        m_rLocalMaxCountLimit = other.m_rLocalMaxCountLimit;
     }
     return *this;
 }
 
 Simulation::Simulation(Simulation &&other) noexcept
-    : name(std::move(other.name)), id(other.id), r0(std::move(other.r0)),
-      v0(std::move(other.v0)), delta_time(other.delta_time),
-      total_duration(other.total_duration),
-      rLocalMaxCountLimit(other.rLocalMaxCountLimit),
-      record_interval(other.record_interval),
-      potential(std::move(other.potential)),
-      constantValues(std::move(other.constantValues)),
-      isRelativistic(other.isRelativistic), isQuantized(other.isQuantized),
-      is3D(other.is3D), status(other.status) {}
+    : status(other.status), m_name(std::move(other.m_name)), m_id(other.m_id),
+      m_r0(std::move(other.m_r0)), m_v0(std::move(other.m_v0)),
+      m_deltaTime(other.m_deltaTime), m_totalDuration(other.m_totalDuration),
+      m_rLocalMaxCountLimit(other.m_rLocalMaxCountLimit),
+      m_recordInterval(other.m_recordInterval),
+      m_potential(std::move(other.m_potential)),
+      m_constantValues(std::move(other.m_constantValues)),
+      m_isRelativistic(other.m_isRelativistic),
+      m_isQuantized(other.m_isQuantized), m_is3D(other.m_is3D) {}
 
 Simulation &Simulation::operator=(Simulation &&other) noexcept {
     if (this != &other) {
-        name = std::move(other.name);
-        id = other.id;
-        r0 = std::move(other.r0);
-        v0 = std::move(other.v0);
-        potential = std::move(other.potential);
+        m_name = std::move(other.m_name);
+        m_id = other.m_id;
+        m_r0 = std::move(other.m_r0);
+        m_v0 = std::move(other.m_v0);
+        m_potential = std::move(other.m_potential);
         status = other.status;
-        total_duration = other.total_duration;
-        delta_time = other.delta_time;
-        record_interval = other.record_interval;
-        constantValues = std::move(other.constantValues);
-        other.id = id;
-        is3D = other.is3D;
-        isRelativistic = other.isRelativistic;
-        isQuantized = other.isQuantized;
-        rLocalMaxCountLimit = other.rLocalMaxCountLimit;
+        m_totalDuration = other.m_totalDuration;
+        m_deltaTime = other.m_deltaTime;
+        m_recordInterval = other.m_recordInterval;
+        m_constantValues = std::move(other.m_constantValues);
+        other.m_id = m_id;
+        m_is3D = other.m_is3D;
+        m_isRelativistic = other.m_isRelativistic;
+        m_isQuantized = other.m_isQuantized;
+        m_rLocalMaxCountLimit = other.m_rLocalMaxCountLimit;
     }
     return *this;
 }
 
 const std::unordered_map<std::string, scalar> &
 Simulation::getConstantValues() const {
-    return constantValues;
+    return m_constantValues;
 }
 
 void Simulation::setConstantValues(
     const std::unordered_map<std::string, scalar> &values) {
-    constantValues = values;
+    m_constantValues = values;
 }
 
 void Simulation::setConstantValues(const std::string &jsonString) {
     nlohmann::json constantsJson = nlohmann::json::parse(jsonString);
     for (const auto &[key, value] : constantsJson.items()) {
-        constantValues[key] = value.get<scalar>();
+        m_constantValues[key] = value.get<scalar>();
     }
 }
 
-void Simulation::clearConstantValues() { constantValues.clear(); }
+void Simulation::clearConstantValues() { m_constantValues.clear(); }
 
 bool Simulation::hasConstantValue(const std::string &key) const {
-    return constantValues.find(key) != constantValues.end();
+    return m_constantValues.find(key) != m_constantValues.end();
 }
 
 void Simulation::removeConstantValue(const std::string &key) {
-    constantValues.erase(key);
+    m_constantValues.erase(key);
 }
 
 void Simulation::setConstantValue(const std::string &key, scalar value) {
-    constantValues[key] = value;
+    m_constantValues[key] = value;
 }
 
 scalar Simulation::getConstantValue(const std::string &key) const {
-    auto it = constantValues.find(key);
-    if (it != constantValues.end()) {
+    auto it = m_constantValues.find(key);
+    if (it != m_constantValues.end()) {
         return it->second;
     }
     return -9999e99;
 }
 
-const Vector3 &Simulation::getR0() const { return r0; }
-const Vector3 &Simulation::getV0() const { return v0; }
-void Simulation::setR0(const Vector3 &r0) { this->r0 = r0; }
-void Simulation::setV0(const Vector3 &v0) { this->v0 = v0; }
+const Vector3 &Simulation::getR0() const { return m_r0; }
+const Vector3 &Simulation::getV0() const { return m_v0; }
+void Simulation::setR0(const Vector3 &r0) { this->m_r0 = r0; }
+void Simulation::setV0(const Vector3 &v0) { this->m_v0 = v0; }
 
 Simulation::SimulationStatus Simulation::getStatus() const { return status; }
-void Simulation::setName(const std::string &name) { this->name = name; }
-void Simulation::setId(size_t id) { this->id = id; }
+void Simulation::setName(const std::string &name) { this->m_name = name; }
+void Simulation::setId(size_t id) { this->m_id = id; }
 void Simulation::setStatus(SimulationStatus status) { this->status = status; }
-std::string Simulation::getName() const { return name; }
-size_t Simulation::getId() const { return id; }
+std::string Simulation::getName() const { return m_name; }
+size_t Simulation::getId() const { return m_id; }
 
-const Potential &Simulation::getPotential() const { return potential; }
+const Potential &Simulation::getPotential() const { return m_potential; }
 
 void Simulation::setPotential(const Potential &potential) {
-    this->potential = potential;
+    this->m_potential = potential;
     this->clearConstantValues();
     this->setConstantValues(potential.getConstants());
 }
 
 std::string Simulation::serializeConstants() const {
     nlohmann::json constantsJson;
-    for (const auto &[key, value] : constantValues) {
+    for (const auto &[key, value] : m_constantValues) {
         constantsJson[key] = value;
     }
     return constantsJson.dump();
 }
 
-scalar Simulation::getDeltaTime() const { return delta_time; }
-scalar Simulation::getTotalDuration() const { return total_duration; }
-uint Simulation::getRecordInterval() const { return record_interval; }
+scalar Simulation::getDeltaTime() const { return m_deltaTime; }
+scalar Simulation::getTotalDuration() const { return m_totalDuration; }
+uint Simulation::getRecordInterval() const { return m_recordInterval; }
 
 void Simulation::setDeltaTime(scalar delta_time) {
-    this->delta_time = delta_time;
+    this->m_deltaTime = delta_time;
 }
 void Simulation::setTotalDuration(scalar total_duration) {
-    this->total_duration = total_duration;
+    this->m_totalDuration = total_duration;
 }
 void Simulation::setRecordInterval(uint record_interval) {
-    this->record_interval = record_interval;
+    this->m_recordInterval = record_interval;
 }
 
-int Simulation::getRLocalMaxCountLimit() const { return rLocalMaxCountLimit; }
+int Simulation::getRLocalMaxCountLimit() const { return m_rLocalMaxCountLimit; }
 void Simulation::setRLocalMaxCountLimit(int count) {
-    rLocalMaxCountLimit = count;
+    m_rLocalMaxCountLimit = count;
 }
 
-bool Simulation::getIsRelativistic() const { return isRelativistic; }
-bool Simulation::getIsQuantized() const { return isQuantized; }
-bool Simulation::getIs3D() const { return is3D; }
+bool Simulation::isRelativistic() const { return m_isRelativistic; }
+bool Simulation::isQuantized() const { return m_isQuantized; }
+bool Simulation::is3D() const { return m_is3D; }
 
-void Simulation::setRelativistic(bool is_rel) { isRelativistic = is_rel; }
-void Simulation::setQuantized(bool is_quant) { isQuantized = is_quant; }
-void Simulation::set3D(bool is_3d) { is3D = is_3d; }
+void Simulation::setRelativistic(bool is_rel) { m_isRelativistic = is_rel; }
+void Simulation::setQuantized(bool is_quant) { m_isQuantized = is_quant; }
+void Simulation::set3D(bool is_3d) { m_is3D = is_3d; }
 
 } // namespace simulation::model
