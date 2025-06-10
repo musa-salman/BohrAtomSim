@@ -1,2 +1,0 @@
-include include/atom *.h
-include include *.h
