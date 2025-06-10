@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dataset/FilteredDatasetView.hpp"
+#include "storage/dataset/FilteredDatasetView.hpp"
 #include "utils/Lazy.hpp"
 
 namespace ui::analysis::components {
@@ -14,7 +14,7 @@ class CustomPlotterPanel {
   private:
     size_t m_simulationId;
 
-    utils::Lazy<dataset::FilteredDatasetView> m_filteredDatasetView;
+    utils::Lazy<storage::dataset::FilteredDatasetView> m_filteredDatasetView;
 
     char m_filter[256]{};
     std::string m_filterExpr;

@@ -5,13 +5,22 @@
 #include <sys/types.h>
 #include <time.h>
 
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/PotentialRepository.hpp"
-#include "simulator_runner/Simulation.hpp"
+#include "physics/math/Vector3.hpp"
+#include "physics/math/VectorOps.hpp"
+#include "physics/math/types.hpp"
+#include "simulation/model/Potential.hpp"
+#include "simulation/model/Simulation.hpp"
+#include "storage/persistence/PotentialRepository.hpp"
 #include "ui/active_simulation/components/AddSimulationDialog.hpp"
 #include "ui/ui_utils.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::active_simulation::components {
+using namespace simulation::model;
+using namespace simulation::factories;
+using namespace physics::math;
+using namespace utils;
+using namespace storage::persistence;
 
 AddSimulationDialog::AddSimulationDialog() { resetSimulation(); }
 
@@ -75,8 +84,7 @@ void AddSimulationDialog::render() {
                                               ImGuiDataType_Double, r0, 3)) ||
                 (!is_3d && ImGui::InputScalarN("Position (r0)",
                                                ImGuiDataType_Double, r0, 2))) {
-                stateBuilder.setR0(
-                    eom::Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
+                stateBuilder.setR0(Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
                 updateSimulation();
             }
 
@@ -84,8 +92,7 @@ void AddSimulationDialog::render() {
                                               ImGuiDataType_Double, v0, 3)) ||
                 (!is_3d && ImGui::InputScalarN("Velocity (v0)",
                                                ImGuiDataType_Double, v0, 2))) {
-                stateBuilder.setV0(
-                    eom::Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
+                stateBuilder.setV0(Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
                 updateSimulation();
             }
 
@@ -152,7 +159,7 @@ void AddSimulationDialog::render() {
                                     ImGuiTreeNodeFlags_DefaultOpen)) {
 
             ImGui::Text("Simulation Parameters");
-            if (ImGui::InputDouble("Delta Time", &delta_time)) {
+            if (ImGui::InputDouble("Delta Time", &delta_time, 0, 0, "%.5e")) {
                 simulation.setDeltaTime(delta_time);
             }
             if (ImGui::InputInt("Record Interval", &record_interval)) {
@@ -229,8 +236,8 @@ void AddSimulationDialog::render() {
         simulation.setRelativistic(is_rel);
         simulation.setQuantized(is_quant);
         simulation.set3D(is_3d);
-        simulation.setR0(eom::Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
-        simulation.setV0(eom::Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
+        simulation.setR0(Vector3{r0[0], r0[1], is_3d ? r0[2] : 0.0});
+        simulation.setV0(Vector3{v0[0], v0[1], is_3d ? v0[2] : 0.0});
         if (ImGui::Button("Submit")) {
             is_open = false;
 
@@ -270,17 +277,17 @@ void AddSimulationDialog::resetSimulation() {
 }
 
 void AddSimulationDialog::updateSimulation() {
-    const eom::Vector3 default_r0 = stateBuilder.getR0();
+    const Vector3 default_r0 = stateBuilder.getR0();
     r0[0] = default_r0.x;
     r0[1] = default_r0.y;
     r0[2] = default_r0.z;
-    r0_mag = default_r0.magnitude();
+    r0_mag = magnitude(default_r0);
 
-    const eom::Vector3 default_v0 = stateBuilder.getV0();
+    const Vector3 default_v0 = stateBuilder.getV0();
     v0[0] = default_v0.x;
     v0[1] = default_v0.y;
     v0[2] = default_v0.z;
-    v0_mag = default_v0.magnitude();
+    v0_mag = magnitude(default_v0);
     is_rel = stateBuilder.isRelativistic();
     is_quant = stateBuilder.isQuantized();
     is_3d = stateBuilder.is3D();

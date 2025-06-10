@@ -1,10 +1,13 @@
 #include <imgui.h>
 
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/PotentialRepository.hpp"
+#include "storage/persistence/PotentialRepository.hpp"
 #include "ui/PotentialsView.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui {
+using namespace simulation::model;
+using namespace storage::persistence;
+using namespace utils;
 
 PotentialsView::PotentialsView()
     : potentialRepo(ServiceLocator::getInstance().get<PotentialRepository>()) {

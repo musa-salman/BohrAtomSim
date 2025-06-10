@@ -5,8 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "simulation_repositories/PotentialRepository.hpp"
-#include "steppers/PotentialBuilder.hpp"
+#include "simulation/factories/PotentialBuilder.hpp"
+#include "simulation/model/Potential.hpp"
+#include "storage/persistence/PotentialRepository.hpp"
 
 namespace ui {
 
@@ -22,10 +23,10 @@ class PotentialsView {
 
     void refreshPotentials();
 
-    PotentialRepository &potentialRepo;
-    std::vector<std::unique_ptr<Potential>> potentials;
+    storage::persistence::PotentialRepository &potentialRepo;
+    std::vector<std::unique_ptr<simulation::model::Potential>> potentials;
 
-    PotentialBuilder builder;
+    simulation::factories::PotentialBuilder builder;
 
     char nameBuffer[128] = "";
     bool showError = false;

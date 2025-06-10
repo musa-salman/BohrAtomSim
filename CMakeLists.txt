@@ -20,20 +20,15 @@ include(cmake/Dependencies.cmake)
 
 set(FONT_AWESOME_PATH "${CMAKE_SOURCE_DIR}/assets/fonts/fontawesome-webfont.ttf")
 
-add_library(eom STATIC
-    src/eom/utils.cpp
-    src/eom/spherical.cpp
-    src/eom/polar.cpp
-)
-target_include_directories(eom PUBLIC ${PROJECT_SOURCE_DIR}/include)
-set_target_properties(eom PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES)
+# add_library(eom STATIC
+#     src/eom/utils.cpp
+#     src/eom/spherical.cpp
+#     src/eom/polar.cpp
+# )
+# target_include_directories(eom PUBLIC ${PROJECT_SOURCE_DIR}/include)
+# set_target_properties(eom PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES)
 
 file(GLOB_RECURSE CPP_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
-list(REMOVE_ITEM CPP_SOURCES
-    ${PROJECT_SOURCE_DIR}/src/eom/utils.cpp
-    ${PROJECT_SOURCE_DIR}/src/eom/spherical.cpp
-    ${PROJECT_SOURCE_DIR}/src/eom/polar.cpp
-)
 
 add_executable(bohr_main
     src/main.cpp
@@ -75,7 +70,7 @@ target_compile_definitions(bohr_main PRIVATE
 )
 
 target_link_libraries(bohr_main PRIVATE
-    eom
+    # eom
     imgui_wrapper
     implot_wrapper
     imguifiledialog

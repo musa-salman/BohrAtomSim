@@ -3,11 +3,12 @@
 
 #include <string>
 
-#include "simulator_runner/Simulation.hpp"
+#include "simulation/model/Simulation.hpp"
 
 namespace ui {
 
-std::string createFormattedSimulationName(const Simulation &simulation);
+std::string
+createFormattedSimulationName(const simulation::model::Simulation &simulation);
 
 }; // namespace ui
 

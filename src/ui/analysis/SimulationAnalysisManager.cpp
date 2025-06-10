@@ -4,12 +4,14 @@
 #include <imgui.h>
 #include <memory>
 
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "simulation/service/SimulationService.hpp"
 #include "ui/analysis/SimulationAnalysisManager.hpp"
 #include "ui/components/SimulationListPanel.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::analysis {
+using namespace simulation::service;
+using namespace utils;
 SimulationAnalysisManager::SimulationAnalysisManager()
     : m_simulationListPanel(
           [this](size_t id) {

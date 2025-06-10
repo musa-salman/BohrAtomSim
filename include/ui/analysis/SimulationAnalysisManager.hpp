@@ -5,7 +5,7 @@
 #include <memory>
 #include <optional>
 
-#include "eom/utils.hpp"
+#include "simulation/model/Simulation.hpp"
 #include "ui/analysis/SimulationAnalyzerTabs.hpp"
 #include "ui/components/Component.hpp"
 #include "ui/components/SimulationListPanel.hpp"
@@ -20,17 +20,18 @@ class SimulationAnalysisManager : public ui::components::Component {
 
   private:
     void _loadCompletedSimulations(
-        const boost::container::flat_map<size_t, std::shared_ptr<Simulation>,
-                                         std::greater<size_t>>
-            &kCompletedSimulations) noexcept;
+        const boost::container::flat_map<
+            size_t, std::shared_ptr<simulation::model::Simulation>,
+            std::greater<size_t>> &kCompletedSimulations) noexcept;
 
-    SIM_CONST SIM_INLINE inline bool
+    SIM_CONST SIM_INLINE bool
     _isSimulationCountModified(size_t activeSimulationCount) const noexcept {
         return activeSimulationCount != simulationAnalyzers.size();
     }
 
-    static bool _renderSimulationCard(const Simulation &simulation,
-                                      bool isSelected) noexcept;
+    static bool
+    _renderSimulationCard(const simulation::model::Simulation &simulation,
+                          bool isSelected) noexcept;
 
     boost::container::flat_map<size_t, std::unique_ptr<SimulationAnalyzerTabs>,
                                std::greater<size_t>>

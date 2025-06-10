@@ -1,6 +1,10 @@
 #pragma once
 
-#include "dataset/FilteredDatasetView.hpp"
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+
+#include "storage/dataset/FilteredDatasetView.hpp"
 #include "utils/Lazy.hpp"
 
 namespace ui::analysis::components {
@@ -19,7 +23,7 @@ class DatasetVisualizerPanel {
 
     utils::Lazy<std::unordered_map<std::string, std::vector<double>>>
         m_trajectoryData;
-    utils::Lazy<dataset::FilteredDatasetView> m_filteredDatasetView;
+    utils::Lazy<storage::dataset::FilteredDatasetView> m_filteredDatasetView;
     std::unordered_map<std::string, bool> m_plotSelection;
 };
 

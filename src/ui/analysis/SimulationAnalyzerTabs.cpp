@@ -1,7 +1,7 @@
 #include <gsl/pointers>
 #include <imgui.h>
 
-#include "simulator_runner/Simulation.hpp"
+#include "simulation/model/Simulation.hpp"
 #include "ui/analysis/SimulationAnalyzerTabs.hpp"
 #include "ui/analysis/components/CustomPlotterPanel.hpp"
 #include "ui/analysis/components/DatasetViewerPanel.hpp"
@@ -9,6 +9,8 @@
 #include "ui/components/SimulationOverviewCard.hpp"
 
 namespace ui::analysis {
+using namespace simulation::model;
+
 SimulationAnalyzerTabs::SimulationAnalyzerTabs(
     gsl::not_null<const Simulation *> simulation,
     std::function<void(size_t)> &&onDeleteCallback)

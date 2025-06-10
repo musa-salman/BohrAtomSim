@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/AddSimulationDialog.hpp"
+#include "simulation/model/Simulation.hpp"
 #include "ui/active_simulation/components/SimulationInspectorPanel.hpp"
 #include "ui/components/SimulationListPanel.hpp"
 
@@ -13,8 +14,9 @@ class ActiveSimulationPanel {
     void render();
 
   private:
-    static bool _renderSimulationCard(const Simulation &simulation,
-                                      bool isSelected) noexcept;
+    static bool
+    _renderSimulationCard(const simulation::model::Simulation &simulation,
+                          bool isSelected) noexcept;
     size_t selectedSimulationId = 0;
 
     components::AddSimulationDialog addSimulationWindow;

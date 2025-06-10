@@ -1,26 +1,30 @@
 
 #include <imgui.h>
 
-#include "dataset/FilteredDatasetView.hpp"
-#include "dataset/expression_utils.hpp"
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "simulation/service/SimulationService.hpp"
+#include "storage/dataset/FilteredDatasetView.hpp"
+#include "storage/dataset/expression_utils.hpp"
 #include "ui/analysis/components/DatasetExportPanel.hpp"
 #include "ui/analysis/components/DatasetViewerPanel.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::analysis::components {
+using namespace simulation::service;
+using namespace storage::dataset;
+using namespace utils;
+
 DatasetViewerPanel::DatasetViewerPanel(
     gsl::not_null<const Simulation *> simulation)
     : m_simulation(simulation),
-      m_filteredDatasetView(utils::Lazy<dataset::FilteredDatasetView>([&]() {
+      m_filteredDatasetView(utils::Lazy<FilteredDatasetView>([&]() {
           const auto &dataset = ServiceLocator::getInstance()
                                     .get<SimulationService>()
                                     .getSimulationResult(m_simulation->getId());
-          return dataset::FilteredDatasetView(dataset.getRowCount());
+          return FilteredDatasetView(dataset.getRowCount());
       })),
       m_exportPanel(utils::Lazy<DatasetExportPanel>([&]() {
           return DatasetExportPanel(
-              gsl::not_null<const dataset::FilteredDatasetView *>(
+              gsl::not_null<const FilteredDatasetView *>(
                   &m_filteredDatasetView.get()),
               gsl::not_null<const Simulation *>(m_simulation.get()));
       })) {}
@@ -41,8 +45,7 @@ void DatasetViewerPanel::render() {
             if (std::string(m_filter).empty()) {
                 m_filteredDatasetView->includeAllRows(dataset.getRowCount());
             } else {
-                const auto mask =
-                    dataset::computeMaskFromExpression(m_filter, dataset);
+                const auto mask = computeMaskFromExpression(m_filter, dataset);
                 m_filteredDatasetView->updateMask(mask);
                 m_filterExpr = m_filter;
                 m_errorMessageExpr.clear();

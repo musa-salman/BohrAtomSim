@@ -5,7 +5,8 @@
 #include <functional>
 #include <memory>
 
-#include "simulator_runner/Simulation.hpp"
+#include "physics/math/macros.hpp"
+#include "simulation/model/Simulation.hpp"
 
 namespace ui::components {
 
@@ -14,9 +15,11 @@ class SimulationListPanel {
     using OnSelectCallback = std::function<void(size_t)>;
 
     using SimulationFetcher = std::function<boost::container::flat_map<
-        size_t, std::shared_ptr<Simulation>, std::greater<size_t>>()>;
+        size_t, std::shared_ptr<simulation::model::Simulation>,
+        std::greater<size_t>>()>;
 
-    using CardRenderer = bool (*)(const Simulation &, bool) noexcept;
+    using CardRenderer = bool (*)(const simulation::model::Simulation &,
+                                  bool) noexcept;
 
     SimulationListPanel(OnSelectCallback &&onSelect,
                         SimulationFetcher &&fetcher, CardRenderer renderer);
@@ -44,8 +47,8 @@ class SimulationListPanel {
 
     void _renderSearchingTools() noexcept;
 
-    SIM_CONST SIM_INLINE inline bool
-    _matchFilters(const Simulation &simulation) const noexcept {
+    SIM_CONST SIM_INLINE bool _matchFilters(
+        const simulation::model::Simulation &simulation) const noexcept {
         return (m_filters.dimension == DimensionFilter::All ||
                 (m_filters.dimension == DimensionFilter::D2 &&
                  !simulation.getIs3D()) ||

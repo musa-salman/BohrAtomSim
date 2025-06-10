@@ -5,8 +5,9 @@
 
 #include <vector>
 
-#include "simulator_runner/Simulation.hpp"
-#include "steppers/StateBuilder.hpp"
+#include "simulation/factories/StateBuilder.hpp"
+#include "simulation/model/Potential.hpp"
+#include "simulation/model/Simulation.hpp"
 #include "ui/components/Component.hpp"
 
 namespace ui::active_simulation::components {
@@ -15,14 +16,16 @@ class AddSimulationDialog : public ui::components::Component {
   public:
     explicit AddSimulationDialog();
 
-    void setOnSubmit(const std::function<void(const Simulation &)> &on_submit);
+    void
+    setOnSubmit(const std::function<void(const simulation::model::Simulation &)>
+                    &on_submit);
 
     void render() override;
 
   private:
-    std::function<void(const Simulation &)> on_submit;
+    std::function<void(const simulation::model::Simulation &)> on_submit;
     char date[20];
-    Simulation simulation;
+    simulation::model::Simulation simulation;
 
     double r0[3] = {1.0, 0.0, 0.0};
     double v0[3] = {0.0f, 1.0f, 0.0f};
@@ -32,9 +35,9 @@ class AddSimulationDialog : public ui::components::Component {
     bool is_rel = false, is_quant = true, is_3d = true;
     int principal = 1, angular = 0, magnetic = 0;
 
-    StateBuilder stateBuilder;
+    simulation::factories::StateBuilder stateBuilder;
 
-    std::vector<std::unique_ptr<Potential>> potentials;
+    std::vector<std::unique_ptr<simulation::model::Potential>> potentials;
 
     void resetSimulation();
 

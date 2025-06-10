@@ -5,21 +5,24 @@
 #include "components/CustomPlotterPanel.hpp"
 #include "components/DatasetViewerPanel.hpp"
 #include "components/DatasetVisualizerPanel.hpp"
-#include "simulator_runner/Simulation.hpp"
+#include "simulation/model/Simulation.hpp"
 
 namespace ui::analysis {
 
 class SimulationAnalyzerTabs {
   public:
-    SimulationAnalyzerTabs(gsl::not_null<const Simulation *> simulation,
-                           std::function<void(size_t)> &&onDeleteCallback);
+    SimulationAnalyzerTabs(
+        gsl::not_null<const simulation::model::Simulation *> simulation,
+        std::function<void(size_t)> &&onDeleteCallback);
 
     void render();
 
-    const Simulation &getSimulation() const { return *m_simulation; }
+    const simulation::model::Simulation &getSimulation() const {
+        return *m_simulation;
+    }
 
   private:
-    gsl::not_null<const Simulation *> m_simulation;
+    gsl::not_null<const simulation::model::Simulation *> m_simulation;
 
     components::DatasetVisualizerPanel m_datasetVisualizerPanel;
     components::DatasetViewerPanel m_datasetViewerPanel;

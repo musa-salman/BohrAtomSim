@@ -1,11 +1,14 @@
 
 #include <string>
 
-#include "simulator_runner/Simulation.hpp"
-#include "steppers/StateBuilder.hpp"
+#include "simulation/factories/StateBuilder.hpp"
+#include "simulation/model/Simulation.hpp"
 #include "ui/ui_utils.hpp"
 
 namespace ui {
+using namespace simulation::factories;
+using namespace simulation::model;
+
 std::string createFormattedSimulationName(const Simulation &simulation) {
     std::string filename;
     filename += simulation.getIs3D() ? "3d" : "2d";

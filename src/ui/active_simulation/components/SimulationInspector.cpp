@@ -1,12 +1,16 @@
 #include <imgui.h>
 #include <implot.h>
 
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "simulation/model/Simulation.hpp"
+#include "simulation/service/SimulationService.hpp"
 #include "ui/active_simulation/components/SimulationInspectorPanel.hpp"
 #include "ui/components/SimulationOverviewCard.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::active_simulation::components {
+using namespace simulation::model;
+using namespace simulation::service;
+using namespace utils;
 
 void SimulationInspectorPanel::setSimulation(
     const std::shared_ptr<Simulation> &sim) {
@@ -43,7 +47,6 @@ void SimulationInspectorPanel::render() {
         if (ImGui::Button("Stop Simulation")) {
             simulationService.stopSimulation(simId);
         }
-        ImGui::Text("Simulation is running...");
     } else if (status == Simulation::SimulationStatus::PAUSED) {
         if (ImGui::Button("Resume Simulation")) {
             simulationService.resumeSimulation(simId);
@@ -52,12 +55,10 @@ void SimulationInspectorPanel::render() {
         if (ImGui::Button("Stop Simulation")) {
             simulationService.stopSimulation(simId);
         }
-        ImGui::Text("Simulation is paused.");
     } else if (status == Simulation::SimulationStatus::READY) {
         if (ImGui::Button("Run Simulation")) {
             simulationService.startSimulation(simId);
         }
-        ImGui::Text("Simulation is ready to run.");
     }
 
     ImGui::SameLine();

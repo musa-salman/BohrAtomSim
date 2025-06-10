@@ -11,21 +11,21 @@
 
 #include <memory>
 
-#include "explorer_manager/OngoingSimulationManager.hpp"
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/ArchivedSimulationManager.hpp"
-#include "simulation_repositories/DataSource.hpp"
-#include "simulation_repositories/PotentialRepository.hpp"
-#include "simulation_repositories/PotentialRepositoryImpl.hpp"
-#include "simulation_repositories/SimulationRepository.hpp"
-#include "simulation_repositories/SimulationRepositoryImpl.hpp"
-#include "simulation_repositories/SimulationServiceImpl.hpp"
-#include "simulator_runner/ISimulator.hpp"
-#include "simulator_runner/Simulator.hpp"
-#include "steppers/StepperFactory.hpp"
+#include "physics/stepper/StepperFactory.hpp"
+#include "simulation/core/ISimulator.hpp"
+#include "simulation/core/Simulator.hpp"
+#include "simulation/service/SimulationService.hpp"
+#include "simulation/service/SimulationServiceImpl.hpp"
+#include "storage/persistence/ArchivedSimulationManager.hpp"
+#include "storage/persistence/DataSource.hpp"
+#include "storage/persistence/PotentialRepositoryImpl.hpp"
+#include "storage/persistence/SimulationMonitorManager.hpp"
+#include "storage/persistence/SimulationRepository.hpp"
+#include "storage/persistence/SimulationRepositoryImpl.hpp"
 #include "ui/PotentialsView.hpp"
 #include "ui/active_simulation/ActiveSimulationPanel.hpp"
 #include "ui/analysis/SimulationAnalysisManager.hpp"
+#include "utils/ServiceLocator.hpp"
 
 using namespace boost::interprocess;
 
@@ -34,6 +34,15 @@ void glfw_error_callback(int error, const char *description) {
 }
 
 int main() {
+    using namespace physics::stepper;
+    using namespace simulation::service;
+    using namespace simulation::model;
+    using namespace simulation::core;
+    using namespace storage::persistence;
+    using namespace storage::dataset;
+    using namespace utils;
+    using namespace ui;
+
     // Initialize GLFW
 
     if (!glfwInit())
@@ -88,8 +97,8 @@ int main() {
     ServiceLocator::getInstance().registerService<SimulationRepository>(
         std::make_shared<SimulationRepositoryImpl>());
 
-    ServiceLocator::getInstance().registerService<OngoingSimulationManager>(
-        std::make_shared<OngoingSimulationManager>());
+    ServiceLocator::getInstance().registerService<SimulationMonitorManager>(
+        std::make_shared<SimulationMonitorManager>());
 
     ServiceLocator::getInstance().registerService<ArchivedSimulationManager>(
         std::make_shared<ArchivedSimulationManager>());

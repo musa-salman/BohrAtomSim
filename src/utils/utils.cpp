@@ -1,6 +1,6 @@
-#include "utils/utils.hpp"
-
 #include <format>
+
+#include "utils/utils.hpp"
 
 namespace utils {
 std::string formatOutputFilename(size_t id,

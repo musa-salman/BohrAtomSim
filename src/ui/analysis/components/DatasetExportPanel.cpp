@@ -2,19 +2,23 @@
 #include <ImGuiFileDialog.h>
 #include <imgui.h>
 
-#include "dataset/Dataset.hpp"
-#include "dataset/DatasetFactory.hpp"
-#include "exporters/CSVExporter.hpp"
-#include "exporters/HDF5Exporter.hpp"
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "simulation/service/SimulationService.hpp"
+#include "storage/dataset/Dataset.hpp"
+#include "storage/dataset/DatasetFactory.hpp"
+#include "storage/exporters/CSVExporter.hpp"
+#include "storage/exporters/HDF5Exporter.hpp"
 #include "ui/analysis/components/DatasetExportPanel.hpp"
 #include "ui/ui_utils.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::analysis::components {
+using namespace simulation::service;
+using namespace storage::dataset;
+using namespace storage::exporters;
+using namespace utils;
 
 DatasetExportPanel::DatasetExportPanel(
-    gsl::not_null<const dataset::FilteredDatasetView *> filteredView,
+    gsl::not_null<const FilteredDatasetView *> filteredView,
     gsl::not_null<const Simulation *> simulation)
     : m_filteredView(filteredView), m_simulation(simulation) {}
 
@@ -36,12 +40,11 @@ void DatasetExportPanel::render() {
             const std::string extension =
                 ImGuiFileDialog::Instance()->GetCurrentFilter();
 
-            std::unique_ptr<dataset::Dataset> dataset =
-                dataset::DatasetFactory::create(
-                    ServiceLocator::getInstance()
-                        .get<SimulationService>()
-                        .getSimulationResult(m_simulation->getId()),
-                    *m_filteredView);
+            std::unique_ptr<Dataset> dataset = DatasetFactory::create(
+                ServiceLocator::getInstance()
+                    .get<SimulationService>()
+                    .getSimulationResult(m_simulation->getId()),
+                *m_filteredView);
 
             if (extension == ".csv") {
                 CSVExporter().exportData(filePath, *dataset);

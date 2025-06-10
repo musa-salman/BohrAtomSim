@@ -1,0 +1,19 @@
+#pragma once
+
+#include "types.hpp"
+
+namespace physics::math {
+
+constexpr scalar SPEED_OF_LIGHT_SQUARE =
+    FLOAT_LITERAL_SUFFIX(18778.86507043055614177);
+constexpr scalar INV_SPEED_OF_LIGHT_SQUARED =
+    FLOAT_LITERAL_SUFFIX(0.00005325135444817764497014);
+
+constexpr scalar G_FACTOR = FLOAT_LITERAL_SUFFIX(-2.002319304);
+constexpr scalar S_Z_FACTOR = FLOAT_LITERAL_SUFFIX(0.5);
+
+constexpr scalar HALF_PI = FLOAT_LITERAL_SUFFIX(1.570796326794896557998981);
+constexpr scalar PI = FLOAT_LITERAL_SUFFIX(3.14159265358979323846);
+constexpr scalar TWO_PI = FLOAT_LITERAL_SUFFIX(6.28318530717958647692);
+
+} // namespace physics::math

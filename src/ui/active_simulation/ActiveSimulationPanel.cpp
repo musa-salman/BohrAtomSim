@@ -1,11 +1,13 @@
 #include <imgui.h>
 #include <iostream>
 
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "simulation/service/SimulationService.hpp"
 #include "ui/active_simulation/ActiveSimulationPanel.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::active_simulation {
+using namespace simulation::service;
+using namespace utils;
 
 ActiveSimulationPanel::ActiveSimulationPanel()
     : listPanel(

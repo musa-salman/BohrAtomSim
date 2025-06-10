@@ -1,9 +1,11 @@
 #include <imgui.h>
 #include <magic_enum/magic_enum.hpp>
 
+#include "simulation/model/Simulation.hpp"
 #include "ui/components/SimulationOverviewCard.hpp"
 
 namespace ui::components {
+using namespace simulation::model;
 
 void SimulationOverviewCard::render(const Simulation &sim) {
     ImGui::Text("Simulation: %s", sim.getName().c_str());

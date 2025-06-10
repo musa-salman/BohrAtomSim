@@ -3,20 +3,24 @@
 #include <implot.h>
 #include <matplot/matplot.h>
 
-#include "dataset/expression_utils.hpp"
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "simulation/service/SimulationService.hpp"
+#include "storage/dataset/expression_utils.hpp"
 #include "ui/analysis/components/CustomPlotterPanel.hpp"
+#include "utils/Lazy.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::analysis::components {
+using namespace simulation::service;
+using namespace storage::dataset;
+using namespace utils;
 
 CustomPlotterPanel::CustomPlotterPanel(size_t simulationId)
     : m_simulationId(simulationId),
-      m_filteredDatasetView(utils::Lazy<dataset::FilteredDatasetView>([&]() {
+      m_filteredDatasetView(utils::Lazy<FilteredDatasetView>([&]() {
           const auto &dataset = ServiceLocator::getInstance()
                                     .get<SimulationService>()
                                     .getSimulationResult(m_simulationId);
-          return dataset::FilteredDatasetView(dataset.getRowCount());
+          return FilteredDatasetView(dataset.getRowCount());
       })) {}
 
 void CustomPlotterPanel::render() {
@@ -38,16 +42,15 @@ void CustomPlotterPanel::render() {
             if (std::string(m_filter).empty()) {
                 m_filteredDatasetView->includeAllRows(dataset.getRowCount());
             } else {
-                auto mask =
-                    dataset::computeMaskFromExpression(m_filter, dataset);
+                auto mask = computeMaskFromExpression(m_filter, dataset);
                 m_filteredDatasetView->updateMask(mask);
                 m_filterExpr = m_filter;
             }
             m_errorMessageExpr.clear();
 
             // Compute X and Y data
-            m_xData = dataset::computeVectorFromExpression(xExpr, dataset);
-            m_yData = dataset::computeVectorFromExpression(yExpr, dataset);
+            m_xData = computeVectorFromExpression(xExpr, dataset);
+            m_yData = computeVectorFromExpression(yExpr, dataset);
             errorMessagePlot.clear();
         }
 

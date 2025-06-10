@@ -2,14 +2,18 @@
 #include <imgui.h>
 #include <implot.h>
 
-#include "dataset/FilteredDatasetView.hpp"
-#include "dataset/expression_utils.hpp"
-#include "math_utils.hpp"
-#include "service_locator/ServiceLocator.hpp"
-#include "simulation_repositories/SimulationService.hpp"
+#include "physics/math/math_utils.hpp"
+#include "simulation/service/SimulationService.hpp"
+#include "storage/dataset/FilteredDatasetView.hpp"
+#include "storage/dataset/expression_utils.hpp"
 #include "ui/analysis/components/DatasetVisualizerPanel.hpp"
+#include "utils/Lazy.hpp"
+#include "utils/ServiceLocator.hpp"
 
 namespace ui::analysis::components {
+using namespace simulation::service;
+using namespace storage::dataset;
+using namespace utils;
 
 DatasetVisualizerPanel::DatasetVisualizerPanel(size_t simulationId)
     : m_simulationId(simulationId),
@@ -26,17 +30,17 @@ DatasetVisualizerPanel::DatasetVisualizerPanel(size_t simulationId)
                       std::find(dataset.getColumnsNames().begin(),
                                 dataset.getColumnsNames().end(), "psi");
                   if (is2D)
-                      return polar2cartesian(dataset.get("r"),
-                                             dataset.get("psi"));
-                  return spherical2cartesian(dataset.get("r"),
-                                             dataset.get("theta"),
-                                             dataset.get("phi"));
+                      return physics::math::polar2cartesian(dataset.get("r"),
+                                                            dataset.get("psi"));
+                  return physics::math::spherical2cartesian(
+                      dataset.get("r"), dataset.get("theta"),
+                      dataset.get("phi"));
               })),
-      m_filteredDatasetView(utils::Lazy<dataset::FilteredDatasetView>([&]() {
+      m_filteredDatasetView(utils::Lazy<FilteredDatasetView>([&]() {
           const auto &dataset = ServiceLocator::getInstance()
                                     .get<SimulationService>()
                                     .getSimulationResult(m_simulationId);
-          return dataset::FilteredDatasetView(dataset.getRowCount());
+          return FilteredDatasetView(dataset.getRowCount());
       })) {
     m_plotSelection.emplace("trajectories", false);
 }
@@ -56,8 +60,7 @@ void DatasetVisualizerPanel::render() {
             if (std::string(m_filter).empty()) {
                 m_filteredDatasetView->includeAllRows(dataset.getRowCount());
             } else {
-                const auto mask =
-                    dataset::computeMaskFromExpression(m_filter, dataset);
+                const auto mask = computeMaskFromExpression(m_filter, dataset);
                 m_filteredDatasetView->updateMask(mask);
                 m_filterExpr = m_filter;
                 m_errorMessageExpr.clear();
