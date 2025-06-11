@@ -21,6 +21,8 @@ class SimulationService {
     [[nodiscard]] virtual size_t
     addSimulation(const Simulation &simulation) = 0;
 
+    virtual void updateSimulation(const Simulation &simulation) = 0;
+
     virtual void removeSimulation(size_t id) = 0;
 
     virtual void startSimulation(size_t id) = 0;

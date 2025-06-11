@@ -56,11 +56,11 @@ void SimulationAnalysisManager::render() {
 void SimulationAnalysisManager::_loadCompletedSimulations(
     const boost::container::flat_map<size_t, std::shared_ptr<Simulation>,
                                      std::greater<size_t>>
-        &kCompletedSimulations) noexcept {
-    for (const auto &[id, simulation] : kCompletedSimulations) {
+        &completedSimulations) noexcept {
+    for (const auto &[id, simulation] : completedSimulations) {
         if (simulationAnalyzers.find(id) == simulationAnalyzers.end()) {
             auto analyzer = std::make_unique<SimulationAnalyzerTabs>(
-                gsl::not_null<const Simulation *>(simulation.get()),
+                gsl::not_null<Simulation *>(simulation.get()),
                 [this](size_t id) {
                     if (selectedAnalyzer &&
                         selectedAnalyzer.value()->getSimulation().getId() == id)

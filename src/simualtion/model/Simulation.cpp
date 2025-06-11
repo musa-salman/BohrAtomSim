@@ -4,7 +4,12 @@ namespace simulation::model {
 
 using namespace physics::math;
 
-Simulation::Simulation() = default;
+Simulation::Simulation()
+    : status(SimulationStatus::READY), m_name("New Simulation"), m_id(0),
+      m_r0({2.291796067500631, 0, 0}), m_v0({0, 0.872677996249964890, 0}),
+      m_deltaTime(1e-6), m_totalDuration(800), m_rLocalMaxCountLimit(-1),
+      m_recordInterval(1000), m_potential(), m_isRelativistic(true),
+      m_isQuantized(false), m_is3D(false) {}
 
 Simulation::Simulation(std::string name, size_t id, bool isRelativistic,
                        bool isQuantized, bool is3D, Vector3 r0, Vector3 v0,

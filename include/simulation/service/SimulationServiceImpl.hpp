@@ -25,6 +25,8 @@ class SimulationServiceImpl : public SimulationService {
 
     [[nodiscard]] size_t addSimulation(const Simulation &simulation) override;
 
+    void updateSimulation(const Simulation &simulation) override;
+
     void removeSimulation(size_t id) override;
 
     void startSimulation(size_t id) override;
@@ -47,7 +49,7 @@ class SimulationServiceImpl : public SimulationService {
     getSimulationMonitor(size_t id) const override;
 
   private:
-    const SimulationRepository &simulationRepository;
+    SimulationRepository &simulationRepository;
     ISimulator &simulator;
     SimulationMonitorManager &simulationMonitorManager;
     ArchivedSimulationManager &archivedSimulationManager;

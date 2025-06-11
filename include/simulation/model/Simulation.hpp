@@ -14,7 +14,7 @@ class Simulation {
   public:
     enum class SimulationStatus { READY, RUNNING, PAUSED, COMPLETED, QUEUED };
 
-    SimulationStatus status = SimulationStatus::READY;
+    SimulationStatus status;
 
     Simulation();
     Simulation(std::string name, size_t id, bool isRelativistic = true,
@@ -92,9 +92,9 @@ class Simulation {
 
     std::unordered_map<std::string, physics::math::scalar> m_constantValues;
 
-    bool m_isRelativistic = false;
-    bool m_isQuantized = true;
-    bool m_is3D = true;
+    bool m_isRelativistic;
+    bool m_isQuantized;
+    bool m_is3D;
 };
 
 } // namespace simulation::model

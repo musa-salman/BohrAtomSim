@@ -96,6 +96,9 @@ void ActiveSimulationPanel::render() {
 
     ImGui::Text("Simulations");
     ImGui::SameLine();
+    if (ImGui::Button("Add Simulation")) {
+        addSimulationWindow.setSimulation(Simulation());
+    }
     addSimulationWindow.render();
     ImGui::Separator();
     listPanel.render();
@@ -115,10 +118,11 @@ bool ActiveSimulationPanel::_renderSimulationCard(const Simulation &simulation,
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(40, 40, 40, 255));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
     ImGui::BeginGroup();
+    bool isNewSelected = false;
     {
         if (ImGui::Selectable(simulation.getName().c_str(), isSelected, 0,
                               ImVec2(0, 20))) {
-            return true;
+            isNewSelected = true;
         }
         std::string dimension = simulation.is3D() ? "3D" : "2D";
         std::string modelType =
@@ -131,6 +135,6 @@ bool ActiveSimulationPanel::_renderSimulationCard(const Simulation &simulation,
     ImGui::EndGroup();
     ImGui::Spacing();
     ImGui::PopID();
-    return false;
+    return isNewSelected;
 }
 } // namespace ui::active_simulation

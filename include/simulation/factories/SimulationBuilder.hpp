@@ -60,6 +60,7 @@ class SimulationBuilder {
     physics::math::scalar getAngularMomentum() const;
 
     simulation::model::Simulation &getSimulation();
+    void setSimulation(const simulation::model::Simulation &simulation);
 
     simulation::model::Simulation build() const;
 

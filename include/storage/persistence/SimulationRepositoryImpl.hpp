@@ -18,6 +18,8 @@ class SimulationRepositoryImpl : public SimulationRepository {
 
     size_t add(const simulation::model::Simulation &simulation) const override;
 
+    void update(const simulation::model::Simulation &simulation) override;
+
     void remove(size_t id) const override;
 
     std::vector<std::unique_ptr<simulation::model::Simulation>>

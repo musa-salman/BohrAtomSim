@@ -37,6 +37,7 @@ SimulationServiceImpl::SimulationServiceImpl()
                 simulation->getId(),
                 std::shared_ptr<Simulation>(std::move(simulation)));
         } else {
+            simulation->status = Simulation::SimulationStatus::READY;
             ongoingSimulations.emplace(
                 simulation->getId(),
                 std::shared_ptr<Simulation>(std::move(simulation)));
@@ -56,6 +57,33 @@ size_t SimulationServiceImpl::addSimulation(const Simulation &simulation) {
         id, std::make_shared<Simulation>(std::move(_simulation)));
 
     return id;
+}
+
+void SimulationServiceImpl::updateSimulation(const Simulation &simulation) {
+    Expects(ongoingSimulations.contains(simulation.getId()) ||
+            completedSimulations.contains(simulation.getId()));
+
+    std::shared_ptr<Simulation> &currentSimulation =
+        ongoingSimulations.contains(simulation.getId())
+            ? ongoingSimulations[simulation.getId()]
+            : completedSimulations[simulation.getId()];
+
+    simulationRepository.update(simulation);
+
+    currentSimulation->setName(simulation.getName());
+    currentSimulation->setR0(simulation.getR0());
+    currentSimulation->setV0(simulation.getV0());
+    currentSimulation->setRelativistic(simulation.isRelativistic());
+    currentSimulation->setQuantized(simulation.isQuantized());
+    currentSimulation->set3D(simulation.is3D());
+    currentSimulation->setDeltaTime(simulation.getDeltaTime());
+    currentSimulation->setTotalDuration(simulation.getTotalDuration());
+    currentSimulation->setRecordInterval(simulation.getRecordInterval());
+    currentSimulation->setRLocalMaxCountLimit(
+        simulation.getRLocalMaxCountLimit());
+    currentSimulation->setPotential(simulation.getPotential());
+    currentSimulation->setConstantValues(simulation.getConstantValues());
+    currentSimulation->setStatus(simulation.getStatus());
 }
 
 void SimulationServiceImpl::startSimulation(size_t id) {

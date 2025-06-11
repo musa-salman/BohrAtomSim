@@ -130,7 +130,7 @@ int main() {
 
         if (ImGui::BeginTabBar("Sidebar", ImGuiTabBarFlags_None)) {
 
-            if (ImGui::BeginTabItem(" Simulations")) {
+            if (ImGui::BeginTabItem("Simulations")) {
                 explorer.render();
                 ImGui::EndTabItem();
             }

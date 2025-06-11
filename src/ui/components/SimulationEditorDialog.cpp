@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstring>
+#include <gsl/zstring>
 #include <imgui.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -10,51 +11,61 @@
 #include "simulation/model/Potential.hpp"
 #include "simulation/model/Simulation.hpp"
 #include "storage/persistence/PotentialRepository.hpp"
-#include "ui/active_simulation/components/AddSimulationDialog.hpp"
+#include "ui/components/SimulationEditorDialog.hpp"
 #include "ui/ui_utils.hpp"
 #include "utils/ServiceLocator.hpp"
 
-namespace ui::active_simulation::components {
+namespace ui::components {
 using namespace simulation::model;
 using namespace simulation::factories;
 using namespace physics::math;
 using namespace utils;
 using namespace storage::persistence;
 
-AddSimulationDialog::AddSimulationDialog() : m_isDialogOpen(false) {}
+SimulationEditorDialog::SimulationEditorDialog()
+    : m_isDialogOpen(false), isAutoName(true) {}
 
-void AddSimulationDialog::setOnSubmit(
-    std::function<void(const Simulation &)> &&onSubmit) {
+void SimulationEditorDialog::setOnSubmit(
+    std::function<void(Simulation)> &&onSubmit) {
     this->m_onSubmit = std::move(onSubmit);
 }
 
-void AddSimulationDialog::render() {
-    if (ImGui::Button("Add")) {
-        m_isDialogOpen = true;
-        ImGui::OpenPopup("Add Simulation");
-    }
+void SimulationEditorDialog::setSimulation(const Simulation &simulation) {
+    m_simulationBuilder.setSimulation(simulation);
+    isAutoName = !_isLocked(simulation.getStatus());
+    m_isDialogOpen = true;
+}
 
+void SimulationEditorDialog::render() {
     if (!m_isDialogOpen)
         return;
 
-    if (ImGui::Begin("Add Simulation", &m_isDialogOpen,
+    const bool kIsEdit = m_simulationBuilder.getSimulation().getId() != 0;
+    const bool kIsLocked =
+        _isLocked(m_simulationBuilder.getSimulation().getStatus());
+
+    gsl::czstring kPopupTitle = kIsEdit ? "Edit Simulation" : "Add Simulation";
+
+    if (ImGui::Begin(kPopupTitle, &m_isDialogOpen,
                      ImGuiWindowFlags_NoResize |
                          ImGuiWindowFlags_AlwaysAutoResize)) {
+
         char name[200]; // NOSONAR
         std::strncpy(name, m_simulationBuilder.getName().c_str(),
                      sizeof(name) - 1);
         name[sizeof(name) - 1] = '\0';
-        static bool auto_name = true;
 
         ImGui::InputText("Name", name, IM_ARRAYSIZE(name));
-        ImGui::SameLine();
-        ImGui::Checkbox("Auto", &auto_name);
+        if (!kIsEdit) {
+            ImGui::SameLine();
+            ImGui::Checkbox("Auto", &isAutoName);
+        }
 
-        if (auto_name) {
-            const std::string formattedSimulationName =
+        if (isAutoName) {
+            const std::string kFormattedSimulationName =
                 createFormattedSimulationName(
                     m_simulationBuilder.getSimulation());
-            std::strncpy(name, formattedSimulationName.c_str(),
+            std::strncpy(name, kFormattedSimulationName.c_str(),
                          sizeof(name) - 1);
             name[sizeof(name) - 1] = '\0';
         }
@@ -69,11 +80,11 @@ void AddSimulationDialog::render() {
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
                               ImVec4(0.2f, 0.4f, 0.9f, 0.9f));
 
-        _renderStateConfiguration();
-        _renderSimulationConfiguration();
-        _renderPotentialConfiguration();
+        _renderStateConfiguration(kIsLocked);
+        _renderSimulationConfiguration(kIsLocked);
+        _renderPotentialConfiguration(kIsLocked);
 
-        if (ImGui::Button("Submit")) {
+        if (ImGui::Button(kIsEdit ? "Apply Changes" : "Submit")) {
             m_isDialogOpen = false;
             m_onSubmit(m_simulationBuilder.build());
         }
@@ -89,17 +100,20 @@ void AddSimulationDialog::render() {
     }
 }
 
-void AddSimulationDialog::_renderStateConfiguration() {
+void SimulationEditorDialog::_renderStateConfiguration(bool isLocked) {
     if (!ImGui::CollapsingHeader("State Configuration",
                                  ImGuiTreeNodeFlags_DefaultOpen))
         return;
 
+    ImGui::BeginDisabled(isLocked);
     ImGui::Text("Initial Conditions");
     bool kIsQuant = m_simulationBuilder.isQuantized();
     bool kIs3d = m_simulationBuilder.is3D();
+
     double r0[3] = {m_simulationBuilder.getR0().x,
                     m_simulationBuilder.getR0().y,
                     m_simulationBuilder.getR0().z};
+
     ImGui::BeginDisabled(kIsQuant);
     if ((kIs3d &&
          ImGui::InputScalarN("Position (r0)", ImGuiDataType_Double, r0, 3)) ||
@@ -118,15 +132,15 @@ void AddSimulationDialog::_renderStateConfiguration() {
         m_simulationBuilder.setV0(Vector3{v0[0], v0[1], kIs3d ? v0[2] : 0.0});
     }
 
-    double r0_mag =
-        physics::math::computeMagnitude(m_simulationBuilder.getR0());
+    ImGui::EndDisabled();
+
+    double r0_mag = computeMagnitude(m_simulationBuilder.getR0());
     if (ImGui::InputScalar("Position Magnitude", ImGuiDataType_Double,
                            &r0_mag)) {
         m_simulationBuilder.setR0Magnitude(r0_mag);
     }
 
-    double v0_mag =
-        physics::math::computeMagnitude(m_simulationBuilder.getV0());
+    double v0_mag = computeMagnitude(m_simulationBuilder.getV0());
     if (ImGui::InputScalar("Velocity Magnitude", ImGuiDataType_Double,
                            &v0_mag)) {
         m_simulationBuilder.setV0Magnitude(v0_mag);
@@ -134,20 +148,21 @@ void AddSimulationDialog::_renderStateConfiguration() {
 
     ImGui::Text("Angular Momentum: %.5e",
                 m_simulationBuilder.getAngularMomentum());
-    ImGui::EndDisabled();
 
     ImGui::Spacing();
+
     bool kIsRel = m_simulationBuilder.isRelativistic();
     if (ImGui::Checkbox("Relativistic", &kIsRel))
         m_simulationBuilder.setRelativistic(kIsRel);
+
     ImGui::SameLine();
     if (ImGui::Checkbox("Quantized", &kIsQuant))
         m_simulationBuilder.setQuantized(kIsQuant);
+
     ImGui::SameLine();
     if (ImGui::Checkbox("3D Enabled", &kIs3d))
         m_simulationBuilder.set3D(kIs3d);
 
-    ImGui::Spacing();
     if (kIsQuant) {
         ImGui::Text("Quantum Numbers");
         ImGui::Separator();
@@ -170,14 +185,17 @@ void AddSimulationDialog::_renderStateConfiguration() {
             m_simulationBuilder.setMagneticQuantumNumber(
                 static_cast<quantum_magnetic>(magnetic));
     }
+    ImGui::EndDisabled();
 }
 
-void AddSimulationDialog::_renderSimulationConfiguration() {
+void SimulationEditorDialog::_renderSimulationConfiguration(bool isLocked) {
     if (!ImGui::CollapsingHeader("Simulation Configuration",
                                  ImGuiTreeNodeFlags_DefaultOpen))
         return;
 
     ImGui::Text("Simulation Parameters");
+
+    ImGui::BeginDisabled(isLocked);
     double deltaTime = m_simulationBuilder.getDeltaTime();
     if (ImGui::InputDouble("Delta Time", &deltaTime, 0, 0, "%.5e")) {
         m_simulationBuilder.setDeltaTime(deltaTime);
@@ -202,21 +220,23 @@ void AddSimulationDialog::_renderSimulationConfiguration() {
 
     if (isRLocalMaxLimited) {
         ImGui::InputInt("R Local Max Count", &rLocalMaxCountLimit);
-        if (rLocalMaxCountLimit < 1) {
+        if (rLocalMaxCountLimit < 1)
             m_simulationBuilder.setNotLimitedRLocalMaxCount();
-        }
         m_simulationBuilder.setRLocalMaxCountLimit(rLocalMaxCountLimit);
     }
+    ImGui::EndDisabled();
 }
 
-void AddSimulationDialog::_renderPotentialConfiguration() {
+void SimulationEditorDialog::_renderPotentialConfiguration(bool isLocked) {
     if (!ImGui::CollapsingHeader("Potential Configuration",
                                  ImGuiTreeNodeFlags_DefaultOpen))
         return;
 
     ImGui::Text("Available Potentials");
+
     _loadPotentials();
 
+    ImGui::BeginDisabled(isLocked);
     for (const auto &potential : m_potentials) {
         ImGui::PushID(potential->getId());
         if (ImGui::Selectable(potential->getName().c_str(),
@@ -227,17 +247,17 @@ void AddSimulationDialog::_renderPotentialConfiguration() {
         ImGui::PopID();
     }
 
-    if (m_simulationBuilder.getPotential().getId() != 0) {
+    const Potential &selected = m_simulationBuilder.getPotential();
+    if (selected.getId() != 0) {
         ImGui::Separator();
-        ImGui::Text("Selected Potential: %s",
-                    m_simulationBuilder.getPotential().getName().c_str());
-        ImGui::Text("dU/dr = %s",
-                    m_simulationBuilder.getPotential().getExpression().c_str());
+        ImGui::Text("Selected Potential: %s", selected.getName().c_str());
+        ImGui::Text("dU/dr = %s", selected.getExpression().c_str());
 
         const auto &constants = m_simulationBuilder.getConstantValues();
         if (!constants.empty()) {
             ImGui::Separator();
             ImGui::Text("Constants:");
+            ImGui::BeginDisabled(isLocked);
             for (const auto &[key, value] : constants) {
                 ImGui::PushID(key.c_str());
                 double val = value;
@@ -246,15 +266,17 @@ void AddSimulationDialog::_renderPotentialConfiguration() {
                 }
                 ImGui::PopID();
             }
+            ImGui::EndDisabled();
         }
     }
+    ImGui::EndDisabled();
 }
 
-void AddSimulationDialog::_loadPotentials() {
+void SimulationEditorDialog::_loadPotentials() {
     auto potentials =
         ServiceLocator::getInstance().get<PotentialRepository>().getAll();
     if (potentials.size() != this->m_potentials.size()) {
         this->m_potentials = std::move(potentials);
     }
 }
-} // namespace ui::active_simulation::components
+} // namespace ui::components

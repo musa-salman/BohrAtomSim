@@ -120,6 +120,47 @@ void SimulationRepositoryImpl::completeSimulation(size_t id) const {
     }
 }
 
+void SimulationRepositoryImpl::update(const Simulation &simulation) {
+    try {
+        SQLite::Statement query(
+            *db,
+            R"(UPDATE Simulations SET name = ?, status = ?, is_relativistic = ?,
+                                is_quantized = ?, is_3d = ?, 
+                                r0_x = ?, r0_y = ?, r0_z = ?, v0_x = ?, v0_y = ?,
+                                v0_z = ?, delta_time = ?, total_duration = ?,
+                                record_interval = ?, constants = ?,
+                                potential_id = ?, r_local_max_limit = ?
+                                WHERE id = ?;)");
+        query.bind(1, simulation.getName());
+        query.bind(2, static_cast<int>(simulation.getStatus()));
+        query.bind(3, static_cast<int>(simulation.isRelativistic()));
+        query.bind(4, static_cast<int>(simulation.isQuantized()));
+        query.bind(5, static_cast<int>(simulation.is3D()));
+
+        const auto &r0 = simulation.getR0();
+        const auto &v0 = simulation.getV0();
+
+        query.bind(6, r0.x);
+        query.bind(7, r0.y);
+        query.bind(8, r0.z);
+        query.bind(9, v0.x);
+        query.bind(10, v0.y);
+        query.bind(11, v0.z);
+        query.bind(12, simulation.getDeltaTime());
+        query.bind(13, simulation.getTotalDuration());
+        query.bind(14, simulation.getRecordInterval());
+        query.bind(15, simulation.serializeConstants());
+        query.bind(16, static_cast<int>(simulation.getPotential().getId()));
+        query.bind(17, simulation.getRLocalMaxCountLimit());
+        query.bind(18, static_cast<int>(simulation.getId()));
+
+        query.exec();
+
+    } catch (const SQLite::Exception &e) {
+        std::cerr << "Error updating simulation: " << e.what() << std::endl;
+    }
+}
+
 std::vector<std::unique_ptr<Simulation>>
 SimulationRepositoryImpl::getAll() const {
     constexpr std::string_view sql =

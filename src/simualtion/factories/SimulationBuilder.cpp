@@ -185,18 +185,16 @@ scalar SimulationBuilder::getAngularMomentum() const {
            physics::math::sin(angle);
 }
 
+void SimulationBuilder::setSimulation(const model::Simulation &simulation) {
+    m_simulation = simulation;
+
+    if (m_simulation.isQuantized()) {
+        _quantize();
+    }
+}
 model::Simulation &SimulationBuilder::getSimulation() { return m_simulation; }
 
-model::Simulation SimulationBuilder::build() const {
-    model::Simulation simulation(
-        m_simulation.getName(), 0, m_simulation.isRelativistic(),
-        m_simulation.isQuantized(), m_simulation.is3D(), m_simulation.getR0(),
-        m_simulation.getV0(), m_simulation.getPotential(),
-        m_simulation.getDeltaTime(), m_simulation.getRecordInterval(),
-        m_simulation.getTotalDuration(), m_simulation.getRLocalMaxCountLimit());
-
-    return simulation;
-}
+model::Simulation SimulationBuilder::build() const { return m_simulation; }
 void SimulationBuilder::setName(const std::string &name) {
     m_simulation.setName(name);
 }

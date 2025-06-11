@@ -5,7 +5,7 @@ namespace simulation::model {
 using namespace physics::math;
 
 Potential::Potential()
-    : id(0), type(PotentialType::Coulomb), expression_str("-(q/r)^2") {}
+    : id(1), type(PotentialType::Coulomb), expression_str("-(q/r)^2") {}
 
 Potential::Potential(size_t id, const std::string &name, PotentialType type,
                      const std::string &expression_str,

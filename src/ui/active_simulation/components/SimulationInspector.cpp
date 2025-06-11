@@ -12,16 +12,26 @@ using namespace simulation::model;
 using namespace simulation::service;
 using namespace utils;
 
+SimulationInspectorPanel::SimulationInspectorPanel()
+    : m_simulationEditorDialog() {
+    m_simulationEditorDialog.setOnSubmit([](Simulation simulation) {
+        SimulationService &simulationService =
+            ServiceLocator::getInstance().get<SimulationService>();
+        simulationService.updateSimulation(simulation);
+    });
+    m_plotSelection = {{"t", true}, {"trajectories", false}};
+}
+
 void SimulationInspectorPanel::setSimulation(
     const std::shared_ptr<Simulation> &sim) {
-    simulation = sim;
+    m_simulation = sim;
 }
 
 void SimulationInspectorPanel::render() {
     ImGui::BeginChild("Simulation Details", ImVec2(0, 0),
                       ImGuiChildFlags_Border);
 
-    const auto sim = simulation.lock();
+    const auto sim = m_simulation.lock();
     if (!sim) {
         ImGui::Text("No simulation selected.");
         ImGui::EndChild();
@@ -36,7 +46,6 @@ void SimulationInspectorPanel::render() {
     const auto &status = sim->status;
 
     if (status == Simulation::SimulationStatus::COMPLETED) {
-        ImGui::Text("Simulation completed.");
         ImGui::EndChild();
         return;
     } else if (status == Simulation::SimulationStatus::RUNNING) {
@@ -68,7 +77,7 @@ void SimulationInspectorPanel::render() {
     }
     if (ImGui::Button("Delete Simulation")) {
         simulationService.removeSimulation(simId);
-        simulation.reset();
+        m_simulation.reset();
         ImGui::EndChild();
         return;
     }
@@ -77,9 +86,14 @@ void SimulationInspectorPanel::render() {
         ImGui::EndDisabled();
     }
 
+    ImGui::SameLine();
+    if (ImGui::Button("Edit Simulation")) {
+        m_simulationEditorDialog.setSimulation(*sim);
+    }
+    m_simulationEditorDialog.render();
+
     auto optMonitor = simulationService.getSimulationMonitor(simId);
     if (!optMonitor.has_value()) {
-        ImGui::Text("No data available for plotting.");
         ImGui::EndChild();
         return;
     }
@@ -102,18 +116,18 @@ void SimulationInspectorPanel::render() {
     for (const auto &[name, data] : *datasets) {
         if (name == "t")
             continue;
-        if (!plotSelection.contains(name)) {
-            plotSelection[name] = false;
+        if (!m_plotSelection.contains(name)) {
+            m_plotSelection[name] = false;
         }
         ImGui::SameLine();
-        ImGui::Checkbox(name.c_str(), &plotSelection[name]);
+        ImGui::Checkbox(name.c_str(), &m_plotSelection[name]);
     }
     ImGui::SameLine();
-    ImGui::Checkbox("Show Trajectories", &plotSelection["trajectories"]);
+    ImGui::Checkbox("Show Trajectories", &m_plotSelection["trajectories"]);
     ImGui::PopID();
 
     for (const auto &[name, data] : *datasets) {
-        if (name == "t" || !plotSelection[name])
+        if (name == "t" || !m_plotSelection[name])
             continue;
         if (ImPlot::BeginPlot(name.c_str())) {
             ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_AutoFit,
@@ -125,7 +139,7 @@ void SimulationInspectorPanel::render() {
         }
     }
 
-    if (plotSelection["trajectories"]) {
+    if (m_plotSelection["trajectories"]) {
         auto cartesian_data = monitor->getTrajectories();
         if (ImPlot::BeginPlot("Trajectories")) {
             ImPlot::SetupAxes("X", "Y");
