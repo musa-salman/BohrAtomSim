@@ -22,7 +22,9 @@ class SimulationEditorDialog : public ui::components::Component {
 
   private:
     bool m_isDialogOpen;
-    bool isAutoName;
+    bool m_isAutoName;
+    bool m_isRLocalMaxLimited;
+
     std::function<void(simulation::model::Simulation)> m_onSubmit;
 
     simulation::factories::SimulationBuilder m_simulationBuilder;

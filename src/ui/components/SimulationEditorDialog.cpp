@@ -23,7 +23,7 @@ using namespace utils;
 using namespace storage::persistence;
 
 SimulationEditorDialog::SimulationEditorDialog()
-    : m_isDialogOpen(false), isAutoName(true) {}
+    : m_isDialogOpen(false), m_isAutoName(true), m_isRLocalMaxLimited(false) {}
 
 void SimulationEditorDialog::setOnSubmit(
     std::function<void(Simulation)> &&onSubmit) {
@@ -32,7 +32,7 @@ void SimulationEditorDialog::setOnSubmit(
 
 void SimulationEditorDialog::setSimulation(const Simulation &simulation) {
     m_simulationBuilder.setSimulation(simulation);
-    isAutoName = !_isLocked(simulation.getStatus());
+    m_isAutoName = !_isLocked(simulation.getStatus());
     m_isDialogOpen = true;
 }
 
@@ -58,10 +58,10 @@ void SimulationEditorDialog::render() {
         ImGui::InputText("Name", name, IM_ARRAYSIZE(name));
         if (!kIsEdit) {
             ImGui::SameLine();
-            ImGui::Checkbox("Auto", &isAutoName);
+            ImGui::Checkbox("Auto", &m_isAutoName);
         }
 
-        if (isAutoName) {
+        if (m_isAutoName) {
             const std::string kFormattedSimulationName =
                 createFormattedSimulationName(
                     m_simulationBuilder.getSimulation());
@@ -211,14 +211,13 @@ void SimulationEditorDialog::_renderSimulationConfiguration(bool isLocked) {
         m_simulationBuilder.setTotalDuration(totalDuration);
     }
 
-    int rLocalMaxCountLimit = m_simulationBuilder.getRLocalMaxCountLimit();
-    bool isRLocalMaxLimited = (rLocalMaxCountLimit > 0);
-    if (ImGui::Checkbox("Limit R Local Maxima", &isRLocalMaxLimited)) {
-        m_simulationBuilder.setRLocalMaxCountLimit(
-            isRLocalMaxLimited ? rLocalMaxCountLimit : -1);
+    if (ImGui::Checkbox("Limit R Local Maxima", &m_isRLocalMaxLimited)) {
+        m_simulationBuilder.setRLocalMaxCountLimit(m_isRLocalMaxLimited ? 10
+                                                                        : -1);
     }
 
-    if (isRLocalMaxLimited) {
+    int rLocalMaxCountLimit = m_simulationBuilder.getRLocalMaxCountLimit();
+    if (m_isRLocalMaxLimited) {
         ImGui::InputInt("R Local Max Count", &rLocalMaxCountLimit);
         if (rLocalMaxCountLimit < 1)
             m_simulationBuilder.setNotLimitedRLocalMaxCount();
