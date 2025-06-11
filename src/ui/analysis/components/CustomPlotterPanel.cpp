@@ -1,11 +1,14 @@
 
 #include <ImGuiFileDialog.h>
+#include <gsl/zstring>
 #include <implot.h>
 #include <matplot/matplot.h>
 
+#include "imgui.h"
 #include "simulation/service/SimulationService.hpp"
 #include "storage/dataset/expression_utils.hpp"
 #include "ui/analysis/components/CustomPlotterPanel.hpp"
+#include "ui/components/Components.hpp"
 #include "utils/Lazy.hpp"
 #include "utils/ServiceLocator.hpp"
 
@@ -27,11 +30,18 @@ void CustomPlotterPanel::render() {
     ImGui::BeginGroup();
     {
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Plotter");
+        ImGui::SameLine();
+        m_expressionHelper.render();
         ImGui::Separator();
 
-        ImGui::InputText("X Expression", xExpr, sizeof(xExpr));
-        ImGui::InputText("Y Expression", yExpr, sizeof(yExpr));
-        ImGui::InputText("Filter Expression", m_filter, sizeof(m_filter));
+        ui::components::renderAutoGrowInputMultiline("X Expression", m_xExpr);
+        ImGui::Spacing();
+
+        ui::components::renderAutoGrowInputMultiline("Y Expression", m_yExpr);
+        ImGui::Spacing();
+
+        ui::components::renderAutoGrowInputMultiline("Filter Expression",
+                                                     m_filterExpr);
 
         if (ImGui::Button("Apply")) {
             const auto &dataset = ServiceLocator::getInstance()
@@ -39,18 +49,17 @@ void CustomPlotterPanel::render() {
                                       .getSimulationResult(m_simulationId);
 
             // Apply filter
-            if (std::string(m_filter).empty()) {
+            if (std::string(m_filterExpr).empty()) {
                 m_filteredDatasetView->includeAllRows(dataset.getRowCount());
             } else {
-                auto mask = computeMaskFromExpression(m_filter, dataset);
+                auto mask = computeMaskFromExpression(m_filterExpr, dataset);
                 m_filteredDatasetView->updateMask(mask);
-                m_filterExpr = m_filter;
             }
             m_errorMessageExpr.clear();
 
             // Compute X and Y data
-            m_xData = computeVectorFromExpression(xExpr, dataset);
-            m_yData = computeVectorFromExpression(yExpr, dataset);
+            m_xData = computeVectorFromExpression(m_xExpr, dataset);
+            m_yData = computeVectorFromExpression(m_yExpr, dataset);
             errorMessagePlot.clear();
         }
 
@@ -58,9 +67,7 @@ void CustomPlotterPanel::render() {
         if (ImGui::Button("Reset")) {
             m_xData->clear();
             m_yData->clear();
-            m_filter[0] = '\0';
-            xExpr[0] = '\0';
-            yExpr[0] = '\0';
+
             m_filterExpr.clear();
             errorMessagePlot.clear();
             m_errorMessageExpr.clear();
@@ -134,8 +141,8 @@ void CustomPlotterPanel::render() {
 
                     auto fig = figure(true);
                     plot(xVec, yVec);
-                    xlabel(xExpr);
-                    ylabel(yExpr);
+                    xlabel(m_xExpr);
+                    ylabel(m_yExpr);
 
                     save(filePath);
                 } catch (const std::exception &e) {

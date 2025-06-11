@@ -1,7 +1,10 @@
+#include <gsl/zstring>
 #include <imgui.h>
+#include <optional>
 
 #include "storage/persistence/PotentialRepository.hpp"
 #include "ui/PotentialsView.hpp"
+#include "ui/components/Components.hpp"
 #include "utils/ServiceLocator.hpp"
 
 namespace ui {
@@ -10,27 +13,30 @@ using namespace storage::persistence;
 using namespace utils;
 
 PotentialsView::PotentialsView()
-    : potentialRepo(ServiceLocator::getInstance().get<PotentialRepository>()) {
-    refreshPotentials();
+    : m_potentialRepo(
+          ServiceLocator::getInstance().get<PotentialRepository>()) {
+    _refreshPotentials();
 }
 
-void PotentialsView::refreshPotentials() {
-    potentials = potentialRepo.getAll();
+void PotentialsView::_refreshPotentials() {
+    m_potentials = m_potentialRepo.getAll();
 }
 
 void PotentialsView::render() {
     ImGui::BeginChild("Potential Manager");
 
-    renderPotentialList();
+    _renderPotentialList();
     ImGui::Separator();
-    renderPotentialForm();
+    _renderPotentialForm();
 
     ImGui::EndChild();
 }
 
-void PotentialsView::renderPotentialList() {
+void PotentialsView::_renderPotentialList() {
+    m_expressionHelper.render();
     ImGui::Text("Existing Potentials:");
-    for (const auto &potential : potentials) {
+    bool wasPotentialRemoved = false;
+    for (const auto &potential : m_potentials) {
         ImGui::PushID(potential->getId());
 
         ImGui::Text("Name: %s", potential->getName().c_str());
@@ -49,27 +55,37 @@ void PotentialsView::renderPotentialList() {
 
         if (ImGui::Button("Delete")) {
             // TODO: Check if used by any Simulation
-            potentialRepo.remove(potential->getId());
-            refreshPotentials();
+            m_potentialRepo.remove(potential->getId());
+            wasPotentialRemoved = true;
         }
 
         ImGui::Separator();
         ImGui::PopID();
     }
+
+    if (wasPotentialRemoved) {
+        _refreshPotentials();
+    }
 }
 
-void PotentialsView::renderPotentialForm() {
+void PotentialsView::_renderPotentialForm() {
     ImGui::Text("Add New Potential:");
 
-    ImGui::InputText("Name", nameBuffer, sizeof(nameBuffer));
+    {
+        char nameBuffer[512] = "";
+        std::strncpy(nameBuffer, m_potentialBuilder.getName().c_str(),
+                     sizeof(nameBuffer) - 1);
+        nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+        if (ImGui::InputText("Name", nameBuffer, sizeof(nameBuffer))) {
+            m_potentialBuilder.setName(nameBuffer);
+        }
+    }
 
     static int type = static_cast<int>(PotentialType::GeneralExpression);
     ImGui::Combo("Type", &type, "Coulomb\0GeneralExpression\0");
-    builder.setPotentialType(static_cast<PotentialType>(type));
+    m_potentialBuilder.setPotentialType(static_cast<PotentialType>(type));
 
-    static char exprBuffer[256] = "";
-    ImGui::InputText("Expression", exprBuffer, sizeof(exprBuffer));
-    builder.setPotentialExpression(exprBuffer);
+    ui::components::renderAutoGrowInputMultiline("Expression", m_potExpr);
     //     errorMessage.clear();
     // else {
     //     errorMessage = "Invalid expression.";
@@ -84,39 +100,43 @@ void PotentialsView::renderPotentialForm() {
     ImGui::InputFloat("Const Value", &constValue);
 
     if (ImGui::Button("Add Constant")) {
-        builder.addPotentialConstant(constName, constValue);
+        m_potentialBuilder.addPotentialConstant(constName, constValue);
         constName[0] = '\0';
         constValue = 1.0f;
     }
 
-    const auto &constants = builder.getPotentialConstants();
+    const auto &constants = m_potentialBuilder.getPotentialConstants();
+    std::optional<std::string> toRemove;
     for (const auto &[name, value] : constants) {
         ImGui::Text("%s = %.3f", name.c_str(), value);
         ImGui::SameLine();
         ImGui::PushID(name.c_str());
         if (ImGui::Button("Remove")) {
-            builder.removePotentialConstant(name);
+            toRemove = name;
         }
         ImGui::PopID();
     }
 
+    if (toRemove.has_value()) {
+        m_potentialBuilder.removePotentialConstant(toRemove.value());
+    }
+
     if (ImGui::Button("Create Potential")) {
-        if (std::strlen(nameBuffer) == 0) {
-            errorMessage = "Name cannot be empty.";
-            showError = true;
+        if (m_potentialBuilder.getName().empty()) {
+            m_errorMessage = "Name cannot be empty.";
+            m_showError = true;
         } else {
-            Potential newPot = builder.build();
-            newPot.setName(nameBuffer);
-            potentialRepo.add(newPot);
-            refreshPotentials();
-            builder.clearPotentialConstants();
-            exprBuffer[0] = '\0';
-            nameBuffer[0] = '\0';
+            m_potentialBuilder.setPotentialExpression(m_potExpr);
+            Potential newPot = m_potentialBuilder.build();
+
+            m_potentialRepo.add(newPot);
+            _refreshPotentials();
+            m_potentialBuilder.clearPotentialConstants();
         }
     }
 
-    if (showError) {
-        ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", errorMessage.c_str());
+    if (m_showError) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", m_errorMessage.c_str());
     }
 }
 

@@ -8,6 +8,7 @@
 #include "simulation/factories/PotentialBuilder.hpp"
 #include "simulation/model/Potential.hpp"
 #include "storage/persistence/PotentialRepository.hpp"
+#include "ui/components/ExpressionHelper.hpp"
 
 namespace ui {
 
@@ -18,19 +19,20 @@ class PotentialsView {
     void render();
 
   private:
-    void renderPotentialList();
-    void renderPotentialForm();
+    void _renderPotentialList();
+    void _renderPotentialForm();
 
-    void refreshPotentials();
+    void _refreshPotentials();
 
-    storage::persistence::PotentialRepository &potentialRepo;
-    std::vector<std::unique_ptr<simulation::model::Potential>> potentials;
+    storage::persistence::PotentialRepository &m_potentialRepo;
+    std::vector<std::unique_ptr<simulation::model::Potential>> m_potentials;
+    std::string m_potExpr;
 
-    simulation::factories::PotentialBuilder builder;
+    simulation::factories::PotentialBuilder m_potentialBuilder;
+    ui::components::ExpressionHelper m_expressionHelper;
 
-    char nameBuffer[128] = "";
-    bool showError = false;
-    std::string errorMessage;
+    bool m_showError = false;
+    std::string m_errorMessage;
 };
 } // namespace ui
 

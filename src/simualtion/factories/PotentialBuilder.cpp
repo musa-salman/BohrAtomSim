@@ -7,49 +7,57 @@ namespace simulation::factories {
 using namespace simulation::model;
 using namespace physics::math;
 
+void PotentialBuilder::setName(const std::string &name) { m_name = name; }
+
+const std::string &PotentialBuilder::getName() const { return m_name; }
+
 void PotentialBuilder::setPotentialType(PotentialType type) {
-    potential_type = type;
+    m_potentialType = type;
 }
 
 void PotentialBuilder::setPotentialExpression(const std::string &expression) {
     if (expression.empty()) {
         // return std::unexpected("Potential expression cannot be empty.");
     }
-    potentialExpression = expression;
+    m_potentialExpression = expression;
     // return {};
 }
 
 void PotentialBuilder::addPotentialConstant(const std::string &name,
                                             scalar value) {
-    potentialConstants[name] = value;
+    m_potentialConstants[name] = value;
 }
 
 void PotentialBuilder::removePotentialConstant(const std::string &name) {
-    potentialConstants.erase(name);
+    m_potentialConstants.erase(name);
 }
 
-void PotentialBuilder::clearPotentialConstants() { potentialConstants.clear(); }
+void PotentialBuilder::clearPotentialConstants() {
+    m_potentialConstants.clear();
+}
 
 const std::unordered_map<std::string, scalar> &
 PotentialBuilder::getPotentialConstants() const {
-    return potentialConstants;
+    return m_potentialConstants;
 }
 
 std::string PotentialBuilder::getPotentialExpression() const {
-    return potentialExpression;
+    return m_potentialExpression;
 }
 
 PotentialType PotentialBuilder::getPotentialType() const {
-    return potential_type;
+    return m_potentialType;
 }
 
-PotentialBuilder::PotentialBuilder() : potential_type(PotentialType::Coulomb) {}
+PotentialBuilder::PotentialBuilder()
+    : m_potentialType(PotentialType::Coulomb) {}
 
 Potential PotentialBuilder::build() const {
     Potential potential;
-    potential.setType(potential_type);
-    potential.setExpression(potentialExpression);
-    potential.setConstants(potentialConstants);
+    potential.setName(m_name);
+    potential.setType(m_potentialType);
+    potential.setExpression(m_potentialExpression);
+    potential.setConstants(m_potentialConstants);
     return potential;
 }
 } // namespace simulation::factories

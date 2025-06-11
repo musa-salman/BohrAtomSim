@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "storage/dataset/FilteredDatasetView.hpp"
+#include "ui/components/ExpressionHelper.hpp"
 #include "utils/Lazy.hpp"
 
 namespace ui::analysis::components {
@@ -17,10 +18,10 @@ class DatasetVisualizerPanel {
 
   private:
     size_t m_simulationId;
-    char m_filter[512] = "";
     std::string m_filterExpr;
     std::string m_errorMessageExpr;
 
+    ui::components::ExpressionHelper m_expressionHelper;
     utils::Lazy<std::unordered_map<std::string, std::vector<double>>>
         m_trajectoryData;
     utils::Lazy<storage::dataset::FilteredDatasetView> m_filteredDatasetView;

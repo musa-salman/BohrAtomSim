@@ -7,6 +7,7 @@
 #include "storage/dataset/FilteredDatasetView.hpp"
 #include "storage/dataset/expression_utils.hpp"
 #include "ui/analysis/components/DatasetVisualizerPanel.hpp"
+#include "ui/components/Components.hpp"
 #include "utils/Lazy.hpp"
 #include "utils/ServiceLocator.hpp"
 
@@ -49,20 +50,22 @@ void DatasetVisualizerPanel::render() {
     ImGui::BeginGroup();
     {
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Trajectories");
+        ImGui::SameLine();
+        m_expressionHelper.render();
         ImGui::Separator();
 
-        ImGui::InputText("Filter", m_filter, sizeof(m_filter));
-        ImGui::SameLine();
+        ui::components::renderAutoGrowInputMultiline("Filter Expression",
+                                                     m_filterExpr);
         const auto &dataset = ServiceLocator::getInstance()
                                   .get<SimulationService>()
                                   .getSimulationResult(m_simulationId);
         if (ImGui::Button("Apply")) {
-            if (std::string(m_filter).empty()) {
+            if (std::string(m_filterExpr).empty()) {
                 m_filteredDatasetView->includeAllRows(dataset.getRowCount());
             } else {
-                const auto mask = computeMaskFromExpression(m_filter, dataset);
+                const auto mask =
+                    computeMaskFromExpression(m_filterExpr, dataset);
                 m_filteredDatasetView->updateMask(mask);
-                m_filterExpr = m_filter;
                 m_errorMessageExpr.clear();
             }
         }

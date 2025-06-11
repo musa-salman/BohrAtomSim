@@ -6,14 +6,11 @@
 namespace simulation::factories {
 
 class PotentialBuilder {
-
-    model::PotentialType potential_type;
-
-    std::string potentialExpression;
-    std::unordered_map<std::string, physics::math::scalar> potentialConstants;
-
   public:
     explicit PotentialBuilder();
+
+    void setName(const std::string &name);
+    const std::string &getName() const;
 
     void setPotentialType(model::PotentialType type);
 
@@ -31,5 +28,12 @@ class PotentialBuilder {
     model::PotentialType getPotentialType() const;
 
     model::Potential build() const;
+
+  private:
+    model::PotentialType m_potentialType;
+    std::string m_name;
+
+    std::string m_potentialExpression;
+    std::unordered_map<std::string, physics::math::scalar> m_potentialConstants;
 };
 } // namespace simulation::factories

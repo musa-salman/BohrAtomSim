@@ -6,6 +6,7 @@
 #include "storage/dataset/expression_utils.hpp"
 #include "ui/analysis/components/DatasetExportPanel.hpp"
 #include "ui/analysis/components/DatasetViewerPanel.hpp"
+#include "ui/components/Components.hpp"
 #include "utils/ServiceLocator.hpp"
 
 namespace ui::analysis::components {
@@ -33,21 +34,23 @@ void DatasetViewerPanel::render() {
     ImGui::BeginGroup();
     {
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Dataset Viewer");
+        ImGui::SameLine();
+        m_expressionHelper.render();
         ImGui::Separator();
 
-        ImGui::InputText("Filter", m_filter, sizeof(m_filter));
-        ImGui::SameLine();
+        ui::components::renderAutoGrowInputMultiline("Filter Expression",
+                                                     m_filterExpr);
 
         const auto &dataset = ServiceLocator::getInstance()
                                   .get<SimulationService>()
                                   .getSimulationResult(m_simulation->getId());
         if (ImGui::Button("Apply")) {
-            if (std::string(m_filter).empty()) {
+            if (std::string(m_filterExpr).empty()) {
                 m_filteredDatasetView->includeAllRows(dataset.getRowCount());
             } else {
-                const auto mask = computeMaskFromExpression(m_filter, dataset);
+                const auto mask =
+                    computeMaskFromExpression(m_filterExpr, dataset);
                 m_filteredDatasetView->updateMask(mask);
-                m_filterExpr = m_filter;
                 m_errorMessageExpr.clear();
             }
         }
@@ -61,7 +64,6 @@ void DatasetViewerPanel::render() {
             m_filteredDatasetView->includeAllRows(dataset.getRowCount());
             m_filterExpr.clear();
             m_errorMessageExpr.clear();
-            m_filter[0] = '\0';
         }
 
         ImGui::SameLine();
