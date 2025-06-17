@@ -31,8 +31,7 @@ math::scalar compute_psi_0(const math::Vector2 &r0) noexcept {
 math::scalar compute_p_psi(const math::Vector2 &r0,
                            const math::Vector2 &v0) noexcept {
     const math::scalar angle = math::angle_with(r0, v0);
-    return math::magnitude(r0) * math::magnitude(v0) * math::sin(angle) /
-           math::cos(angle);
+    return math::magnitude(r0) * math::magnitude(v0) * math::sin(angle);
 }
 
 } // namespace physics::eom::polar
